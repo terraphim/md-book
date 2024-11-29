@@ -46,13 +46,6 @@
             </article>
         </main>
         <doc-toc>
-            <ul class="toc-list">
-                {% for header in page.page_toc %}
-                <li class="toc-item level-{{ header.level }}">
-                    <a href="#{{ header.id }}">{{ header.title }}</a>
-                </li>
-                {% endfor %}
-            </ul>
         </doc-toc>
 
     </div>

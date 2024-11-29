@@ -15,12 +15,12 @@
     <div class="container">
         <doc-sidebar>
             <ul class="nav-groups">
-                {% for section in toc %}
+                {% for page in pages %}
                 <li class="nav-group">
-                    <div class="nav-group-title">{{ section.title }}</div>
+                    <div class="nav-group-title">{{ page.title }}</div>
                     <ul>
                         <li>
-                            <a href="/{{ section.path | safe }}">{{ section.title }}</a>
+                            <a href="/{{ page.path | safe }}">{{ page.title }}</a>
                         </li>
                     </ul>
                 </li>

@@ -19,27 +19,14 @@ struct Args {
 }
 
 #[derive(Serialize, Debug, Clone)]
-struct Header {
-    id: String,
-    title: String,
-    level: u8,
-}
-
-#[derive(Serialize, Debug, Clone)]
 struct PageData {
     title: String,
-    content: String,
-    page_toc: Vec<Header>,     // Headers within the current page
+    content: String,   // Headers within the current page
     sections: Vec<Section>,    // Global navigation
     previous: Option<PageInfo>,
     next: Option<PageInfo>,
 }
 
-#[derive(Serialize, Debug, Clone)]
-struct TocItem {
-    title: String,
-    path: String,
-}
 
 #[derive(Serialize, Debug, Clone)]
 struct Section {
@@ -67,8 +54,6 @@ fn main() -> Result<()> {
     tera.add_raw_template("page", include_str!("templates/page.html.tera"))?;
     tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
     
-    // Generate table of contents
-    let mut toc: Vec<TocItem> = Vec::new();
     
     // Create sections based on directory structure
     let mut sections: Vec<Section> = Vec::new();
@@ -152,7 +137,6 @@ fn main() -> Result<()> {
             let html_content = to_html_with_options(&markdown_content, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
             
-            let headers = extract_headers(&markdown_content);
             
             // Safe navigation handling
             let previous = if current_page > 0 {
@@ -173,7 +157,6 @@ fn main() -> Result<()> {
                         .map(|s| s.to_string_lossy().into_owned())
                         .unwrap_or_else(|| "Untitled".to_string())),
                 content: html_content,
-                page_toc: headers,
                 sections: sections.clone(),
                 previous,
                 next,
@@ -191,7 +174,7 @@ fn main() -> Result<()> {
     
     // Generate index page
     let mut context = TeraContext::new();
-    context.insert("toc", &toc);
+    context.insert("pages", &all_pages);
     let rendered = tera.render("index", &context)?;
     fs::write(format!("{}/index.html", args.output), rendered)?;
     
@@ -227,43 +210,4 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
     ).context("Failed to write TOC component")?;
     
     Ok(())
-}
-
-fn extract_headers(content: &str) -> Vec<Header> {
-    let mut headers = Vec::new();
-    
-    for line in content.lines() {
-        if line.starts_with('#') {
-            let level = line.chars().take_while(|&c| c == '#').count() as u8;
-            let title = line.chars()
-                .skip(level as usize)
-                .collect::<String>()
-                .trim()
-                .to_string();
-            let id = slugify(&title);
-            
-            headers.push(Header {
-                id,
-                title,
-                level,
-            });
-        }
-    }
-    
-    headers
-}
-
-fn slugify(text: &str) -> String {
-    text.to_lowercase()
-        .chars()
-        .map(|c| match c {
-            'a'..='z' | '0'..='9' => c,
-            ' ' | '-' | '_' => '-',
-            _ => '-',
-        })
-        .collect::<String>()
-        .split('-')
-        .filter(|s| !s.is_empty())
-        .collect::<Vec<_>>()
-        .join("-")
 }
