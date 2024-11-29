@@ -36,11 +36,17 @@
                 <h1>{{ page.title }}</h1>
                 {{ page.content | safe }}
                 <div class="nav-footer">
-                    {% if previous %}
-                    <a href="{{ previous.path | safe }}" class="nav-previous">← {{ previous.title }}</a>
+                    {% if page.previous %}
+                    <sl-button href="{{ page.previous.path | safe }}" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        {{ page.previous.title }}
+                    </sl-button>
                     {% endif %}
-                    {% if next %}
-                    <a href="{{ next.path | safe }}" class="nav-next">{{ next.title }} →</a>
+                    {% if page.next %}
+                    <sl-button href="{{ page.next.path | safe }}" variant="default" class="nav-next">
+                            {{ page.next.title }}
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
                     {% endif %}
                 </div>
             </article>

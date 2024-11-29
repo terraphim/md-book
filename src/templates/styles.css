@@ -193,20 +193,44 @@ sl-input {
     margin-top: 4rem;
     padding-top: 2rem;
     border-top: 1px solid var(--theme-border);
+    gap: 1rem;
 }
 
-.nav-previous,
-.nav-next {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
+.nav-footer sl-button::part(base) {
     color: var(--theme-text);
+    font-family: var(--sl-font-sans);
+    background: var(--theme-bg);
     font-weight: 500;
+    --sl-spacing-medium: 1rem;
 }
 
-.nav-previous:hover,
-.nav-next:hover {
+.nav-footer sl-button::part(base):hover {
     color: var(--primary-color);
+}
+
+.nav-footer sl-button::part(prefix),
+.nav-footer sl-button::part(suffix) {
+    font-size: 1.2em;
+}
+
+.nav-previous {
+    margin-right: auto;
+}
+
+.nav-next {
+    margin-left: auto;
+}
+
+@media (max-width: 640px) {
+    .nav-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-previous,
+    .nav-next {
+        margin: 0;
+    }
 }
 
 .sidebar a.active {
