@@ -38,25 +38,22 @@ class DocSidebar extends HTMLElement {
         }
 
         .sidebar-section-title {
+          display: inline-flex;
+          align-items: center;
           font-family: var(--sl-font-sans);
           font-size: var(--sl-font-size-small);
           font-weight: var(--sl-font-weight-semibold);
           text-transform: uppercase;
-          color: var(--sl-color-neutral-500);
+          color: var(--sl-color-neutral-100);
+          background: var(--sl-color-neutral-100);
+          border: solid 1px var(--sl-color-neutral-200);
+          padding: var(--sl-spacing-x-small) var(--sl-spacing-small);
           margin: 0 0 var(--sl-spacing-medium);
-          display: flex;
-          align-items: center;
-          gap: var(--sl-spacing-2x-large);
-          padding-left: var(--sl-spacing-medium);
-        }
-
-        .sidebar-section-title sl-icon {
-          font-size: 1.2em;
-          color: var(--sl-color-neutral-400);
+          border-radius: var(--sl-border-radius-medium);
         }
 
         .sidebar-items {
-          margin: 0 0 0 var(--sl-spacing-2x-large);
+          margin: 0 0 0 var(--sl-spacing-medium);
         }
 
         .sidebar-item {
@@ -136,14 +133,7 @@ class DocSidebar extends HTMLElement {
       </nav>
     `;
 
-    // Add section icons
-    this.shadowRoot.host.querySelectorAll('.sidebar-section-title').forEach(title => {
-      const icon = document.createElement('sl-icon');
-      icon.name = 'folder';
-      title.prepend(icon);
-    });
-
-    // Add page icons and handle active state
+    // Only keep page icons code
     this.shadowRoot.host.querySelectorAll('.sidebar-item a').forEach(link => {
       const icon = document.createElement('sl-icon');
       if (link.matches('.active')) {

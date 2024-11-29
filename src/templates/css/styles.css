@@ -11,7 +11,7 @@
 }
 
 a {
-  color: var(--sl-color-neutral-700);
+  color: var(--sl-color-neutral-800);
   text-decoration: none;
   transition: var(--sl-transition-medium) color;
 }
