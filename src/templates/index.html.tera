@@ -3,60 +3,35 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config.title }}</title>
-    <link rel="stylesheet" href="{{ config.base_url | safe }}/book.css">
-    <link rel="stylesheet" href="{{ config.base_url | safe }}/styles.css">
+    <title>Title</title>
+    <link rel="stylesheet" href="/styles.css">
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <script src="/components/doc-sidebar.js" type="module"></script>
+    <script src="/components/doc-toc.js" type="module"></script>
 </head>
 <body>
     <div class="container">
-        <nav class="sidebar">
-            <div class="sidebar-content">
-                <sl-input placeholder="Search docs..." size="small" clearable>
-                    <sl-icon name="search" slot="prefix"></sl-icon>
-                </sl-input>
-                <ul class="nav-groups">
-                    {% for section in sections %}
-                    <li class="nav-group">
-                        <div class="nav-group-title">{{ section.title }}</div>
-                        <ul>
-                            {% for page in section.pages %}
-                            <li><a href="{{ page.path | safe }}">{{ page.title }}</a></li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </nav>
-
-        <main class="content">
-            <article class="main-article">
-                {{ content | safe }}
-            </article>
-        </main>
-
-        <nav class="toc">
-            <div class="toc-header">On this page</div>
-            {% if toc %}
-            <ul>
-                {% for h1 in toc %}
-                <li>
-                    <a href="#{{ h1.id | safe }}">{{ h1.title }}</a>
-                    {% if h1.children %}
+        <doc-sidebar>
+            <ul class="nav-groups">
+                {% for section in toc %}
+                <li class="nav-group">
+                    <div class="nav-group-title">{{ section.title }}</div>
                     <ul>
-                        {% for h2 in h1.children %}
-                        <li><a href="#{{ h2.id | safe }}">{{ h2.title }}</a></li>
-                        {% endfor %}
+                        <li>
+                            <a href="/{{ section.path | safe }}">{{ section.title }}</a>
+                        </li>
                     </ul>
-                    {% endif %}
                 </li>
                 {% endfor %}
             </ul>
-            {% endif %}
-        </nav>
+        </doc-sidebar>
+
+        <main class="content">
+            Other content
+        </main>
+
     </div>
 </body>
 </html> 

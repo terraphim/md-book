@@ -18,15 +18,37 @@ struct Args {
     output: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Debug, Clone)]
+struct Header {
+    id: String,
+    title: String,
+    level: u8,
+}
+
+#[derive(Serialize, Debug, Clone)]
 struct PageData {
     title: String,
     content: String,
-    toc: Vec<TocItem>,
+    page_toc: Vec<Header>,     // Headers within the current page
+    sections: Vec<Section>,    // Global navigation
+    previous: Option<PageInfo>,
+    next: Option<PageInfo>,
 }
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Debug, Clone)]
 struct TocItem {
+    title: String,
+    path: String,
+}
+
+#[derive(Serialize, Debug, Clone)]
+struct Section {
+    title: String,
+    pages: Vec<PageInfo>,
+}
+
+#[derive(Serialize, Debug, Clone)]
+struct PageInfo {
     title: String,
     path: String,
 }
@@ -46,55 +68,124 @@ fn main() -> Result<()> {
     tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
     
     // Generate table of contents
-    let mut toc = Vec::new();
+    let mut toc: Vec<TocItem> = Vec::new();
     
-    // Process markdown files
+    // Create sections based on directory structure
+    let mut sections: Vec<Section> = Vec::new();
+    let mut root_pages: Vec<PageInfo> = Vec::new();
+
     for entry in WalkDir::new(&args.input) {
         let entry = entry?;
         if entry.path().extension().map_or(false, |e| e == "md") {
             let rel_path = entry.path().strip_prefix(&args.input)?;
-            let html_path = args.output.clone() + "/" + &rel_path.with_extension("html").display().to_string();
+            let parent_dir = rel_path.parent().and_then(|p| p.to_str()).unwrap_or("");
             
-            // Create necessary subdirectories
+            let page_info = PageInfo {
+                title: extract_title(&fs::read_to_string(entry.path())?)
+                    .unwrap_or_else(|| entry.path().file_stem()
+                        .map(|s| s.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "Untitled".to_string())),
+                path: rel_path.with_extension("html").display().to_string(),
+            };
+
+            if parent_dir.is_empty() {
+                root_pages.push(page_info);
+            } else {
+                if let Some(section) = sections.iter_mut().find(|s| s.title == parent_dir) {
+                    section.pages.push(page_info);
+                } else {
+                    sections.push(Section {
+                        title: parent_dir.to_string(),
+                        pages: vec![page_info],
+                    });
+                }
+            }
+        }
+    }
+
+    // Add root pages as a section if they exist
+    if !root_pages.is_empty() {
+        sections.insert(0, Section {
+            title: "Guide".to_string(),
+            pages: root_pages,
+        });
+    }
+
+    // Process markdown files
+    let mut all_pages: Vec<PageInfo> = Vec::new();
+    
+    // Collect only markdown files first
+    for entry in WalkDir::new(&args.input) {
+        let entry = entry?;
+        if entry.path().extension().map_or(false, |e| e == "md") {
+            let markdown_content = fs::read_to_string(entry.path())?;
+            let rel_path = entry.path().strip_prefix(&args.input)?;
+            
+            let page_info = PageInfo {
+                title: extract_title(&markdown_content)
+                    .unwrap_or_else(|| entry.path().file_stem()
+                        .map(|s| s.to_string_lossy().into_owned())
+                        .unwrap_or_else(|| "Untitled".to_string())),
+                path: rel_path.with_extension("html").display().to_string(),
+            };
+            
+            all_pages.push(page_info);
+        }
+    }
+    
+    // Second pass: generate pages with navigation
+    let total_pages = all_pages.len();
+    let mut current_page = 0;
+    
+    for entry in WalkDir::new(&args.input) {
+        let entry = entry?;
+        if entry.path().extension().map_or(false, |e| e == "md") {
+            let rel_path = entry.path().strip_prefix(&args.input)?;
+            let html_path = format!("{}/{}", args.output, rel_path.with_extension("html").display());
+            
             if let Some(parent) = std::path::Path::new(&html_path).parent() {
                 fs::create_dir_all(parent)?;
             }
             
-            // Read and convert markdown
             let markdown_content = fs::read_to_string(entry.path())?;
-
-            // Use the predefined GFM options
             let options = markdown::Options::gfm();
-
-            // Handle markdown conversion error
             let html_content = to_html_with_options(&markdown_content, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
             
-            // Fix 2: Proper string conversion for file name
-            let title = extract_title(&markdown_content)
-                .unwrap_or_else(|| {
-                    entry.path()
-                        .file_stem()
+            let headers = extract_headers(&markdown_content);
+            
+            // Safe navigation handling
+            let previous = if current_page > 0 {
+                Some(all_pages[current_page - 1].clone())
+            } else {
+                None
+            };
+            
+            let next = if current_page + 1 < total_pages {
+                Some(all_pages[current_page + 1].clone())
+            } else {
+                None
+            };
+            
+            let page_data = PageData {
+                title: extract_title(&markdown_content)
+                    .unwrap_or_else(|| entry.path().file_stem()
                         .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| "Untitled".to_string())
-                });
-            
-            // Add to TOC
-            toc.push(TocItem {
-                title: title.clone(),
-                path: rel_path.with_extension("html").display().to_string(),
-            });
-            
-            // Render page
-            let mut context = TeraContext::new();
-            context.insert("page", &PageData {
-                title,
+                        .unwrap_or_else(|| "Untitled".to_string())),
                 content: html_content,
-                toc: toc.clone(),
-            });
+                page_toc: headers,
+                sections: sections.clone(),
+                previous,
+                next,
+            };
+            
+            let mut context = TeraContext::new();
+            context.insert("page", &page_data);
             
             let rendered = tera.render("page", &context)?;
             fs::write(html_path, rendered)?;
+            
+            current_page += 1;
         }
     }
     
@@ -136,4 +227,43 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
     ).context("Failed to write TOC component")?;
     
     Ok(())
+}
+
+fn extract_headers(content: &str) -> Vec<Header> {
+    let mut headers = Vec::new();
+    
+    for line in content.lines() {
+        if line.starts_with('#') {
+            let level = line.chars().take_while(|&c| c == '#').count() as u8;
+            let title = line.chars()
+                .skip(level as usize)
+                .collect::<String>()
+                .trim()
+                .to_string();
+            let id = slugify(&title);
+            
+            headers.push(Header {
+                id,
+                title,
+                level,
+            });
+        }
+    }
+    
+    headers
+}
+
+fn slugify(text: &str) -> String {
+    text.to_lowercase()
+        .chars()
+        .map(|c| match c {
+            'a'..='z' | '0'..='9' => c,
+            ' ' | '-' | '_' => '-',
+            _ => '-',
+        })
+        .collect::<String>()
+        .split('-')
+        .filter(|s| !s.is_empty())
+        .collect::<Vec<_>>()
+        .join("-")
 }
