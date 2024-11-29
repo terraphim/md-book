@@ -7,6 +7,9 @@
             </a>
         </div>
         <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
             <div class="header-links">
                 <a href="https://github.com/yourusername/yourrepo" class="header-link" target="_blank">
                     <sl-icon name="github"></sl-icon>

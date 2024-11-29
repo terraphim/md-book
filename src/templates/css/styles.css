@@ -1,13 +1,30 @@
 :root {
     --sidebar-width: 300px;
     --toc-width: 240px;
-    --primary-color: #1284b9;
+    --primary-color: var(--sl-color-primary-600);
     --header-height: 60px;
-    --theme-text: #2c3e50;
-    --theme-text-light: #666;
-    --theme-bg: #ffffff;
-    --theme-bg-offset: #f4f4f4;
-    --theme-border: #ddd;
+    --theme-text: var(--sl-color-neutral-900);
+    --theme-text-light: var(--sl-color-neutral-600);
+    --theme-bg: var(--sl-color-neutral-0);
+    --theme-bg-offset: var(--sl-color-neutral-50);
+    --theme-border: var(--sl-color-neutral-200);
+}
+
+a {
+  color: var(--sl-color-neutral-700);
+  text-decoration: none;
+  transition: var(--sl-transition-medium) color;
+}
+
+a:hover {
+  color: var(--sl-color-primary-600);
+  text-decoration: none;
+}
+
+a.active,
+.active > a {
+  color: var(--sl-color-primary-600);
+  font-weight: var(--sl-font-weight-semibold);
 }
 
 body {
@@ -260,7 +277,7 @@ doc-toc {
 }
 
 .footer-link:hover {
-    color: var(--primary-color);
+    color: var(--sl-color-primary-600);
 }
 
 /* Navigation Footer */
@@ -387,20 +404,12 @@ sl-input {
     padding: var(--sl-spacing-large);
 }
 
-/* Sidebar styles */
-.sidebar a.active {
-    color: var(--primary-color);
-    font-weight: 600;
-}
-
-.sidebar a.active::before {
-    content: "";
-    position: absolute;
-    left: -1rem;
-    width: 3px;
-    height: 1.5rem;
-    background: var(--primary-color);
-    border-radius: 0 4px 4px 0;
+/* Add these global list resets */
+doc-sidebar ul,
+doc-sidebar li {
+    list-style: none !important;
+    padding: 0;
+    margin: 0;
 }
 
 /* TOC styles */
@@ -559,7 +568,7 @@ sl-input {
 }
 
 .footer-link:hover {
-    color: var(--primary-color);
+    color: var(--sl-color-primary-600);
 }
 
 @media (max-width: 640px) {
@@ -676,7 +685,7 @@ sl-input {
 }
 
 .header-link:hover {
-    color: var(--primary-color);
+    color: var(--sl-color-primary-600);
 }
 
 @media (max-width: 768px) {
@@ -687,4 +696,19 @@ sl-input {
     .header-link span {
         display: none;
     }
-} 
+}
+
+.header-search {
+    margin-right: 2rem;
+}
+
+.header-search::part(base) {
+    width: 200px;
+    background: var(--sl-color-neutral-50);
+}
+
+@media (max-width: 768px) {
+    .header-search {
+        display: none;
+    }
+}

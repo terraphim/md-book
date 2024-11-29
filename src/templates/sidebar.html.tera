@@ -1,16 +1,17 @@
-<ul class="nav-groups">
+<nav class="sidebar-nav">
     {% for section in page.sections %}
-    <li class="nav-group">
-        <div class="nav-group-title">{{ section.title }}</div>
-        <ul>
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">{{ section.title }}</h2>
+        <ul class="sidebar-items">
             {% for page in section.pages %}
-            <li>
-                <a href="{{ page.path | safe }}" {% if page.path == current_path %}class="active"{% endif %}>
+            <li class="sidebar-item">
+                <a href="{{ page.path | safe }}" 
+                   {% if page.path | trim_start_matches(pat="/") == current_path %}class="active"{% endif %}>
                     {{ page.title }}
                 </a>
             </li>
             {% endfor %}
         </ul>
-    </li>
+    </div>
     {% endfor %}
-</ul> 
+</nav>
