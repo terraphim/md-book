@@ -10,9 +10,12 @@
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
     <script src="/components/doc-sidebar.js" type="module"></script>
     <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
 </head>
 <body>
     <div class="container">
+    {% include "header" %}
         <doc-sidebar>
             {% include "sidebar" %}
         </doc-sidebar>
@@ -35,11 +38,19 @@
                     {% endif %}
                 </div>
             </article>
-
         </main>
         <doc-toc>
         </doc-toc>
     </div>
     {% include "footer" %}
+    
+    <!-- <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            mermaid.initialize({ startOnLoad: true });
+            mermaid.run({
+                querySelector: '.language-mermaid',
+            });
+        });
+    </script> -->
 </body>
 </html> 

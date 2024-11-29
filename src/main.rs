@@ -55,6 +55,7 @@ fn main() -> Result<()> {
     tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
     tera.add_raw_template("sidebar", include_str!("templates/sidebar.html.tera"))?;
     tera.add_raw_template("footer", include_str!("templates/footer.html.tera"))?;
+    tera.add_raw_template("header", include_str!("templates/header.html.tera"))?;
     
 
 
@@ -228,11 +229,30 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
-    // Copy CSS
-    fs::write(
-        format!("{}/styles.css", output_dir),
-        include_str!("templates/styles.css"),
-    ).context("Failed to write CSS file")?;
+ 
+    // Copy CSS directory
+    let css_source = "src/templates/css";
+    let css_dest = format!("{}/css/", output_dir);
+    fs::create_dir_all(&css_dest)?;
+    for entry in WalkDir::new(css_source) {
+        let entry = entry?;
+        let dest_path = css_dest.clone() + entry.path().strip_prefix(css_source)?.to_str().unwrap();
+        if entry.file_type().is_file() {
+            fs::copy(entry.path(), dest_path).context(format!("Failed to copy CSS file: {:?}", entry.path()))?;
+        }
+    }
+
+    // Copy JS directory
+    let js_source = "src/templates/js";
+    let js_dest = format!("{}/js/", output_dir);
+    fs::create_dir_all(&js_dest)?;
+    for entry in WalkDir::new(js_source) {
+        let entry = entry?;
+        let dest_path = js_dest.clone() + entry.path().strip_prefix(js_source)?.to_str().unwrap();
+        if entry.file_type().is_file() {
+            fs::copy(entry.path(), dest_path).context(format!("Failed to copy JS file: {:?}", entry.path()))?;
+        }
+    }
     
     // Copy web components
     fs::write(
@@ -244,6 +264,8 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
         format!("{}/components/doc-toc.js", output_dir),
         include_str!("templates/components/doc-toc.js"),
     ).context("Failed to write TOC component")?;
+    //copy templates js to output_dir
     
+
     Ok(())
 }

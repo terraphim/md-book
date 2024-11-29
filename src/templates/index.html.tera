@@ -11,6 +11,7 @@
 </head>
 <body>
     <div class="container index-container">
+        {% include "header" %}
         <main class="content index-content">
             {% if has_index %}
                 <article class="main-article">
