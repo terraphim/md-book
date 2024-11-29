@@ -159,8 +159,72 @@ code {
 .main-article {
     min-height: 100vh;
     width: 100%;
-    max-width: 800px;
+    max-width: 1400px;
     margin: 0 auto;
+    padding: 0 2rem;
+}
+
+/* Add column layout for article content */
+.main-article > p,
+.main-article > ul,
+.main-article > ol {
+    column-width: 35ch;
+    column-gap: 4rem;
+    column-rule: 1px solid var(--theme-border);
+}
+
+/* Ensure headings and code blocks span all columns */
+.main-article > h1,
+.main-article > h2,
+.main-article > h3,
+.main-article > h4,
+.main-article > h5,
+.main-article > h6,
+.main-article > pre,
+.main-article > .nav-footer {
+    column-span: all;
+}
+
+/* Prevent orphaned headings */
+.main-article > h2,
+.main-article > h3,
+.main-article > h4,
+.main-article > h5,
+.main-article > h6 {
+    break-after: avoid;
+}
+
+/* Prevent code blocks from breaking across columns */
+.main-article > pre {
+    break-inside: avoid;
+    margin: 2rem 0;
+}
+
+/* Adjust spacing for better readability */
+.main-article > * + * {
+    margin-top: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .main-article {
+        max-width: 800px;
+    }
+    
+    .main-article > p,
+    .main-article > ul,
+    .main-article > ol {
+        column-width: auto;
+        column-count: 1;
+        column-gap: 0;
+        column-rule: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-article {
+        padding: 0 1rem;
+    }
 }
 
 sl-input {
