@@ -1,0 +1,16 @@
+<ul class="nav-groups">
+    {% for section in page.sections %}
+    <li class="nav-group">
+        <div class="nav-group-title">{{ section.title }}</div>
+        <ul>
+            {% for page in section.pages %}
+            <li>
+                <a href="{{ page.path | safe }}" {% if page.path == current_path %}class="active"{% endif %}>
+                    {{ page.title }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endfor %}
+</ul> 

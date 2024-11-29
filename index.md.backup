@@ -1,0 +1,58 @@
+# Terraphim AI Assistant: Your Personal AI Assistant Under Your Control
+
+<!--desc: A very easiest and easy-to-use document site generation tool, you can even use it without reading the documentation.-->
+
+<l-m src="https://cdn.jsdelivr.net/npm/obook@2.1.44/blocks/simp-block.html"></l-m>
+
+<simp-block>
+
+<img src="../desktop/public/180x180.png" class="logo" />
+
+## What is Terraphim AI Assistant?
+
+### If you just want to focus on getting things done, then Terraphim AI Assistant is your best choice.
+
+[Use Cases](./Use-cases.md)
+
+</simp-block>
+
+<simp-block>
+
+## Extremely Simple
+
+
+</simp-block>
+
+<simp-block>
+
+## Completely free
+
+### You can use it without any cost.
+
+</simp-block>
+
+<simp-block>
+
+## Powerful Features
+
+### Everything is under your control.
+
+</simp-block>
+
+<simp-block>
+
+## Multi-language support
+
+### Website native components provide multilingual support
+
+Currently supports **English**, **Simplified Chinese**, **Traditional Chinese**, **Spanish**, **Japanese**, **Korean**.
+
+</simp-block>
+
+<simp-block>
+
+## Case study
+
+The current site is a case study.
+
+</simp-block>

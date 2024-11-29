@@ -1,0 +1,13 @@
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© {{ year }} Documentation. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/yourusername/yourrepo" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>

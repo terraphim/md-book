@@ -31,22 +31,28 @@ class DocSidebar extends HTMLElement {
           font-weight: 600;
           color: var(--sl-color-neutral-700);
           margin-bottom: 0.5rem;
+          font-size: 0.875rem;
+          text-transform: uppercase;
         }
         ul {
           list-style: none;
           padding: 0;
           margin: 0;
         }
-        a {
+        li ul {
+          padding-left: 0.5rem;
+        }
+        ::slotted(a) {
           color: var(--sl-color-neutral-700);
           text-decoration: none;
           display: block;
           padding: 0.25rem 0;
+          font-size: 0.9375rem;
         }
-        a:hover {
+        ::slotted(a:hover) {
           color: var(--sl-color-primary-600);
         }
-        a.active {
+        ::slotted(a.active) {
           color: var(--sl-color-primary-600);
           font-weight: 500;
         }

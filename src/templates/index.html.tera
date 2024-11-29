@@ -3,35 +3,43 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Title</title>
+    <title>{{ title }}</title>
     <link rel="stylesheet" href="/styles.css">
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
-    <script src="/components/doc-sidebar.js" type="module"></script>
-    <script src="/components/doc-toc.js" type="module"></script>
 </head>
 <body>
-    <div class="container">
-        <doc-sidebar>
-            <ul class="nav-groups">
-                {% for page in pages %}
-                <li class="nav-group">
-                    <div class="nav-group-title">{{ page.title }}</div>
-                    <ul>
-                        <li>
-                            <a href="/{{ page.path | safe }}">{{ page.title }}</a>
-                        </li>
-                    </ul>
-                </li>
-                {% endfor %}
-            </ul>
-        </doc-sidebar>
-
-        <main class="content">
-            Other content
+    <div class="container index-container">
+        <main class="content index-content">
+            {% if has_index %}
+                <article class="main-article">
+                    {{ content | safe }}
+                </article>
+            {% else %}
+                <div class="index-header">
+                    <h1>Documentation</h1>
+                </div>
+                <div class="card-grid">
+                    {% for section in sections %}
+                        <div class="section-group">
+                            <h2>{{ section.title }}</h2>
+                            <div class="card-group">
+                                {% for page in section.pages %}
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">{{ page.title }}</h3>
+                                        <sl-button href="{{ page.path }}" variant="primary">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </main>
-
     </div>
 </body>
 </html> 

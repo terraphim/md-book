@@ -22,11 +22,16 @@ body {
 .container {
     display: grid;
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
+    grid-template-rows: 1fr auto;
+    grid-template-areas: 
+        "sidebar main toc"
+        "footer footer footer";
     min-height: 100vh;
     gap: 0;
 }
 
 doc-sidebar {
+    grid-area: sidebar;
     position: sticky;
     top: 0;
     height: 100vh;
@@ -36,12 +41,14 @@ doc-sidebar {
 }
 
 .content {
+    grid-area: main;
     padding: 2rem;
     max-width: 100%;
     overflow-x: auto;
 }
 
 doc-toc {
+    grid-area: toc;
     position: sticky;
     top: 0;
     height: 100vh;
@@ -165,9 +172,12 @@ sl-input {
 @media (max-width: 1200px) {
     .container {
         grid-template-columns: var(--sidebar-width) 1fr;
+        grid-template-areas: 
+            "sidebar main"
+            "footer footer";
     }
     
-    .toc {
+    doc-toc {
         display: none;
     }
 }
@@ -175,9 +185,12 @@ sl-input {
 @media (max-width: 768px) {
     .container {
         grid-template-columns: 1fr;
+        grid-template-areas: 
+            "main"
+            "footer";
     }
     
-    .sidebar {
+    doc-sidebar {
         display: none;
     }
     
@@ -263,4 +276,152 @@ sl-input {
 .toc-item.level-3 { padding-left: 2rem; }
 .toc-item.level-4 { padding-left: 3rem; }
 .toc-item.level-5 { padding-left: 4rem; }
-.toc-item.level-6 { padding-left: 5rem; } 
+.toc-item.level-6 { padding-left: 5rem; }
+
+.card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    padding: 1rem 0;
+}
+
+.section-group h2 {
+    margin-bottom: 1rem;
+    color: var(--sl-color-neutral-700);
+}
+
+.card-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.doc-card {
+    --sl-panel-background-color: var(--sl-color-neutral-50);
+}
+
+.doc-card::part(header) {
+    padding: var(--sl-spacing-large);
+}
+
+.doc-card h3 {
+    margin: 0;
+    font-size: var(--sl-font-size-medium);
+    color: var(--sl-color-neutral-700);
+}
+
+.doc-card::part(body) {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--sl-spacing-large);
+}
+
+@media (max-width: 640px) {
+    .card-group {
+        grid-template-columns: 1fr;
+    }
+}
+
+.index-container {
+    display: block !important;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+.index-content {
+    max-width: none;
+    padding: 3rem 0;
+}
+
+.index-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.index-header h1 {
+    font-size: 2.5rem;
+    color: var(--sl-color-neutral-900);
+    margin: 0;
+}
+
+.card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+}
+
+.section-group h2 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+    color: var(--sl-color-neutral-800);
+    border-bottom: 2px solid var(--sl-color-neutral-200);
+    padding-bottom: 0.5rem;
+}
+
+.card-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .index-container {
+        padding: 0 1rem;
+    }
+    
+    .index-content {
+        padding: 2rem 0;
+    }
+    
+    .card-grid {
+        gap: 3rem;
+    }
+}
+
+.site-footer {
+    grid-area: footer;
+    margin-top: auto;
+    padding: 2rem;
+    background: var(--sl-color-neutral-50);
+    border-top: 1px solid var(--sl-color-neutral-200);
+}
+
+.footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.footer-section {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.copyright {
+    color: var(--sl-color-neutral-600);
+    margin: 0;
+}
+
+.footer-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--sl-color-neutral-600);
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    color: var(--primary-color);
+}
+
+@media (max-width: 640px) {
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+} 

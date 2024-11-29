@@ -14,22 +14,7 @@
 <body>
     <div class="container">
         <doc-sidebar>
-            {% if toc %}
-            <ul>
-                {% for h1 in toc %}
-                <li>
-                    <a href="#{{ h1.id | safe }}">{{ h1.title }}</a>
-                    {% if h1.children %}
-                    <ul>
-                        {% for h2 in h1.children %}
-                        <li><a href="#{{ h2.id | safe }}">{{ h2.title }}</a></li>
-                        {% endfor %}
-                    </ul>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
-            {% endif %}
+            {% include "sidebar" %}
         </doc-sidebar>
         <main class="content">
             <article class="main-article">
@@ -44,16 +29,17 @@
                     {% endif %}
                     {% if page.next %}
                     <sl-button href="{{ page.next.path | safe }}" variant="default" class="nav-next">
-                            {{ page.next.title }}
+                        {{ page.next.title }}
                         <sl-icon slot="suffix" name="arrow-right"></sl-icon>
                     </sl-button>
                     {% endif %}
                 </div>
             </article>
+
         </main>
         <doc-toc>
         </doc-toc>
-
     </div>
+    {% include "footer" %}
 </body>
 </html> 

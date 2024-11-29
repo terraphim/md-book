@@ -1,5 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+use jiff::{Zoned, Unit};
 use markdown::{to_html_with_options, Options};
 use serde::Serialize;
 use std::fs;
@@ -27,7 +28,6 @@ struct PageData {
     next: Option<PageInfo>,
 }
 
-
 #[derive(Serialize, Debug, Clone)]
 struct Section {
     title: String,
@@ -53,8 +53,11 @@ fn main() -> Result<()> {
     let mut tera = Tera::default();
     tera.add_raw_template("page", include_str!("templates/page.html.tera"))?;
     tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
+    tera.add_raw_template("sidebar", include_str!("templates/sidebar.html.tera"))?;
+    tera.add_raw_template("footer", include_str!("templates/footer.html.tera"))?;
     
-    
+
+
     // Create sections based on directory structure
     let mut sections: Vec<Section> = Vec::new();
     let mut root_pages: Vec<PageInfo> = Vec::new();
@@ -70,7 +73,7 @@ fn main() -> Result<()> {
                     .unwrap_or_else(|| entry.path().file_stem()
                         .map(|s| s.to_string_lossy().into_owned())
                         .unwrap_or_else(|| "Untitled".to_string())),
-                path: rel_path.with_extension("html").display().to_string(),
+                path: format!("/{}", rel_path.with_extension("html").display().to_string()),
             };
 
             if parent_dir.is_empty() {
@@ -111,7 +114,7 @@ fn main() -> Result<()> {
                     .unwrap_or_else(|| entry.path().file_stem()
                         .map(|s| s.to_string_lossy().into_owned())
                         .unwrap_or_else(|| "Untitled".to_string())),
-                path: rel_path.with_extension("html").display().to_string(),
+                path: format!("/{}", rel_path.with_extension("html").display().to_string()),
             };
             
             all_pages.push(page_info);
@@ -122,6 +125,14 @@ fn main() -> Result<()> {
     let total_pages = all_pages.len();
     let mut current_page = 0;
     
+    println!("Total pages: {}", total_pages);
+    let mut context = TeraContext::new();
+    // Add current year to all contexts
+    let now = Zoned::now().round(Unit::Second)?;
+    let current_year = now.year();
+    context.insert("year", &current_year);
+    context.insert("sections", &all_pages);
+
     for entry in WalkDir::new(&args.input) {
         let entry = entry?;
         if entry.path().extension().map_or(false, |e| e == "md") {
@@ -163,7 +174,9 @@ fn main() -> Result<()> {
             };
             
             let mut context = TeraContext::new();
+            context.insert("year", &current_year);
             context.insert("page", &page_data);
+            context.insert("current_path", &rel_path.with_extension("html").display().to_string());
             
             let rendered = tera.render("page", &context)?;
             fs::write(html_path, rendered)?;
@@ -174,7 +187,30 @@ fn main() -> Result<()> {
     
     // Generate index page
     let mut context = TeraContext::new();
-    context.insert("pages", &all_pages);
+    
+    // Check if index.md exists in root pages
+    let index_page = all_pages.iter().find(|p| p.path == "/index.html");
+    
+    if let Some(index) = index_page {
+        // If index.md exists, use its content
+        let index_path = std::path::Path::new(&args.input).join("index.md");
+        let markdown_content = fs::read_to_string(index_path)?;
+        let options = markdown::Options::gfm();
+        let html_content = to_html_with_options(&markdown_content, &options)
+            .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+        
+        context.insert("has_index", &true);
+        context.insert("title", &index.title);
+        context.insert("content", &html_content);
+    } else {
+        // If no index.md, use the default template with cards
+        context.insert("has_index", &false);
+        context.insert("title", &"Documentation");
+    }
+    
+    context.insert("sections", &sections);
+    context.insert("current_path", &"index.html");
+    
     let rendered = tera.render("index", &context)?;
     fs::write(format!("{}/index.html", args.output), rendered)?;
     
