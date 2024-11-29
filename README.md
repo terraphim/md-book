@@ -25,3 +25,8 @@ Or anything you want to change in the src/templates folder, it's a standard tera
 - Code blocks with syntax highlighting
 - Copy to clipboard button (doesn't work)
 - Better default styling
+
+# Screenshots
+
+![screen_resize](gif/screen_resize.gif)
+![screen](gif/screen.gif)
