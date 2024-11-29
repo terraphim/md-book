@@ -38,18 +38,12 @@ class DocSidebar extends HTMLElement {
         }
 
         .sidebar-section-title {
-          display: inline-flex;
-          align-items: center;
           font-family: var(--sl-font-sans);
           font-size: var(--sl-font-size-small);
           font-weight: var(--sl-font-weight-semibold);
           text-transform: uppercase;
-          color: var(--sl-color-neutral-100);
-          background: var(--sl-color-neutral-100);
-          border: solid 1px var(--sl-color-neutral-200);
-          padding: var(--sl-spacing-x-small) var(--sl-spacing-small);
-          margin: 0 0 var(--sl-spacing-medium);
-          border-radius: var(--sl-border-radius-medium);
+          color: var(--sl-color-neutral-500);
+          margin-bottom: var(--sl-spacing-medium);
         }
 
         .sidebar-items {

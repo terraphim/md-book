@@ -712,3 +712,48 @@ doc-sidebar li {
         display: none;
     }
 }
+
+.header-links sl-icon {
+    font-size: 1.25rem;
+    margin-right: 0.5rem;
+}
+
+.header-search sl-icon {
+    font-size: 1.25rem;
+    margin-right: 0.3rem;
+}
+
+/* Code block styling */
+pre {
+  position: relative;
+  padding: var(--sl-spacing-medium);
+  padding-top: calc(var(--sl-spacing-medium) + 2em);
+  background: var(--sl-color-neutral-50);
+  border-radius: var(--sl-border-radius-medium);
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+pre code {
+  font-family: var(--sl-font-mono);
+  font-size: var(--sl-font-size-small);
+  line-height: var(--sl-line-height-dense);
+  white-space: pre;
+  display: block;
+}
+
+/* Copy button positioning */
+pre sl-copy-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  border-top-left-radius: var(--sl-border-radius-medium);
+  border-bottom-right-radius: var(--sl-border-radius-small);
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+pre:hover sl-copy-button {
+  opacity: 1;
+}

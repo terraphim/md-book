@@ -13,11 +13,11 @@
             <div class="header-links">
                 <a href="https://github.com/yourusername/yourrepo" class="header-link" target="_blank">
                     <sl-icon name="github"></sl-icon>
-                    <span>GitHub</span>
                 </a>
+            </div>
+            <div class="header-links">
                 <a href="https://github.com/yourusername/yourrepo/edit/main/{{ current_path }}" class="header-link" target="_blank">
                     <sl-icon name="pencil-square"></sl-icon>
-                    <span>Edit this page</span>
                 </a>
             </div>
         </div>
