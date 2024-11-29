@@ -12,11 +12,6 @@
     <script src="/components/doc-toc.js" type="module"></script>
     <script src="/js/mermaid.min.js" type="module"></script>
     <script src="/js/mermaid-init.js" type="module"></script>
-
-    <!-- <script src="/js/highlight.js" type="module"></script> -->
-    <!-- <link rel="stylesheet" href="/css/highlight.css"> -->
-    <!-- <script src="/js/code-copy.js" type="module"></script> -->
-    
 </head>
 <body>
     <div class="container">
