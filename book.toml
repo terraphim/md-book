@@ -1,9 +1,9 @@
 [book]
 title = "mdBook test book"
 description = "A demo book to test and validate changes"
-authors = ["YJDoc2"]
+authors = ["Alex Mikhalev"]
 language = "en"
-
+logo = "/img/terraphim_gray.png"
 [rust]
 edition = "2018"
 

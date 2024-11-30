@@ -2,9 +2,9 @@
     <div class="header-content">
         <div class="header-left">
             <a href="/" class="header-logo">
-                <sl-icon name="book"></sl-icon>
-                <span class="header-title">Documentation</span>
+                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img">
             </a>
+            <span class="header-title">{{ config.book.title }}</span>
         </div>
         <div class="header-right">
             <sl-input placeholder="Search docs..." size="small" clearable class="header-search">
