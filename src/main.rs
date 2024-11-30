@@ -145,7 +145,7 @@ fn main() -> Result<()> {
     
     // Add syntax highlighting CSS
     let ts = ThemeSet::load_defaults();
-    let theme = &ts.themes["Solarized (dark)"];
+    let theme = &ts.themes["Solarized (light)"];
     let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
         .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
     
@@ -285,14 +285,39 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
 
 fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Result<String> {
     let syntax = match language {
-        Some("rust") => ss.find_syntax_by_extension("rs"),
-        Some(lang) => ss.find_syntax_by_extension(lang)
-            .or_else(|| ss.find_syntax_by_name(lang))
-            .or_else(|| ss.find_syntax_by_token(lang))
-            .or_else(|| Some(ss.find_syntax_plain_text())), // Fallback to plain text
-        None => Some(ss.find_syntax_plain_text()),
-    }.ok_or_else(|| anyhow::anyhow!("Syntax not found for language: {:?}", language))?;
+        Some("rust") => {
+            let syntax = ss.find_syntax_by_extension("rs")
+                .ok_or_else(|| anyhow::anyhow!("Rust syntax not found"))?;
+            // Check if code block has editable tag
+            if code.contains("<--editable-->") {
+                let code_with_comment = format!("{}\n// <--editable-->", code);
+                process_rust_code(&code_with_comment, syntax, ss)?
+            } else {
+                process_rust_code(code, syntax, ss)?
+            }
+        },
+        Some("mermaid") => {
+            // For markdown, preserve the content exactly as is
+            format!("<pre class=\"code\"><code class=\"language-mermaid\">{}</code></pre>", 
+                   html_escape::encode_text(code))
+        },
+        Some(lang) => {
+            let syntax = ss.find_syntax_by_extension(lang)
+                .or_else(|| ss.find_syntax_by_name(lang))
+                .or_else(|| ss.find_syntax_by_token(lang))
+                .or_else(|| Some(ss.find_syntax_plain_text()))
+                .ok_or_else(|| anyhow::anyhow!("Syntax not found for language: {:?}", lang))?;
+            process_generic_code(code, syntax, ss)?
+        },
+        None => {
+            let syntax = ss.find_syntax_plain_text();
+            process_generic_code(code, syntax, ss)?
+        }
+    };
+    Ok(syntax)
+}
 
+fn process_rust_code(code: &str, syntax: &syntect::parsing::SyntaxReference, ss: &SyntaxSet) -> Result<String> {
     let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
         syntax,
         ss,
@@ -303,10 +328,23 @@ fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Res
         html_generator.parse_html_for_line_which_includes_newline(line)
             .map_err(|e| anyhow::anyhow!("HTML generation error: {:?}", e))?;
     }
-    let to_html = html_generator.finalize();
-    //add pre tag to the html with class code
-    let html_with_pre = format!("<pre class=\"code\"><code>{}</code></pre>", to_html);
-    Ok(html_with_pre)
+    let html = html_generator.finalize();
+    Ok(format!("<pre class=\"code rust\"><code>{}</code></pre>", html))
+}
+
+fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, ss: &SyntaxSet) -> Result<String> {
+    let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
+        syntax,
+        ss,
+        ClassStyle::Spaced
+    );
+
+    for line in LinesWithEndings::from(code) {
+        html_generator.parse_html_for_line_which_includes_newline(line)
+            .map_err(|e| anyhow::anyhow!("HTML generation error: {:?}", e))?;
+    }
+    let html = html_generator.finalize();
+    Ok(format!("<pre class=\"code\"><code>{}</code></pre>", html))
 }
 
 fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<String> {
