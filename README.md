@@ -30,3 +30,32 @@ Or anything you want to change in the src/templates folder, it's a standard tera
 
 ![screen_resize](gif/screen_resize.gif)
 ![screen](gif/screen.gif)
+
+# Configuration
+
+You can add a book.toml file to the input directory to configure the book.
+
+Supports TOML configuration via book.toml
+Allows overriding with environment variables (prefixed with MDBOOK_)
+Supports command line arguments
+Enables shell expansion in config file paths
+Provides default values for optional fields
+Example usage:
+
+```bash
+# Using environment variables
+MDBOOK_BOOK.TITLE="My Book" ./md-book -i input -o output
+
+# Using custom config file
+./md-book -i input -o output -c ~/my-config.toml
+
+# Config values can be nested using underscore
+MDBOOK_OUTPUT.HTML.MATHJAX_SUPPORT=true ./md-book -i input -o output
+```
+The configuration system follows the priority order:
+1. Command line arguments (highest priority)
+2. Environment variables (prefixed with MDBOOK_)
+3. Custom config file (if provided)
+4. Default book.toml
+5. Default values (lowest priority)
+you shall be able to feed config into json and yaml files.

@@ -10,8 +10,10 @@ use syntect::highlighting::ThemeSet;
 use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 use syntect::util::LinesWithEndings;
-use markdown::mdast::{Node, Code};
+use markdown::mdast::Node;
 use markdown::to_mdast;
+mod config;
+use config::BookConfig;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -23,6 +25,10 @@ struct Args {
     /// Output directory for HTML files
     #[arg(short, long)]
     output: String,
+
+    /// Optional path to config file
+    #[arg(short, long)]
+    config: Option<String>,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -49,13 +55,16 @@ struct PageInfo {
 fn main() -> Result<()> {
     let args = Args::parse();
     
+    // Load configuration
+    let config = config::load_config(args.config.as_deref())?;
+    println!("{:#?}", config);
     // Create output directory if it doesn't exist
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
     copy_static_assets(&args.output)?;
     
-    // Initialize Tera template engine
+    // Initialize Tera 
     let mut tera = Tera::default();
     tera.add_raw_template("page", include_str!("templates/page.html.tera"))?;
     tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
@@ -192,6 +201,7 @@ fn main() -> Result<()> {
             let mut context = TeraContext::new();
             context.insert("year", &current_year);
             context.insert("page", &page_data);
+            context.insert("config", &config);
             context.insert("current_path", &rel_path.with_extension("html").display().to_string());
             
             let rendered = tera.render("page", &context)?;
@@ -221,7 +231,8 @@ fn main() -> Result<()> {
         context.insert("has_index", &false);
         context.insert("title", &"Documentation");
     }
-    
+
+    context.insert("config", &config);
     context.insert("sections", &sections);
     context.insert("current_path", &"index.html");
     
