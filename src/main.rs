@@ -6,6 +6,12 @@ use serde::Serialize;
 use std::fs;
 use tera::{Context as TeraContext, Tera};
 use walkdir::WalkDir;
+use syntect::highlighting::ThemeSet;
+use syntect::html::{ClassStyle, ClassedHTMLGenerator};
+use syntect::parsing::SyntaxSet;
+use syntect::util::LinesWithEndings;
+use markdown::mdast::{Node, Code};
+use markdown::to_mdast;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -134,6 +140,17 @@ fn main() -> Result<()> {
     context.insert("year", &current_year);
     context.insert("sections", &all_pages);
 
+    // Initialize SyntaxSet once
+    let ss = SyntaxSet::load_defaults_newlines();
+    
+    // Add syntax highlighting CSS
+    let ts = ThemeSet::load_defaults();
+    let theme = &ts.themes["Solarized (dark)"];
+    let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
+        .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
+    
+    fs::write(format!("{}/css/syntax.css", args.output), syntax_css)?;
+
     for entry in WalkDir::new(&args.input) {
         let entry = entry?;
         if entry.path().extension().map_or(false, |e| e == "md") {
@@ -145,9 +162,7 @@ fn main() -> Result<()> {
             }
             
             let markdown_content = fs::read_to_string(entry.path())?;
-            let options = markdown::Options::gfm();
-            let html_content = to_html_with_options(&markdown_content, &options)
-                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+            let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
             
             
             // Safe navigation handling
@@ -196,9 +211,7 @@ fn main() -> Result<()> {
         // If index.md exists, use its content
         let index_path = std::path::Path::new(&args.input).join("index.md");
         let markdown_content = fs::read_to_string(index_path)?;
-        let options = markdown::Options::gfm();
-        let html_content = to_html_with_options(&markdown_content, &options)
-            .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+        let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
         
         context.insert("has_index", &true);
         context.insert("title", &index.title);
@@ -268,4 +281,84 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
     
 
     Ok(())
+}
+
+fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Result<String> {
+    let syntax = match language {
+        Some("rust") => ss.find_syntax_by_extension("rs"),
+        Some(lang) => ss.find_syntax_by_extension(lang)
+            .or_else(|| ss.find_syntax_by_name(lang))
+            .or_else(|| ss.find_syntax_by_token(lang))
+            .or_else(|| Some(ss.find_syntax_plain_text())), // Fallback to plain text
+        None => Some(ss.find_syntax_plain_text()),
+    }.ok_or_else(|| anyhow::anyhow!("Syntax not found for language: {:?}", language))?;
+
+    let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
+        syntax,
+        ss,
+        ClassStyle::Spaced
+    );
+
+    for line in LinesWithEndings::from(code) {
+        html_generator.parse_html_for_line_which_includes_newline(line)
+            .map_err(|e| anyhow::anyhow!("HTML generation error: {:?}", e))?;
+    }
+    let to_html = html_generator.finalize();
+    //add pre tag to the html with class code
+    let html_with_pre = format!("<pre class=\"code\"><code>{}</code></pre>", to_html);
+    Ok(html_with_pre)
+}
+
+fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<String> {
+    let ast = to_mdast(content, &markdown::ParseOptions::default())
+        .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
+    
+    let mut parts = Vec::new();
+    let mut last_pos = 0;
+    
+    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize) -> Result<()> {
+        match node {
+            Node::Code(code) => {
+                // Add text before this code block
+                if let Some(pos) = &code.position {
+                    if *last_pos < pos.start.offset {
+                        let text = &content[*last_pos..pos.start.offset];
+                        if !text.trim().is_empty() {
+                            parts.push(to_html_with_options(text, &markdown::Options::gfm())
+                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
+                        }
+                    }
+                    
+                    // Process code block with syntax highlighting
+                    let highlighted = process_code_block(&code.value, code.lang.as_deref(), ss)?;
+                    parts.push(highlighted);
+                    
+                    *last_pos = pos.end.offset;
+                }
+            },
+            _ => {
+                // Process children recursively
+                if let Some(children) = node.children() {
+                    for child in children {
+                        process_node(child, ss, content, parts, last_pos)?;
+                    }
+                }
+            }
+        }
+        Ok(())
+    }
+    
+    // Process the AST
+    process_node(&ast, ss, content, &mut parts, &mut last_pos)?;
+    
+    // Add any remaining content
+    if last_pos < content.len() {
+        let remaining = &content[last_pos..];
+        if !remaining.trim().is_empty() {
+            parts.push(to_html_with_options(remaining, &markdown::Options::gfm())
+                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
+        }
+    }
+    
+    Ok(parts.join(""))
 }

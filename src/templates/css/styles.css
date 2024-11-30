@@ -724,26 +724,44 @@ doc-sidebar li {
 }
 
 /* Code blocks */
-pre[class*="language-"] {
+pre {
     margin: 2rem 0;
     padding: 1.5rem;
     border-radius: var(--sl-border-radius-medium);
     background: var(--sl-color-neutral-50);
     border: 1px solid var(--sl-color-neutral-200);
     overflow-x: auto;
+    column-span: all;
+    break-inside: avoid;
+    white-space: pre !important;
 }
 
-/* Inline code */
+/* Code block content */
+pre code {
+    display: block;
+    line-height: 1.5;
+    white-space: pre !important;
+}
+
+/* Remove text styling from highlighted code */
+pre .code {
+    display: block;
+    white-space: pre !important;
+    word-break: normal;
+    word-wrap: normal;
+    column-width: auto;
+    column-count: 1;
+    column-gap: 0;
+    column-rule: none;
+    hyphens: none;
+}
+
+/* Ensure inline code doesn't break */
 :not(pre) > code {
     padding: 0.2em 0.4em;
     background: var(--sl-color-neutral-50);
     border: 1px solid var(--sl-color-neutral-200);
     border-radius: var(--sl-border-radius-small);
     font-size: 0.9em;
-}
-
-/* Ensure code blocks don't break columns */
-.main-article > pre {
-    column-span: all;
-    break-inside: avoid;
+    white-space: nowrap;
 }
