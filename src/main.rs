@@ -242,7 +242,6 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
- 
     // Copy CSS directory
     let css_source = "src/templates/css";
     let css_dest = format!("{}/css/", output_dir);
@@ -267,18 +266,11 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
         }
     }
     
-    // Copy web components
-    fs::write(
-        format!("{}/components/doc-sidebar.js", output_dir),
-        include_str!("templates/components/doc-sidebar.js"),
-    ).context("Failed to write sidebar component")?;
-    
+    // Copy only TOC web component
     fs::write(
         format!("{}/components/doc-toc.js", output_dir),
         include_str!("templates/components/doc-toc.js"),
     ).context("Failed to write TOC component")?;
-    //copy templates js to output_dir
-    
 
     Ok(())
 }

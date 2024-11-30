@@ -11,7 +11,7 @@
 }
 
 a {
-  color: var(--sl-color-neutral-800);
+  color: var(--sl-color-neutral-600);
   text-decoration: none;
   transition: var(--sl-transition-medium) color;
 }
@@ -23,7 +23,7 @@ a:hover {
 
 a.active,
 .active > a {
-  color: var(--sl-color-primary-600);
+  color: var(--sl-color-primary-400);
   font-weight: var(--sl-font-weight-semibold);
 }
 
@@ -52,7 +52,7 @@ body {
     grid-area: header;
 }
 
-doc-sidebar {
+.sidebar {
     grid-area: sidebar;
     position: sticky;
     top: 0;
@@ -91,7 +91,7 @@ doc-toc {
 .main-article > p,
 .main-article > ul,
 .main-article > ol {
-    column-width: 35ch;
+    column-width: 40ch;
     column-gap: 4rem;
     column-rule: 1px solid var(--theme-border);
     hyphens: none;
@@ -225,7 +225,7 @@ doc-toc {
             "footer";
     }
     
-    doc-sidebar {
+    .sidebar {
         display: none;
     }
     
@@ -405,11 +405,32 @@ sl-input {
 }
 
 /* Add these global list resets */
-doc-sidebar ul,
-doc-sidebar li {
-    list-style: none !important;
+.sidebar-nav {
+    padding: 2rem 1.5rem;
+}
+
+.sidebar-section {
+    margin-bottom: 2rem;
+    padding-left: 0.5rem;
+}
+
+.sidebar-section-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--sl-color-neutral-500);
+    margin-bottom: 1rem;
+}
+
+.sidebar-items {
+    list-style: none;
     padding: 0;
     margin: 0;
+}
+
+.sidebar-item {
+    margin: 0.5rem 0;
+    padding-left: 0.5rem;
 }
 
 /* TOC styles */
@@ -764,4 +785,21 @@ pre .code {
     border-radius: var(--sl-border-radius-small);
     font-size: 0.9em;
     white-space: nowrap;
+}
+
+/* Update link styles in content area */
+.content a {
+    color: var(--sl-color-primary-600);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    transition: var(--sl-transition-medium) color;
+}
+
+.content a:hover {
+    color: var(--sl-color-primary-800);
+    text-decoration: underline;
+}
+
+.content a:active {
+    color: var(--sl-color-primary-900);
 }

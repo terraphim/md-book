@@ -8,7 +8,6 @@
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
-    <script src="/components/doc-sidebar.js" type="module"></script>
     <script src="/components/doc-toc.js" type="module"></script>
     <script src="/js/mermaid.min.js" type="module"></script>
     <script src="/js/mermaid-init.js" type="module"></script>
@@ -18,9 +17,9 @@
 <body>
     <div class="container">
         {% include "header" %}
-        <doc-sidebar>
+        <div class="sidebar">
             {% include "sidebar" %}
-        </doc-sidebar>
+        </div>
         <main class="content">
             <article class="main-article">
                 <h1>{{ page.title }}</h1>
