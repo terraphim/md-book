@@ -13,7 +13,7 @@ use syntect::util::LinesWithEndings;
 use markdown::mdast::Node;
 use markdown::to_mdast;
 mod config;
-use config::BookConfig;
+use config::{BookConfig, MarkdownFormat};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -368,24 +368,29 @@ fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, 
 }
 
 fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &BookConfig) -> Result<String> {
-    let mut options = markdown::Options::gfm();
-    
-    // Parse options for HTML in markdown
-    options.parse = markdown::ParseOptions {
-        constructs: markdown::Constructs {
-            html_flow: config.output.html.allow_html,
-            html_text: config.output.html.allow_html,
-            ..markdown::Constructs::gfm()
-        },
-        ..markdown::ParseOptions::gfm()
+    let parse_options = match config.markdown.format {
+        MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+        MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+        MarkdownFormat::Markdown => markdown::ParseOptions::default(),
     };
 
-    // Compile options to control HTML rendering
-    options.compile = markdown::CompileOptions {
-        allow_dangerous_html: config.output.html.allow_html,
-        allow_dangerous_protocol: config.output.html.allow_html,
-        ..markdown::CompileOptions::default()
+    let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+        markdown::CompileOptions::gfm()
+    } else {
+        markdown::CompileOptions::default()
     };
+
+    let mut options = markdown::Options {
+        parse: parse_options,
+        compile: compile_options,
+    };
+
+    // Modify constructs for HTML and frontmatter
+    options.parse.constructs.frontmatter = config.markdown.frontmatter;
+    options.parse.constructs.html_flow = config.output.html.allow_html;
+    options.parse.constructs.html_text = config.output.html.allow_html;
+    options.compile.allow_dangerous_html = config.output.html.allow_html;
+    options.compile.allow_dangerous_protocol = config.output.html.allow_html;
 
     let ast = to_mdast(content, &options.parse)
         .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
@@ -400,21 +405,28 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                     if *last_pos < pos.start.offset {
                         let text = &content[*last_pos..pos.start.offset];
                         if !text.trim().is_empty() {
-                            let mut options = markdown::Options::gfm();
-                            options.compile = markdown::CompileOptions {
-                                allow_dangerous_html: config.output.html.allow_html,
-                                allow_dangerous_protocol: config.output.html.allow_html,
-                                ..markdown::CompileOptions::default()
+                            let parse_options = match config.markdown.format {
+                                MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+                                MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+                                MarkdownFormat::Markdown => markdown::ParseOptions::default(),
                             };
-                            
-                            options.parse = markdown::ParseOptions {
-                                constructs: markdown::Constructs {
-                                    html_flow: config.output.html.allow_html,
-                                    html_text: config.output.html.allow_html,
-                                    ..markdown::Constructs::gfm()
-                                },
-                                ..markdown::ParseOptions::gfm()
+
+                            let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+                                markdown::CompileOptions::gfm()
+                            } else {
+                                markdown::CompileOptions::default()
                             };
+
+                            let mut options = markdown::Options {
+                                parse: parse_options,
+                                compile: compile_options,
+                            };
+
+                            options.parse.constructs.frontmatter = config.markdown.frontmatter;
+                            options.parse.constructs.html_flow = config.output.html.allow_html;
+                            options.parse.constructs.html_text = config.output.html.allow_html;
+                            options.compile.allow_dangerous_html = config.output.html.allow_html;
+                            options.compile.allow_dangerous_protocol = config.output.html.allow_html;
 
                             let temp_html = to_html_with_options(text, &options)
                                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
@@ -422,7 +434,6 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                         }
                     }
                     
-                    // Process code block with syntax highlighting
                     let highlighted = process_code_block(&code.value, code.lang.as_deref(), ss)?;
                     parts.push(highlighted);
                     
@@ -430,7 +441,6 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                 }
             },
             _ => {
-                // Process children recursively
                 if let Some(children) = node.children() {
                     for child in children {
                         process_node(child, ss, content, parts, last_pos, config)?;
@@ -441,28 +451,33 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
         Ok(())
     }
     
-    // Process the AST
     process_node(&ast, ss, content, &mut parts, &mut last_pos, config)?;
     
-    // Handle remaining content with config-based options
     if last_pos < content.len() {
         let remaining = &content[last_pos..];
         if !remaining.trim().is_empty() {
-            let mut options = markdown::Options::gfm();
-            options.compile = markdown::CompileOptions {
-                allow_dangerous_html: config.output.html.allow_html,
-                allow_dangerous_protocol: config.output.html.allow_html,
-                ..markdown::CompileOptions::default()
+            let parse_options = match config.markdown.format {
+                MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+                MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+                MarkdownFormat::Markdown => markdown::ParseOptions::default(),
             };
-            
-            options.parse = markdown::ParseOptions {
-                constructs: markdown::Constructs {
-                    html_flow: config.output.html.allow_html,
-                    html_text: config.output.html.allow_html,
-                    ..markdown::Constructs::gfm()
-                },
-                ..markdown::ParseOptions::gfm()
+
+            let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+                markdown::CompileOptions::gfm()
+            } else {
+                markdown::CompileOptions::default()
             };
+
+            let mut options = markdown::Options {
+                parse: parse_options,
+                compile: compile_options,
+            };
+
+            options.parse.constructs.frontmatter = config.markdown.frontmatter;
+            options.parse.constructs.html_flow = config.output.html.allow_html;
+            options.parse.constructs.html_text = config.output.html.allow_html;
+            options.compile.allow_dangerous_html = config.output.html.allow_html;
+            options.compile.allow_dangerous_protocol = config.output.html.allow_html;
 
             parts.push(to_html_with_options(remaining, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);

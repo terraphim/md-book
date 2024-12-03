@@ -1,5 +1,37 @@
 use serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
+#[serde(rename_all = "lowercase")]
+pub enum MarkdownFormat {
+    Markdown,
+    Gfm,
+    Mdx,
+}
+
+impl Default for MarkdownFormat {
+    fn default() -> Self {
+        MarkdownFormat::Markdown
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MarkdownInput {
+    #[serde(default)]
+    pub format: MarkdownFormat,
+    #[serde(default)]
+    pub frontmatter: bool,
+}
+
+impl Default for MarkdownInput {
+    fn default() -> Self {
+        Self {
+            format: MarkdownFormat::default(),
+            frontmatter: false,
+        }
+    }
+}
+
 #[config]
 #[derive(Debug, Default, serde::Serialize)]
 pub struct BookConfig {
@@ -8,7 +40,10 @@ pub struct BookConfig {
     pub rust: Rust,
     #[serde(default)]
     pub output: Output,
+    #[serde(default)]
+    pub markdown: MarkdownInput,
 }
+
 #[config]
 #[derive(Debug, Default, serde::Serialize)]
 pub struct Book {
@@ -55,8 +90,7 @@ pub struct HtmlOutput {
     #[serde(default)]
     pub allow_html: bool,
     pub playground: PlaygroundConfig,
-    pub search: SearchConfig,
-    pub redirect: std::collections::HashMap<String, String>,
+    pub search: SearchConfig
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
