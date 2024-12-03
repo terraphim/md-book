@@ -393,34 +393,31 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
     let mut parts = Vec::new();
     let mut last_pos = 0;
     
-    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize) -> Result<()> {
+    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize, config: &BookConfig) -> Result<()> {
         match node {
             Node::Code(code) => {
-                // Add text before this code block
                 if let Some(pos) = &code.position {
                     if *last_pos < pos.start.offset {
                         let text = &content[*last_pos..pos.start.offset];
                         if !text.trim().is_empty() {
-                            // Use the same HTML-enabled options here
                             let mut options = markdown::Options::gfm();
-                            // Compile options to control HTML rendering
                             options.compile = markdown::CompileOptions {
-                                allow_dangerous_html: true,
-                                allow_dangerous_protocol: true,
+                                allow_dangerous_html: config.output.html.allow_html,
+                                allow_dangerous_protocol: config.output.html.allow_html,
                                 ..markdown::CompileOptions::default()
                             };
-
+                            
                             options.parse = markdown::ParseOptions {
-                                // constructs: markdown::Constructs {
-                                //     html_flow: true,
-                                //     html_text: true,
-                                //     ..markdown::Constructs::gfm()
-                                // },
+                                constructs: markdown::Constructs {
+                                    html_flow: config.output.html.allow_html,
+                                    html_text: config.output.html.allow_html,
+                                    ..markdown::Constructs::gfm()
+                                },
                                 ..markdown::ParseOptions::gfm()
                             };
+
                             let temp_html = to_html_with_options(text, &options)
                                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
-                            println!("temp_html: {}", temp_html);
                             parts.push(temp_html);
                         }
                     }
@@ -436,7 +433,7 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                 // Process children recursively
                 if let Some(children) = node.children() {
                     for child in children {
-                        process_node(child, ss, content, parts, last_pos)?;
+                        process_node(child, ss, content, parts, last_pos, config)?;
                     }
                 }
             }
@@ -445,18 +442,28 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
     }
     
     // Process the AST
-    process_node(&ast, ss, content, &mut parts, &mut last_pos)?;
+    process_node(&ast, ss, content, &mut parts, &mut last_pos, config)?;
     
-    // Add any remaining content
+    // Handle remaining content with config-based options
     if last_pos < content.len() {
         let remaining = &content[last_pos..];
         if !remaining.trim().is_empty() {
             let mut options = markdown::Options::gfm();
             options.compile = markdown::CompileOptions {
-                allow_dangerous_html: true,
-                allow_dangerous_protocol: true,
+                allow_dangerous_html: config.output.html.allow_html,
+                allow_dangerous_protocol: config.output.html.allow_html,
                 ..markdown::CompileOptions::default()
             };
+            
+            options.parse = markdown::ParseOptions {
+                constructs: markdown::Constructs {
+                    html_flow: config.output.html.allow_html,
+                    html_text: config.output.html.allow_html,
+                    ..markdown::Constructs::gfm()
+                },
+                ..markdown::ParseOptions::gfm()
+            };
+
             parts.push(to_html_with_options(remaining, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
         }
