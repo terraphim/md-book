@@ -2,7 +2,7 @@
     <div class="header-content">
         <div class="header-left">
             <a href="/" class="header-logo">
-                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img">
+                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img" height="48px">
             </a>
             <span class="header-title">{{ config.book.title }}</span>
         </div>

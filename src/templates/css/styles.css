@@ -1,7 +1,19 @@
 :root {
+    --sl-color-primary-50: var(--sl-color-gray-50);
+    --sl-color-primary-100: var(--sl-color-gray-100);
+    --sl-color-primary-200: var(--sl-color-gray-200);
+    --sl-color-primary-300: var(--sl-color-gray-300);
+    --sl-color-primary-400: var(--sl-color-gray-400);
+    --sl-color-primary-500: var(--sl-color-gray-500);
+    --sl-color-primary-600: var(--sl-color-gray-600);
+    --sl-color-primary-700: var(--sl-color-gray-700);
+    --sl-color-primary-800: var(--sl-color-gray-800);
+    --sl-color-primary-900: var(--sl-color-gray-900);
+
+
     --sidebar-width: 300px;
     --toc-width: 240px;
-    --primary-color: var(--sl-color-primary-600);
+    --primary-color: var(--sl-color-primary-500);
     --header-height: 60px;
     --theme-text: var(--sl-color-neutral-900);
     --theme-text-light: var(--sl-color-neutral-600);
@@ -13,24 +25,25 @@
 a {
   color: var(--sl-color-neutral-600);
   text-decoration: none;
+  text-decoration-color: var(--sl-color-neutral-200);
   transition: var(--sl-transition-medium) color;
 }
 
 a:hover {
-  color: var(--sl-color-primary-600);
+  color: var(--sl-color-gray-300);
   text-decoration: none;
 }
 
 a.active,
 .active > a {
-  color: var(--sl-color-primary-400);
-  font-weight: var(--sl-font-weight-semibold);
+  color: var(--sl-color-gray-700);
+  font-weight: var(--sl-font-weight-bold);
 }
 
 body {
     margin: 0;
     padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,Helvetica, Oxygen, Ubuntu, Cantarell, Arial, sans-serif;
     line-height: 1.6;
     color: var(--theme-text);
     background: var(--theme-bg);
@@ -669,22 +682,23 @@ sl-input {
 }
 
 .header-logo {
-    height: var(--header-height);
-    display: flex;
+    display: inline-flex;
     align-items: center;
+    height: var(--header-height);
+    padding: 0.5rem;
+    box-sizing: border-box;
 }
 
-.header-logo-img {
-    max-height: 40px;
+.header-logo-img,
+.header-logo sl-icon {
+    height: calc(var(--header-height) * 0.6);
     width: auto;
     display: block;
 }
 
-.header-logo sl-icon {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    height: 100%;
-    width: auto;
+.header-logo sl-icon::part(base) {
+    font-size: calc(var(--header-height) * 0.5);
+    color: var(--sl-color-primary-600);
 }
 
 .header-title {
