@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use clap::Parser;
 use jiff::{Zoned, Unit};
-use markdown::{to_html_with_options, Options};
+use markdown::to_html_with_options;
 use serde::Serialize;
 use std::fs;
 use tera::{Context as TeraContext, Tera};
@@ -15,10 +15,13 @@ use markdown::to_mdast;
 mod config;
 use config::BookConfig;
 use tokio;
-use warp::Filter;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
-use std::sync::mpsc::channel;
+use notify::{Config as NotifyConfig, RecommendedWatcher, RecursiveMode, Watcher};
+use std::path::Path;
 use std::time::Duration;
+use std::collections::BTreeMap;
+use std::sync::Arc;
+use tokio::sync::{Mutex, broadcast};
+mod server; // Import the server module
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -51,8 +54,8 @@ struct Args {
 #[derive(Serialize, Debug, Clone)]
 struct PageData {
     title: String,
-    content: String,   // Headers within the current page
-    sections: Vec<Section>,    // Global navigation
+    content: String,
+    sections: Vec<Section>,
     previous: Option<PageInfo>,
     next: Option<PageInfo>,
 }
@@ -73,169 +76,219 @@ struct PageInfo {
 async fn main() -> Result<()> {
     let args = Args::parse();
     
-    // Initial build
-    build(&args)?;
-
-    if args.watch || args.serve {
-        let args_clone = args.clone();
-        let rebuild = move || build(&args_clone);
-
-        if args.serve {
-            // Start the server in a separate task
-            let output_dir = args.output.clone();
-            let port = args.port;
-            tokio::spawn(async move {
-                if let Err(e) = serve_book(output_dir, port).await {
-                    eprintln!("Server error: {}", e);
-                }
-            });
-        }
-
-        if args.watch {
-            // Watch for changes
-            watch_for_changes(args.input, rebuild)?;
-        } else {
-            // Just serve without watching
-            loop {
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        }
-    }
-
-    Ok(())
-}
-
-async fn serve_book(output_dir: String, port: u16) -> Result<()> {
-    let static_files = warp::fs::dir(output_dir.clone())
-        .or(warp::fs::file(format!("{}/index.html", output_dir)));
-
-    println!("Serving book at http://localhost:{}", port);
-    warp::serve(static_files)
-        .run(([127, 0, 0, 1], port))
-        .await;
-    Ok(())
-}
-
-fn watch_for_changes<F>(input_dir: String, callback: F) -> Result<()>
-where
-    F: Fn() -> Result<()> + Send + 'static,
-{
-    let mut watcher = notify::recommended_watcher(move |res| {
-        match res {
-            Ok(_) => {
-                println!("Change detected, rebuilding...");
-                if let Err(e) = callback() {
-                    eprintln!("Error rebuilding: {}", e);
-                }
-            }
-            Err(e) => eprintln!("Watch error: {}", e),
-        }
-    })?;
-
-    watcher.watch(input_dir.as_ref(), RecursiveMode::Recursive)?;
-    println!("Watching for changes in {}...", input_dir);
-
-    // Keep the main thread alive
-    loop {
-        std::thread::sleep(Duration::from_secs(1));
-    }
-}
-
-fn build(args: &Args) -> Result<()> {
     // Load configuration
     let config = config::load_config(args.config.as_deref())?;
-    println!("{:#?}", config);
+    
+    // Initial build
+    build(&args, &config)?;
+
+    if args.watch || args.serve {
+        let (reload_tx, _) = broadcast::channel(16);
+        
+        let mut handles = vec![];
+
+        // Start server if requested
+        if args.serve {
+            let output_dir = args.output.clone();
+            let port = args.port;
+            let reload_tx = reload_tx.clone();
+            
+            handles.push(tokio::spawn(async move {
+                if let Err(e) = server::serve_book(output_dir, port, reload_tx).await {
+                    eprintln!("Server error: {}", e);
+                }
+            }));
+        }
+
+        // Start watcher if requested
+        if args.watch {
+            let mut watch_paths = vec![args.input.clone()];
+            if let Some(templates_dir) = get_templates_dir(&config) {
+                println!("Adding template dir to watch: {}", templates_dir);
+                watch_paths.push(templates_dir);
+            }
+
+            let args = args.clone();
+            let config = config.clone();
+            let reload_tx = reload_tx.clone();
+
+            handles.push(tokio::spawn(async move {
+                if let Err(e) = watch_files(watch_paths, move || {
+                    build(&args, &config)
+                }, reload_tx).await {
+                    eprintln!("Watch error: {}", e);
+                }
+            }));
+        }
+
+        // Keep the main task running
+        futures::future::join_all(handles).await;
+    }
+
+    Ok(())
+}
+
+fn get_templates_dir(config: &BookConfig) -> Option<String> {
+    let templates_dir = &config.paths.templates;
+    if Path::new(templates_dir).exists() {
+        Some(templates_dir.clone())
+    } else {
+        None
+    }
+}
+
+async fn watch_files<F>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
+where
+    F: Fn() -> Result<()> + Send + Sync + 'static,
+{
+    use tokio::time::Duration;
+    use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+    
+    let (tx, mut rx) = tokio::sync::mpsc::channel(32);
+    
+    let mut watcher = RecommendedWatcher::new(
+        move |res| {
+            if let Ok(event) = res {
+                println!("Change detected: {:?}", event);
+                let _ = tx.blocking_send(());
+            }
+        },
+        notify::Config::default(),
+    )?;
+
+    // Watch all paths
+    for path in &paths {
+        println!("Watching {}", path);
+        watcher.watch(std::path::Path::new(path), RecursiveMode::Recursive)?;
+    }
+
+    // Debounce timer
+    let mut debounce = tokio::time::interval(Duration::from_millis(100));
+    let mut pending = false;
+
+    loop {
+        tokio::select! {
+            Some(_) = rx.recv() => {
+                pending = true;
+            }
+            _ = debounce.tick() => {
+                if pending {
+                    pending = false;
+                    println!("Rebuilding...");
+                    if let Err(e) = rebuild() {
+                        eprintln!("Rebuild error: {}", e);
+                    } else {
+                        let _ = reload_tx.send(());
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn build(args: &Args, config: &BookConfig) -> Result<()> {
+    // Initialize Tera with configured templates directory
+    let mut tera = Tera::default();
+    
+    // Add template files from the configured directory
+    let template_files = [
+        ("page", "page.html.tera"),
+        ("index", "index.html.tera"),
+        ("sidebar", "sidebar.html.tera"),
+        ("footer", "footer.html.tera"),
+        ("header", "header.html.tera"),
+    ];
+
+    for (name, file) in template_files {
+        let template_path = format!("{}/{}", config.paths.templates, file);
+        let template_content = if Path::new(&template_path).exists() {
+            fs::read_to_string(&template_path)
+                .with_context(|| format!("Failed to read template: {}", template_path))?
+        } else {
+            // Load default template content directly
+            match file {
+                "page.html.tera" => include_str!("templates/page.html.tera").to_string(),
+                "index.html.tera" => include_str!("templates/index.html.tera").to_string(),
+                "sidebar.html.tera" => include_str!("templates/sidebar.html.tera").to_string(),
+                "footer.html.tera" => include_str!("templates/footer.html.tera").to_string(),
+                "header.html.tera" => include_str!("templates/header.html.tera").to_string(),
+                _ => panic!("Unknown template file: {}", file),
+            }
+        };
+        
+        tera.add_raw_template(name, &template_content)
+            .with_context(|| format!("Failed to add template: {}", name))?;
+    }
     
     // Create output directory if it doesn't exist
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
-    copy_static_assets(&args.output)?;
-    
-    // Initialize Tera 
-    let mut tera = Tera::default();
-    tera.add_raw_template("page", include_str!("templates/page.html.tera"))?;
-    tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
-    tera.add_raw_template("sidebar", include_str!("templates/sidebar.html.tera"))?;
-    tera.add_raw_template("footer", include_str!("templates/footer.html.tera"))?;
-    tera.add_raw_template("header", include_str!("templates/header.html.tera"))?;
-    
+    copy_static_assets(&args.output, &config.paths.templates)?;
 
-
-    // Create sections based on directory structure
-    let mut sections: Vec<Section> = Vec::new();
+    // Collect all pages first
+    let mut all_pages = Vec::new();
+    let mut section_map: BTreeMap<String, Vec<PageInfo>> = BTreeMap::new();
     let mut root_pages: Vec<PageInfo> = Vec::new();
 
-    for entry in WalkDir::new(&args.input) {
-        let entry = entry?;
-        if entry.path().extension().map_or(false, |e| e == "md") {
-            let rel_path = entry.path().strip_prefix(&args.input)?;
-            let parent_dir = rel_path.parent().and_then(|p| p.to_str()).unwrap_or("");
-            
-            let page_info = PageInfo {
-                title: extract_title(&fs::read_to_string(entry.path())?)
-                    .unwrap_or_else(|| entry.path().file_stem()
-                        .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| "Untitled".to_string())),
-                path: format!("/{}", rel_path.with_extension("html").display().to_string()),
-            };
+    // First pass: collect all pages
+    let mut entries: Vec<_> = WalkDir::new(&args.input)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.path().extension().map_or(false, |ext| ext == "md"))
+        .collect();
 
-            if parent_dir.is_empty() {
-                root_pages.push(page_info);
-            } else {
-                if let Some(section) = sections.iter_mut().find(|s| s.title == parent_dir) {
-                    section.pages.push(page_info);
-                } else {
-                    sections.push(Section {
-                        title: parent_dir.to_string(),
-                        pages: vec![page_info],
-                    });
-                }
-            }
+    // Sort entries by path to ensure consistent ordering
+    entries.sort_by_key(|e| e.path().to_path_buf());
+
+    for entry in &entries {
+        let rel_path = entry.path().strip_prefix(&args.input)?;
+        let parent_dir = rel_path.parent().and_then(|p| p.to_str()).unwrap_or("");
+        
+        let content = fs::read_to_string(entry.path())?;
+        let page_info = PageInfo {
+            title: extract_title(&content)
+                .unwrap_or_else(|| entry.path().file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| "Untitled".to_string())),
+            path: format!("/{}", rel_path.with_extension("html").display().to_string()),
+        };
+
+        all_pages.push(page_info.clone());
+
+        if parent_dir.is_empty() {
+            root_pages.push(page_info);
+        } else {
+            section_map.entry(parent_dir.to_string())
+                .or_default()
+                .push(page_info);
         }
     }
 
-    // Add root pages as a section if they exist
+    // Convert the map to sections
+    let mut sections = Vec::new();
+    
+    // Add root pages first if they exist
     if !root_pages.is_empty() {
-        sections.insert(0, Section {
+        sections.push(Section {
             title: "Guide".to_string(),
             pages: root_pages,
         });
     }
 
-    // Process markdown files
-    let mut all_pages: Vec<PageInfo> = Vec::new();
-    
-    // Collect only markdown files first
-    for entry in WalkDir::new(&args.input) {
-        let entry = entry?;
-        if entry.path().extension().map_or(false, |e| e == "md") {
-            let markdown_content = fs::read_to_string(entry.path())?;
-            let rel_path = entry.path().strip_prefix(&args.input)?;
-            
-            let page_info = PageInfo {
-                title: extract_title(&markdown_content)
-                    .unwrap_or_else(|| entry.path().file_stem()
-                        .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| "Untitled".to_string())),
-                path: format!("/{}", rel_path.with_extension("html").display().to_string()),
-            };
-            
-            all_pages.push(page_info);
-        }
+    // Add other sections
+    for (title, pages) in section_map {
+        sections.push(Section {
+            title,
+            pages,
+        });
     }
-    
-    // Second pass: generate pages with navigation
+
     let total_pages = all_pages.len();
-    let mut current_page = 0;
-    
     println!("Total pages: {}", total_pages);
-    let mut context = TeraContext::new();
-    // Add current year to all contexts
-    let now = Zoned::now().round(Unit::Second)?;
-    let current_year = now.year();
-    context.insert("year", &current_year);
-    context.insert("sections", &all_pages);
+
+    // Get current year using Jiff
+    let current_year = Zoned::now().year().to_string();
 
     // Initialize SyntaxSet once
     let ss = SyntaxSet::load_defaults_newlines();
@@ -248,21 +301,19 @@ fn build(args: &Args) -> Result<()> {
     
     fs::write(format!("{}/css/syntax.css", args.output), syntax_css)?;
 
-    for entry in WalkDir::new(&args.input) {
-        let entry = entry?;
-        if entry.path().extension().map_or(false, |e| e == "md") {
+    // Process each markdown file
+    for (current_page, entry) in entries.iter().enumerate() {
+        if entry.path().extension().map_or(false, |ext| ext == "md") {
             let rel_path = entry.path().strip_prefix(&args.input)?;
             let html_path = format!("{}/{}", args.output, rel_path.with_extension("html").display());
             
-            if let Some(parent) = std::path::Path::new(&html_path).parent() {
+            if let Some(parent) = Path::new(&html_path).parent() {
                 fs::create_dir_all(parent)?;
             }
             
             let markdown_content = fs::read_to_string(entry.path())?;
             let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
             
-            
-            // Safe navigation handling
             let previous = if current_page > 0 {
                 Some(all_pages[current_page - 1].clone())
             } else {
@@ -292,23 +343,26 @@ fn build(args: &Args) -> Result<()> {
             context.insert("config", &config);
             context.insert("current_path", &rel_path.with_extension("html").display().to_string());
             
-            let rendered = tera.render("page", &context)?;
-            fs::write(html_path, rendered)?;
-            
-            current_page += 1;
+            let rendered = tera.render("page", &context)
+                .with_context(|| format!("Failed to render page: {}", html_path))?;
+            fs::write(&html_path, rendered)
+                .with_context(|| format!("Failed to write file: {}", html_path))?;
         }
     }
-    
+
     // Generate index page
     let mut context = TeraContext::new();
-    
-    // Check if index.md exists in root pages
+    context.insert("year", &current_year);
+    context.insert("config", &config);
+    context.insert("sections", &sections);
+    context.insert("current_path", &"index.html");
+
     let index_page = all_pages.iter().find(|p| p.path == "/index.html");
     
     if let Some(index) = index_page {
-        // If index.md exists, use its content
-        let index_path = std::path::Path::new(&args.input).join("index.md");
-        let markdown_content = fs::read_to_string(index_path)?;
+        let index_path = Path::new(&args.input).join("index.md");
+        let markdown_content = fs::read_to_string(&index_path)
+            .with_context(|| format!("Failed to read index file: {}", index_path.display()))?;
         let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
         
         context.insert("has_index", &true);
@@ -319,14 +373,12 @@ fn build(args: &Args) -> Result<()> {
         context.insert("has_index", &false);
         context.insert("title", &"Documentation");
     }
+    
+    let rendered = tera.render("index", &context)
+        .context("Failed to render index page")?;
+    fs::write(format!("{}/index.html", args.output), rendered)
+        .context("Failed to write index.html")?;
 
-    context.insert("config", &config);
-    context.insert("sections", &sections);
-    context.insert("current_path", &"index.html");
-    
-    let rendered = tera.render("index", &context)?;
-    fs::write(format!("{}/index.html", args.output), rendered)?;
-    
     Ok(())
 }
 
@@ -337,31 +389,35 @@ fn extract_title(markdown: &str) -> Option<String> {
         .map(|line| line[2..].trim().to_string())
 }
 
-fn copy_static_assets(output_dir: &str) -> Result<()> {
+fn copy_static_assets(output_dir: &str, templates_dir: &str) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
     // Copy CSS directory
-    let css_source = "src/templates/css";
+    let css_source = format!("{}/css", templates_dir);
     let css_dest = format!("{}/css/", output_dir);
     fs::create_dir_all(&css_dest)?;
-    for entry in WalkDir::new(css_source) {
-        let entry = entry?;
-        let dest_path = css_dest.clone() + entry.path().strip_prefix(css_source)?.to_str().unwrap();
-        if entry.file_type().is_file() {
-            fs::copy(entry.path(), dest_path).context(format!("Failed to copy CSS file: {:?}", entry.path()))?;
+    if std::path::Path::new(&css_source).exists() {
+        for entry in WalkDir::new(&css_source) {
+            let entry = entry?;
+            let dest_path = css_dest.clone() + entry.path().strip_prefix(&css_source)?.to_str().unwrap();
+            if entry.file_type().is_file() {
+                fs::copy(entry.path(), dest_path)?;
+            }
         }
     }
 
     // Copy JS directory
-    let js_source = "src/templates/js";
+    let js_source = format!("{}/js", templates_dir);
     let js_dest = format!("{}/js/", output_dir);
     fs::create_dir_all(&js_dest)?;
-    for entry in WalkDir::new(js_source) {
-        let entry = entry?;
-        let dest_path = js_dest.clone() + entry.path().strip_prefix(js_source)?.to_str().unwrap();
-        if entry.file_type().is_file() {
-            fs::copy(entry.path(), dest_path).context(format!("Failed to copy JS file: {:?}", entry.path()))?;
+    if std::path::Path::new(&js_source).exists() {
+        for entry in WalkDir::new(&js_source) {
+            let entry = entry?;
+            let dest_path = js_dest.clone() + entry.path().strip_prefix(&js_source)?.to_str().unwrap();
+            if entry.file_type().is_file() {
+                fs::copy(entry.path(), dest_path)?;
+            }
         }
     }
     
