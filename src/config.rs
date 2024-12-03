@@ -52,6 +52,8 @@ pub struct Output {
 pub struct HtmlOutput {
     #[serde(default)]
     pub mathjax_support: bool,
+    #[serde(default)]
+    pub allow_html: bool,
     pub playground: PlaygroundConfig,
     pub search: SearchConfig,
     pub redirect: std::collections::HashMap<String, String>,

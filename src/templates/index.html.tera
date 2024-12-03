@@ -15,7 +15,13 @@
         <main class="content index-content">
             {% if has_index %}
                 <article class="main-article">
-                    {{ content | safe }}
+                    {% if config.output.html.allow_html %}
+                        <!-- HTML is allowed -->
+                        {{ content | safe }}
+                    {% else %}
+                        HTML is not allowed
+                        {{ content }}
+                    {% endif %}
                 </article>
             {% else %}
                 <div class="index-header">

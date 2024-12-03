@@ -62,7 +62,7 @@ fn main() -> Result<()> {
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
-    copy_static_assets(&args.output)?;
+    copy_static_assets(&args.output, &config)?;
     
     // Initialize Tera 
     let mut tera = Tera::default();
@@ -171,7 +171,7 @@ fn main() -> Result<()> {
             }
             
             let markdown_content = fs::read_to_string(entry.path())?;
-            let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
+            let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
             
             
             // Safe navigation handling
@@ -221,8 +221,9 @@ fn main() -> Result<()> {
         // If index.md exists, use its content
         let index_path = std::path::Path::new(&args.input).join("index.md");
         let markdown_content = fs::read_to_string(index_path)?;
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
-        
+        println!("markdown_content index: {}", markdown_content);
+        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
+        println!("html_content index: {}", html_content);
         context.insert("has_index", &true);
         context.insert("title", &index.title);
         context.insert("content", &html_content);
@@ -249,7 +250,7 @@ fn extract_title(markdown: &str) -> Option<String> {
         .map(|line| line[2..].trim().to_string())
 }
 
-fn copy_static_assets(output_dir: &str) -> Result<()> {
+fn copy_static_assets(output_dir: &str, config: &BookConfig) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
@@ -288,11 +289,16 @@ fn copy_static_assets(output_dir: &str) -> Result<()> {
         }
     }
 
-    // Copy only TOC web component
-    fs::write(
-        format!("{}/components/doc-toc.js", output_dir),
-        include_str!("templates/components/doc-toc.js"),
-    ).context("Failed to write TOC component")?;
+
+        fs::write(
+            format!("{}/components/doc-toc.js", output_dir),
+            include_str!("templates/components/doc-toc.js"),
+        ).context("Failed to write TOC component")?;
+
+        fs::write(
+            format!("{}/components/simple-block.js", output_dir),
+            include_str!("templates/components/simple-block.js"),
+        ).context("Failed to write Simple Block component")?;
 
     Ok(())
 }
@@ -361,8 +367,27 @@ fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, 
     Ok(format!("<pre class=\"code\"><code>{}</code></pre>", html))
 }
 
-fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<String> {
-    let ast = to_mdast(content, &markdown::ParseOptions::default())
+fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &BookConfig) -> Result<String> {
+    let mut options = markdown::Options::gfm();
+    
+    // Parse options for HTML in markdown
+    options.parse = markdown::ParseOptions {
+        constructs: markdown::Constructs {
+            html_flow: config.output.html.allow_html,
+            html_text: config.output.html.allow_html,
+            ..markdown::Constructs::gfm()
+        },
+        ..markdown::ParseOptions::gfm()
+    };
+
+    // Compile options to control HTML rendering
+    options.compile = markdown::CompileOptions {
+        allow_dangerous_html: config.output.html.allow_html,
+        allow_dangerous_protocol: config.output.html.allow_html,
+        ..markdown::CompileOptions::default()
+    };
+
+    let ast = to_mdast(content, &options.parse)
         .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
     
     let mut parts = Vec::new();
@@ -376,8 +401,27 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<S
                     if *last_pos < pos.start.offset {
                         let text = &content[*last_pos..pos.start.offset];
                         if !text.trim().is_empty() {
-                            parts.push(to_html_with_options(text, &markdown::Options::gfm())
-                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
+                            // Use the same HTML-enabled options here
+                            let mut options = markdown::Options::gfm();
+                            // Compile options to control HTML rendering
+                            options.compile = markdown::CompileOptions {
+                                allow_dangerous_html: true,
+                                allow_dangerous_protocol: true,
+                                ..markdown::CompileOptions::default()
+                            };
+
+                            options.parse = markdown::ParseOptions {
+                                // constructs: markdown::Constructs {
+                                //     html_flow: true,
+                                //     html_text: true,
+                                //     ..markdown::Constructs::gfm()
+                                // },
+                                ..markdown::ParseOptions::gfm()
+                            };
+                            let temp_html = to_html_with_options(text, &options)
+                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+                            println!("temp_html: {}", temp_html);
+                            parts.push(temp_html);
                         }
                     }
                     
@@ -407,7 +451,13 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<S
     if last_pos < content.len() {
         let remaining = &content[last_pos..];
         if !remaining.trim().is_empty() {
-            parts.push(to_html_with_options(remaining, &markdown::Options::gfm())
+            let mut options = markdown::Options::gfm();
+            options.compile = markdown::CompileOptions {
+                allow_dangerous_html: true,
+                allow_dangerous_protocol: true,
+                ..markdown::CompileOptions::default()
+            };
+            parts.push(to_html_with_options(remaining, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
         }
     }

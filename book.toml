@@ -9,6 +9,7 @@ edition = "2018"
 
 [output.html]
 mathjax-support = true
+allow_html = true
 
 [output.html.playground]
 editable = true
