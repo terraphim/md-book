@@ -14,8 +14,13 @@ use markdown::mdast::Node;
 use markdown::to_mdast;
 mod config;
 use config::BookConfig;
+use tokio;
+use warp::Filter;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use std::sync::mpsc::channel;
+use std::time::Duration;
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
 struct Args {
     /// Input directory containing markdown files
@@ -29,6 +34,18 @@ struct Args {
     /// Optional path to config file
     #[arg(short, long)]
     config: Option<String>,
+
+    /// Watch for changes and rebuild
+    #[arg(short, long)]
+    watch: bool,
+
+    /// Serve the book at http://localhost:3000
+    #[arg(short, long)]
+    serve: bool,
+
+    /// Port to serve on when using --serve (default: 3000)
+    #[arg(long, default_value = "3000")]
+    port: u16,
 }
 
 #[derive(Serialize, Debug, Clone)]
@@ -52,12 +69,83 @@ struct PageInfo {
     path: String,
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Args::parse();
     
+    // Initial build
+    build(&args)?;
+
+    if args.watch || args.serve {
+        let args_clone = args.clone();
+        let rebuild = move || build(&args_clone);
+
+        if args.serve {
+            // Start the server in a separate task
+            let output_dir = args.output.clone();
+            let port = args.port;
+            tokio::spawn(async move {
+                if let Err(e) = serve_book(output_dir, port).await {
+                    eprintln!("Server error: {}", e);
+                }
+            });
+        }
+
+        if args.watch {
+            // Watch for changes
+            watch_for_changes(args.input, rebuild)?;
+        } else {
+            // Just serve without watching
+            loop {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+            }
+        }
+    }
+
+    Ok(())
+}
+
+async fn serve_book(output_dir: String, port: u16) -> Result<()> {
+    let static_files = warp::fs::dir(output_dir.clone())
+        .or(warp::fs::file(format!("{}/index.html", output_dir)));
+
+    println!("Serving book at http://localhost:{}", port);
+    warp::serve(static_files)
+        .run(([127, 0, 0, 1], port))
+        .await;
+    Ok(())
+}
+
+fn watch_for_changes<F>(input_dir: String, callback: F) -> Result<()>
+where
+    F: Fn() -> Result<()> + Send + 'static,
+{
+    let mut watcher = notify::recommended_watcher(move |res| {
+        match res {
+            Ok(_) => {
+                println!("Change detected, rebuilding...");
+                if let Err(e) = callback() {
+                    eprintln!("Error rebuilding: {}", e);
+                }
+            }
+            Err(e) => eprintln!("Watch error: {}", e),
+        }
+    })?;
+
+    watcher.watch(input_dir.as_ref(), RecursiveMode::Recursive)?;
+    println!("Watching for changes in {}...", input_dir);
+
+    // Keep the main thread alive
+    loop {
+        std::thread::sleep(Duration::from_secs(1));
+    }
+}
+
+fn build(args: &Args) -> Result<()> {
     // Load configuration
     let config = config::load_config(args.config.as_deref())?;
     println!("{:#?}", config);
+    
     // Create output directory if it doesn't exist
     fs::create_dir_all(&args.output)?;
     
