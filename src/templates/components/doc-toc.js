@@ -57,6 +57,7 @@ class DocToc extends HTMLElement {
   render() {
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+      <link rel="stylesheet" href="/css/styles.css">
       <style>
         :host {
           display: block;

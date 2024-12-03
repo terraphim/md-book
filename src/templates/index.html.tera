@@ -29,7 +29,7 @@
                                 {% for page in section.pages %}
                                     <sl-card class="doc-card">
                                         <h3 slot="header">{{ page.title }}</h3>
-                                        <sl-button href="{{ page.path }}" variant="primary">
+                                        <sl-button href="{{ page.path }}" variant="default">
                                             Read More
                                             <sl-icon slot="suffix" name="arrow-right"></sl-icon>
                                         </sl-button>
