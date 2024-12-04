@@ -4,6 +4,10 @@ description = "A demo book to test and validate changes"
 authors = ["YJDoc2"]
 language = "en"
 
+[paths]
+# Optional: Custom templates directory (defaults to "templates")
+templates = "src/templates"
+
 [rust]
 edition = "2018"
 
