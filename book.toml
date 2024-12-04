@@ -4,6 +4,11 @@ description = "A demo book to test and validate changes"
 authors = ["Alex Mikhalev"]
 language = "en"
 logo = "/img/terraphim_gray.png"
+
+[paths]
+# Optional: Custom templates directory (defaults to "templates")
+templates = "src/templates"
+
 [rust]
 edition = "2018"
 [markdown]

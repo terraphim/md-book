@@ -15,7 +15,7 @@ impl Default for MarkdownFormat {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MarkdownInput {
     #[serde(default)]
     pub format: MarkdownFormat,
@@ -33,7 +33,7 @@ impl Default for MarkdownInput {
 }
 
 #[config]
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default, serde::Serialize, Clone)]
 pub struct BookConfig {
     pub book: Book,
     #[serde(default)]
@@ -42,10 +42,12 @@ pub struct BookConfig {
     pub output: Output,
     #[serde(default)]
     pub markdown: MarkdownInput,
+    #[serde(default)]
+    pub paths: Paths
 }
 
 #[config]
-#[derive(Debug, Default, serde::Serialize)]
+#[derive(Debug, Default, serde::Serialize, Clone)]
 pub struct Book {
     pub title: String,
     #[serde(default)]
@@ -68,7 +70,7 @@ fn default_logo() -> String {
     "/img/default_logo.svg".to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Rust {
     #[serde(default = "default_edition")]
     pub edition: String,
@@ -78,12 +80,12 @@ fn default_edition() -> String {
     "2021".to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Output {
     pub html: HtmlOutput,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct HtmlOutput {
     #[serde(default)]
     pub mathjax_support: bool,
@@ -93,7 +95,7 @@ pub struct HtmlOutput {
     pub search: SearchConfig
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct PlaygroundConfig {
     #[serde(default)]
     pub editable: bool,
@@ -101,7 +103,7 @@ pub struct PlaygroundConfig {
     pub line_numbers: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct SearchConfig {
     #[serde(default = "default_limit_results")]
     pub limit_results: u32,
@@ -124,6 +126,16 @@ fn default_boost_title() -> u32 { 2 }
 fn default_boost_hierarchy() -> u32 { 2 }
 fn default_boost_paragraph() -> u32 { 1 }
 fn default_heading_split_level() -> u32 { 2 }
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct Paths {
+    #[serde(default = "default_templates_dir")]
+    pub templates: String,
+}
+
+fn default_templates_dir() -> String {
+    "templates".to_string()
+}
 
 pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
     let mut layers = vec![

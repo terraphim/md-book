@@ -23,7 +23,7 @@ Or anything you want to change in the src/templates folder, it's a standard tera
 
 
 - Code blocks with syntax highlighting
-- Copy to clipboard button (doesn't work)
+
 - Better default styling
 
 # Screenshots
@@ -59,3 +59,30 @@ The configuration system follows the priority order:
 4. Default book.toml
 5. Default values (lowest priority)
 you shall be able to feed config into json and yaml files.
+
+# Serve and Watch
+
+## Just build
+```bash
+cargo run -- -i input -o output
+```
+
+## Build and watch
+```bash
+cargo run -- -i input -o output --watch
+```
+
+## Build and serve
+```bash
+cargo run -- -i input -o output --serve
+```
+
+## Build, watch and serve on custom port
+```bash
+cargo run -- -i input -o output --watch --serve --port 8080
+```
+
+# TODO
+[ ] Rust specific synax highlight
+[ ] Search
+[ ] Mathjax

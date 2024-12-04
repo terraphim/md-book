@@ -44,5 +44,6 @@
         </doc-toc>
     </div>
     {% include "footer" %}
+    <script src="/js/live-reload.js"></script>
 </body>
 </html> 
