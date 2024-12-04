@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use jiff::{Zoned, Unit};
+use jiff::Zoned;
 use markdown::to_html_with_options;
 use serde::Serialize;
 use std::fs;
@@ -212,7 +212,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
                 "sidebar.html.tera" => include_str!("templates/sidebar.html.tera").to_string(),
                 "footer.html.tera" => include_str!("templates/footer.html.tera").to_string(),
                 "header.html.tera" => include_str!("templates/header.html.tera").to_string(),
-                _ => panic!("Unknown template file: {}", file),
+                _ => return Err(anyhow::anyhow!("Unknown template file: {}", file)),
             }
         };
         
@@ -224,162 +224,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
-    copy_static_assets(&args.output, &config)?;
-    
-    // Initialize Tera 
-    let mut tera = Tera::default();
-    tera.add_raw_template("page", include_str!("templates/page.html.tera"))?;
-    tera.add_raw_template("index", include_str!("templates/index.html.tera"))?;
-    tera.add_raw_template("sidebar", include_str!("templates/sidebar.html.tera"))?;
-    tera.add_raw_template("footer", include_str!("templates/footer.html.tera"))?;
-    tera.add_raw_template("header", include_str!("templates/header.html.tera"))?;
-    
-    // Initial build
-    build(&args, &config)?;
-
-    if args.watch || args.serve {
-        let (reload_tx, _) = broadcast::channel(16);
-        
-        let mut handles = vec![];
-
-        // Start server if requested
-        if args.serve {
-            let output_dir = args.output.clone();
-            let port = args.port;
-            let reload_tx = reload_tx.clone();
-            
-            handles.push(tokio::spawn(async move {
-                if let Err(e) = server::serve_book(output_dir, port, reload_tx).await {
-                    eprintln!("Server error: {}", e);
-                }
-            }));
-        }
-
-        // Start watcher if requested
-        if args.watch {
-            let mut watch_paths = vec![args.input.clone()];
-            if let Some(templates_dir) = get_templates_dir(&config) {
-                println!("Adding template dir to watch: {}", templates_dir);
-                watch_paths.push(templates_dir);
-            }
-
-            let args = args.clone();
-            let config = config.clone();
-            let reload_tx = reload_tx.clone();
-
-            handles.push(tokio::spawn(async move {
-                if let Err(e) = watch_files(watch_paths, move || {
-                    build(&args, &config)
-                }, reload_tx).await {
-                    eprintln!("Watch error: {}", e);
-                }
-            }));
-        }
-
-        // Keep the main task running
-        futures::future::join_all(handles).await;
-    }
-
-    Ok(())
-}
-
-fn get_templates_dir(config: &BookConfig) -> Option<String> {
-    let templates_dir = &config.paths.templates;
-    if Path::new(templates_dir).exists() {
-        Some(templates_dir.clone())
-    } else {
-        None
-    }
-}
-
-async fn watch_files<F>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
-where
-    F: Fn() -> Result<()> + Send + Sync + 'static,
-{
-    use tokio::time::Duration;
-    use notify::{RecommendedWatcher, RecursiveMode, Watcher};
-    
-    let (tx, mut rx) = tokio::sync::mpsc::channel(32);
-    
-    let mut watcher = RecommendedWatcher::new(
-        move |res| {
-            if let Ok(event) = res {
-                println!("Change detected: {:?}", event);
-                let _ = tx.blocking_send(());
-            }
-        },
-        notify::Config::default(),
-    )?;
-
-    // Watch all paths
-    for path in &paths {
-        println!("Watching {}", path);
-        watcher.watch(std::path::Path::new(path), RecursiveMode::Recursive)?;
-    }
-
-    // Debounce timer
-    let mut debounce = tokio::time::interval(Duration::from_millis(100));
-    let mut pending = false;
-
-    loop {
-        tokio::select! {
-            Some(_) = rx.recv() => {
-                pending = true;
-            }
-            _ = debounce.tick() => {
-                if pending {
-                    pending = false;
-                    println!("Rebuilding...");
-                    if let Err(e) = rebuild() {
-                        eprintln!("Rebuild error: {}", e);
-                    } else {
-                        let _ = reload_tx.send(());
-                    }
-                }
-            }
-        }
-    }
-}
-
-fn build(args: &Args, config: &BookConfig) -> Result<()> {
-    // Initialize Tera with configured templates directory
-    let mut tera = Tera::default();
-    
-    // Add template files from the configured directory
-    let template_files = [
-        ("page", "page.html.tera"),
-        ("index", "index.html.tera"),
-        ("sidebar", "sidebar.html.tera"),
-        ("footer", "footer.html.tera"),
-        ("header", "header.html.tera"),
-    ];
-
-    for (name, file) in template_files {
-        let template_path = format!("{}/{}", config.paths.templates, file);
-        let template_content = if Path::new(&template_path).exists() {
-            fs::read_to_string(&template_path)
-                .with_context(|| format!("Failed to read template: {}", template_path))?
-        } else {
-            // Load default template content directly
-            match file {
-                "page.html.tera" => include_str!("templates/page.html.tera").to_string(),
-                "index.html.tera" => include_str!("templates/index.html.tera").to_string(),
-                "sidebar.html.tera" => include_str!("templates/sidebar.html.tera").to_string(),
-                "footer.html.tera" => include_str!("templates/footer.html.tera").to_string(),
-                "header.html.tera" => include_str!("templates/header.html.tera").to_string(),
-                _ => panic!("Unknown template file: {}", file),
-            }
-        };
-        
-        tera.add_raw_template(name, &template_content)
-            .with_context(|| format!("Failed to add template: {}", name))?;
-    }
-    
-    // Create output directory if it doesn't exist
-    fs::create_dir_all(&args.output)?;
-    
-    // Copy static assets
-    copy_static_assets(&args.output, &config.paths.templates)?;
+    copy_static_assets(&args.output, &config.paths.templates, &config)?;
 
     // Collect all pages first
     let mut all_pages = Vec::new();
@@ -516,15 +361,10 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     
     if let Some(index) = index_page {
         // If index.md exists, use its content
-        let index_path = std::path::Path::new(&args.input).join("index.md");
-        let markdown_content = fs::read_to_string(index_path)?;
-        println!("markdown_content index: {}", markdown_content);
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
-        println!("html_content index: {}", html_content);
         let index_path = Path::new(&args.input).join("index.md");
         let markdown_content = fs::read_to_string(&index_path)
             .with_context(|| format!("Failed to read index file: {}", index_path.display()))?;
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
+        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
         
         context.insert("has_index", &true);
         context.insert("title", &index.title);
