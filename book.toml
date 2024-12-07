@@ -4,12 +4,16 @@ description = "A demo book to test and validate changes"
 authors = ["Alex Mikhalev"]
 language = "en"
 logo = "/img/terraphim_gray.png"
+github_url = "https://github.com/terraphim/md-book"
+# Find the edit url base by navigating to the page on GitHub, hit "Edit" button and copying the URL
+github_edit_url_base = "https://github.com/terraphim/terraphim-ai/edit/main/docs/src/"
 
 [paths]
 # Optional: Custom templates directory (defaults to "templates")
 templates = "src/templates"
 
 [rust]
+# Rust related features are not implemented yet
 edition = "2018"
 [markdown]
 format = "markdown"  # mdx or "gfm" or "markdown"

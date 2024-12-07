@@ -44,6 +44,8 @@
         </doc-toc>
     </div>
     {% include "footer" %}
+    {% if watch_enabled %}
     <script src="/js/live-reload.js"></script>
+    {% endif %}
 </body>
 </html> 

@@ -8,20 +8,23 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
     <link rel="stylesheet" href="/css/styles.css">
+    <script type="module" src="/js/components/simple-block.js"></script>
 </head>
 <body>
     <div class="container index-container">
         {% include "header" %}
         <main class="content index-content">
             {% if has_index %}
-                <article class="main-article">
+                
                     {% if config.output.html.allow_html %}
                         <!-- HTML is allowed -->
                         {{ content | safe }}
                     {% else %}
+                    <article class="main-article">
                         HTML is not allowed
                         {{ content }}
-                    {% endif %}
+                    </article>
+                {% endif %}
                 </article>
             {% else %}
                 <div class="index-header">

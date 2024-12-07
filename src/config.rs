@@ -60,6 +60,10 @@ pub struct Book {
     pub base_url: Option<String>,
     #[serde(default = "default_logo")]
     pub logo: String,
+    #[serde(default)]
+    pub github_url: Option<String>,
+    #[serde(default)]
+    pub github_edit_url_base: Option<String>,
 }
 
 fn default_language() -> String {

@@ -11,14 +11,16 @@
                 <sl-icon name="search" slot="prefix"></sl-icon>
             </sl-input>
             <div class="header-links">
-                <a href="https://github.com/yourusername/yourrepo" class="header-link" target="_blank">
+                <a href="{{ config.book.github_url }}" class="header-link" target="_blank">
                     <sl-icon name="github"></sl-icon>
                 </a>
             </div>
             <div class="header-links">
-                <a href="https://github.com/yourusername/yourrepo/edit/main/{{ current_path }}" class="header-link" target="_blank">
+                {% if config.book.github_url %}
+                <a href="{{ config.book.github_edit_url_base }}{{ current_path | replace(from='.html', to='.md') }}" class="header-link" target="_blank">
                     <sl-icon name="pencil-square"></sl-icon>
                 </a>
+                {% endif %}
             </div>
         </div>
     </div>

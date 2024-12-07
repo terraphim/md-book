@@ -75,12 +75,12 @@ struct PageInfo {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    
+    let watch_enabled = args.watch;
     // Load configuration
     let config = config::load_config(args.config.as_deref())?;
     
     // Initial build
-    build(&args, &config)?;
+    build(&args, &config, watch_enabled)?;
 
     if args.watch || args.serve {
         let (reload_tx, _) = broadcast::channel(16);
@@ -114,7 +114,7 @@ async fn main() -> Result<()> {
 
             handles.push(tokio::spawn(async move {
                 if let Err(e) = watch_files(watch_paths, move || {
-                    build(&args, &config)
+                    build(&args, &config, watch_enabled)
                 }, reload_tx).await {
                     eprintln!("Watch error: {}", e);
                 }
@@ -163,7 +163,7 @@ where
     }
 
     // Debounce timer
-    let mut debounce = tokio::time::interval(Duration::from_millis(100));
+    let mut debounce = tokio::time::interval(Duration::from_millis(500));
     let mut pending = false;
 
     loop {
@@ -186,7 +186,7 @@ where
     }
 }
 
-fn build(args: &Args, config: &BookConfig) -> Result<()> {
+fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     // Initialize Tera with configured templates directory
     let mut tera = Tera::default();
     
@@ -295,6 +295,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     
     // Add syntax highlighting CSS
     let ts = ThemeSet::load_defaults();
+    // TODO: Make this configurable
     let theme = &ts.themes["Solarized (light)"];
     let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
         .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
@@ -342,6 +343,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
             context.insert("page", &page_data);
             context.insert("config", &config);
             context.insert("current_path", &rel_path.with_extension("html").display().to_string());
+            context.insert("watch_enabled", &watch_enabled);
             
             let rendered = tera.render("page", &context)
                 .with_context(|| format!("Failed to render page: {}", html_path))?;
