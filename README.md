@@ -9,17 +9,17 @@ cargo run -- -i ../mdBook/test_book  -o ./test_mdbook
 -i is the input directory and -o is the output directory.
 input directory is the directory with md files.
 
-input directory with markdown files and the tool will generate the output directory with the html files ready to be deployed on any static site. 
+The tool will generate the input directory with markdown files and the output directory with HTML files ready to be deployed on any static site. 
 
 Adjust the styling in the src/templates/css/styles.css file.
 
-Or anything you want to change in the src/templates folder, it's a standard tera template so you can add your own custom stuff there.
+Or anything you want to change in the src/templates folder. It's a standard Tera template, so you can add your own custom stuff there.
 
 ## Styling
 
 * Nicer default styling for content - multiple columns for horizontal layout,
-* Right hand TOC to navigate around the page.
-* Create index.md to create a content for home page alternatively it will create a list of cards with all the pages as index.
+* Right-hand TOC to navigate around the page.
+* Create index.md to create content for the home page; alternatively, it will create a list of cards with all the pages as an index.
 
 
 - Code blocks with syntax highlighting
@@ -37,7 +37,7 @@ You can add a book.toml file to the input directory to configure the book.
 
 Supports TOML configuration via book.toml
 Allows overriding with environment variables (prefixed with MDBOOK_)
-Supports command line arguments
+Supports command-line arguments
 Enables shell expansion in config file paths
 Provides default values for optional fields
 Example usage:
@@ -49,7 +49,7 @@ MDBOOK_BOOK.TITLE="My Book" ./md-book -i input -o output
 # Using custom config file
 ./md-book -i input -o output -c ~/my-config.toml
 
-# Config values can be nested using underscore
+# Config values can be nested using an underscore
 MDBOOK_OUTPUT.HTML.MATHJAX_SUPPORT=true ./md-book -i input -o output
 ```
 The configuration system follows the priority order:
