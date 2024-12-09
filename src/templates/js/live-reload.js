@@ -1,4 +1,12 @@
-const socket = new WebSocket(`ws://${location.host}/live-reload`);
+const socket = new WebSocket(`ws://${window.location.hostname}:${window.location.port}/live-reload`);
+
+socket.addEventListener('open', () => {
+    console.log('Live reload connected');
+});
+
+socket.addEventListener('error', (error) => {
+    console.error('Live reload error:', error);
+});
 
 socket.addEventListener('message', (event) => {
     if (event.data === 'reload') {
