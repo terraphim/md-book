@@ -1,3 +1,26 @@
+#![warn(
+    clippy::all,
+    clippy::pedantic,
+    absolute_paths_not_starting_with_crate,
+    rustdoc::invalid_html_tags,
+    missing_copy_implementations,
+    missing_debug_implementations,
+    semicolon_in_expressions_from_macros,
+    unreachable_pub,
+    unused_extern_crates,
+    variant_size_differences,
+    clippy::missing_const_for_fn
+)]
+#![deny(anonymous_parameters, macro_use_extern_crate, pointer_structural_match)]
+#![deny(missing_docs)]
+#![doc = "A modern markdown book generator with live reload capabilities and enhanced styling.
+This tool converts markdown files into a static website with features like:
+- Syntax highlighting
+- Live reload during development
+- Configurable templates
+- Responsive design
+- Table of contents generation"]
+
 use anyhow::{Context, Result};
 use clap::Parser;
 use jiff::{Zoned, Unit};
@@ -21,7 +44,7 @@ use std::time::Duration;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, broadcast};
-mod server; // Import the server module
+mod server; 
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]

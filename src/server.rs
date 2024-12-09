@@ -4,7 +4,7 @@ use tokio::sync::broadcast;
 use futures::{SinkExt, StreamExt};
 use warp::ws::{Message, WebSocket};
 
-pub async fn serve_book(output_dir: String, port: u16, reload_tx: broadcast::Sender<()>) -> Result<()> {
+pub(crate) async fn serve_book(output_dir: String, port: u16, reload_tx: broadcast::Sender<()>) -> Result<()> {
     let static_files = warp::fs::dir(output_dir.clone())
         .or(warp::fs::file(format!("{}/index.html", output_dir)));
 

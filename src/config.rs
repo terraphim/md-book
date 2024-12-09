@@ -1,5 +1,11 @@
+//! Configuration types for the book generator.
+//! These types are used to parse and store configuration from various sources
+//! including TOML files and environment variables.
+
 use serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
+
+/// Main configuration structure for the book
 #[config]
 #[derive(Debug, Default, serde::Serialize, Clone)]
 pub struct BookConfig {
@@ -11,6 +17,8 @@ pub struct BookConfig {
     #[serde(default)]
     pub paths: Paths,
 }
+
+/// Book configuration
 #[config]
 #[derive(Debug, Default, serde::Serialize, Clone)]
 pub struct Book {
@@ -92,7 +100,7 @@ fn default_boost_paragraph() -> u32 { 1 }
 fn default_heading_split_level() -> u32 { 2 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
-pub struct Paths {
+pub(crate) struct Paths {
     #[serde(default = "default_templates_dir")]
     pub templates: String,
 }
@@ -101,7 +109,7 @@ fn default_templates_dir() -> String {
     "templates".to_string()
 }
 
-pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
+pub(crate) fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
     let mut layers = vec![
         Layer::Env(Some("MDBOOK_".to_string())),
     ];
