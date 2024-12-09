@@ -83,6 +83,6 @@ cargo run -- -i input -o output --watch --serve --port 8080
 ```
 
 # TODO
-[ ] Rust specific synax highlight
-[ ] Search
-[ ] Mathjax
+- [ ] Rust specific synax highlight (Good first issue)
+- [ ] Search (WIP)
+- [ ] Mathjax 
