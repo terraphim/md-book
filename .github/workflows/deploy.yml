@@ -40,11 +40,21 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-deploy-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cloudflare-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-deploy-
+            ${{ runner.os }}-cloudflare-cargo-
+            ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
+          save-always: true
             
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+          
       - name: Install Node.js and Bun
         uses: actions/setup-node@v4
         with:
@@ -126,6 +136,14 @@ jobs:
           </html>
           EOF
           
+      - name: Cache npm global packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-global-${{ hashFiles('**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-global-
+            
       - name: Setup Cloudflare CLI
         run: npm install -g wrangler
         

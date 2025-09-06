@@ -53,11 +53,21 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.rust }}-
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-
+            ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
+          save-always: true
             
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+          
       - name: Install Bun for frontend tests
         uses: oven-sh/setup-bun@v1
         with:
@@ -134,9 +144,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
-          
-        
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
       - name: Build for WebAssembly
         run: cargo build --target wasm32-unknown-unknown --lib --no-default-features
         
@@ -159,11 +172,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-msrv-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-msrv-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-msrv-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Check MSRV compilation
         run: cargo check --lib
@@ -182,7 +201,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         
-      - name: Cache Cargo dependencies
+      - name: Cache Cargo dependencies and tools
         uses: actions/cache@v4
         with:
           path: |
@@ -191,10 +210,21 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-audit-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-audit-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Install cargo-audit
-        run: cargo install --locked cargo-audit
+        run: |
+          # Check if cargo-audit is already installed
+          if ! command -v cargo-audit &> /dev/null; then
+            cargo install --locked cargo-audit
+          else
+            echo "cargo-audit is already installed: $(cargo-audit --version)"
+          fi
         
       - name: Run security audit
         run: cargo audit
@@ -213,8 +243,30 @@ jobs:
         with:
           components: llvm-tools-preview
           
+      - name: Cache Cargo dependencies and tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-coverage-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
+          
       - name: Install cargo-tarpaulin
-        run: cargo install --locked cargo-tarpaulin
+        run: |
+          # Check if cargo-tarpaulin is already installed
+          if ! command -v cargo-tarpaulin &> /dev/null; then
+            cargo install --locked cargo-tarpaulin
+          else
+            echo "cargo-tarpaulin is already installed: $(cargo-tarpaulin --version)"
+          fi
         
       - name: Generate coverage report
         run: |
@@ -243,11 +295,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-bench-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bench-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Install benchmark dependencies  
         run: sudo apt-get update && sudo apt-get install -y bc jq
@@ -339,7 +397,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-doc-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-doc-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-doc-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Build documentation
         run: |

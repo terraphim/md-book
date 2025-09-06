@@ -39,10 +39,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-netlify-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-netlify-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-netlify-
+            ${{ runner.os }}-netlify-cargo-
+            ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
+          save-always: true
             
       - name: Run tests
         run: |
