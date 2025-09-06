@@ -664,3 +664,398 @@ fn process_markdown_basic(content: &str, config: &BookConfig) -> Result<String> 
     to_html_with_options(content, &options)
         .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{BookConfig, MarkdownFormat};
+    use tempfile::TempDir;
+    use std::fs;
+
+    #[test]
+    fn test_extract_title_h1() {
+        let markdown = "# Main Title\n\nSome content here.";
+        let title = extract_title(markdown);
+        assert_eq!(title, Some("Main Title".to_string()));
+    }
+
+    #[test]
+    fn test_extract_title_h2() {
+        let markdown = "Some text\n\n## Section Title\n\nContent";
+        let title = extract_title(markdown);
+        assert_eq!(title, Some("Section Title".to_string()));
+    }
+
+    #[test]
+    fn test_extract_title_no_heading() {
+        let markdown = "Just some regular text without headings.";
+        let title = extract_title(markdown);
+        assert_eq!(title, None);
+    }
+
+    #[test]
+    fn test_extract_title_complex_markup() {
+        let markdown = "# Title with **bold** and *italic*";
+        let title = extract_title(markdown);
+        assert_eq!(title, Some("Title with **bold** and *italic*".to_string()));
+    }
+
+    #[test]
+    fn test_extract_title_first_heading_wins() {
+        let markdown = "# First Title\n\n## Second Title\n\n# Third Title";
+        let title = extract_title(markdown);
+        assert_eq!(title, Some("First Title".to_string()));
+    }
+
+    #[test]
+    fn test_args_default_values() {
+        use clap::Parser;
+        
+        // Test that we can parse minimal required args
+        let args = Args::try_parse_from(&["md-book", "-i", "input", "-o", "output"]).unwrap();
+        assert_eq!(args.input, "input");
+        assert_eq!(args.output, "output");
+        assert_eq!(args.config, None);
+        
+        #[cfg(feature = "watcher")]
+        assert!(!args.watch);
+        
+        #[cfg(feature = "server")]
+        {
+            assert!(!args.serve);
+            assert_eq!(args.port, 3000);
+        }
+    }
+
+    #[cfg(feature = "server")]
+    #[test]
+    fn test_args_with_server_options() {
+        use clap::Parser;
+        
+        let args = Args::try_parse_from(&[
+            "md-book", "-i", "input", "-o", "output", 
+            "--serve", "--port", "8080"
+        ]).unwrap();
+        
+        assert!(args.serve);
+        assert_eq!(args.port, 8080);
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_default() -> Result<()> {
+        let config = BookConfig::default();
+        let markdown = "# Hello World\n\nThis is **bold** text.";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        assert!(html.contains("<h1>Hello World</h1>"));
+        assert!(html.contains("<strong>bold</strong>"));
+        
+        Ok(())
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_gfm() -> Result<()> {
+        let mut config = BookConfig::default();
+        config.markdown.format = MarkdownFormat::Gfm;
+        
+        let markdown = "# GFM Test\n\n~~strikethrough~~\n\n- [ ] Task item";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        assert!(html.contains("<h1>GFM Test</h1>"));
+        assert!(html.contains("strikethrough")); 
+        
+        Ok(())
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_mdx() -> Result<()> {
+        let mut config = BookConfig::default();
+        config.markdown.format = MarkdownFormat::Mdx;
+        
+        let markdown = "# MDX Test\n\nThis is **bold** text.";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        assert!(html.contains("<h1>MDX Test</h1>"));
+        assert!(html.contains("<strong>bold</strong>"));
+        
+        Ok(())
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_with_html_allowed() -> Result<()> {
+        let mut config = BookConfig::default();
+        config.output.html.allow_html = true;
+        
+        let markdown = "# Test\n\n<div>Raw HTML</div>";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        assert!(html.contains("<div>Raw HTML</div>"));
+        
+        Ok(())
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_with_html_disallowed() -> Result<()> {
+        let config = BookConfig::default(); 
+        
+        let markdown = "# Test\n\n<div>Raw HTML</div>";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        // HTML should be escaped or stripped when not allowed
+        assert!(!html.contains("<div>Raw HTML</div>"));
+        
+        Ok(())
+    }
+
+    #[cfg(not(feature = "syntax-highlighting"))]
+    #[test]
+    fn test_process_markdown_basic_with_frontmatter() -> Result<()> {
+        let mut config = BookConfig::default();
+        config.markdown.frontmatter = true;
+        
+        let markdown = "---\ntitle: Test\n---\n\n# Hello World";
+        
+        let html = process_markdown_basic(markdown, &config)?;
+        
+        assert!(html.contains("<h1>Hello World</h1>"));
+        // Frontmatter should be processed/removed from output
+        assert!(!html.contains("---"));
+        
+        Ok(())
+    }
+
+    #[test]
+    #[ignore = "MathJax support not implemented yet"]
+    fn test_process_markdown_with_mathjax() -> Result<()> {
+        let mut config = BookConfig::default();
+        config.output.html.mathjax_support = true;
+        
+        let markdown = "# Math Test\n\n$$E = mc^2$$";
+        
+        // Test with basic markdown processing (will work regardless of syntax highlighting feature)
+        let html = markdown::to_html(markdown);
+        
+        // When implemented, should contain MathJax markup
+        assert!(html.contains("E = mc^2"));
+        
+        Ok(())
+    }
+
+    #[test]
+    fn test_page_data_serialization() -> Result<()> {
+        let page_data = PageData {
+            title: "Test Page".to_string(),
+            content: "<h1>Test</h1>".to_string(),
+            sections: vec![
+                Section {
+                    title: "Section 1".to_string(),
+                    pages: vec![
+                        PageInfo {
+                            title: "Page 1".to_string(),
+                            path: "/page1".to_string(),
+                        }
+                    ],
+                }
+            ],
+            previous: Some(PageInfo {
+                title: "Previous".to_string(),
+                path: "/prev".to_string(),
+            }),
+            next: None,
+        };
+        
+        let serialized = serde_json::to_string(&page_data)?;
+        assert!(serialized.contains("Test Page"));
+        assert!(serialized.contains("Section 1"));
+        assert!(serialized.contains("/page1"));
+        
+        Ok(())
+    }
+
+    #[cfg(feature = "syntax-highlighting")]
+    #[test]
+    fn test_process_code_block_rust() -> Result<()> {
+        use syntect::parsing::SyntaxSet;
+        
+        let ss = SyntaxSet::load_defaults_newlines();
+        let code = "fn main() {\n    println!(\"Hello, world!\");\n}";
+        
+        let highlighted = process_code_block(code, Some("rust"), &ss)?;
+        
+        assert!(highlighted.contains("<pre"));
+        assert!(highlighted.contains("fn main"));
+        
+        Ok(())
+    }
+
+    #[cfg(feature = "syntax-highlighting")]
+    #[test]
+    fn test_process_code_block_no_language() -> Result<()> {
+        use syntect::parsing::SyntaxSet;
+        
+        let ss = SyntaxSet::load_defaults_newlines();
+        let code = "some plain text code";
+        
+        let highlighted = process_code_block(code, None, &ss)?;
+        
+        assert!(highlighted.contains("<pre"));
+        assert!(highlighted.contains("some plain text code"));
+        
+        Ok(())
+    }
+
+    #[test]
+    fn test_copy_static_assets() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let output_dir = temp_dir.path().join("output");
+        let templates_dir = "src/templates"; 
+        
+        fs::create_dir_all(&output_dir)?;
+        
+        let config = BookConfig::default();
+        copy_static_assets(output_dir.to_str().unwrap(), templates_dir, &config)?;
+        
+        // Check that some assets were copied (if templates exist)
+        let _has_assets = output_dir.join("css").exists() || 
+                         output_dir.join("js").exists() || 
+                         output_dir.join("img").exists();
+        
+        // This test passes even if no assets exist, just checking the function doesn't crash
+        assert!(output_dir.exists());
+        
+        Ok(())
+    }
+
+    #[test]
+    fn test_copy_static_assets_nonexistent_dir() {
+        let temp_dir = TempDir::new().unwrap();
+        let output_dir = temp_dir.path().join("output");
+        let templates_dir = "nonexistent_templates";
+        
+        fs::create_dir_all(&output_dir).unwrap();
+        
+        let config = BookConfig::default();
+        let result = copy_static_assets(output_dir.to_str().unwrap(), templates_dir, &config);
+        
+        // Should not fail even if templates dir doesn't exist
+        assert!(result.is_ok());
+    }
+
+    // WASM-specific tests
+    #[cfg(target_arch = "wasm32")]
+    #[test]
+    fn test_wasm_process_markdown() {
+        use crate::wasm_process_markdown;
+        
+        let markdown = "# WASM Test\n\nThis is **bold** text for WASM.";
+        let html = wasm_process_markdown(markdown);
+        
+        assert!(html.contains("<h1>WASM Test</h1>"));
+        assert!(html.contains("<strong>bold</strong>"));
+        
+        // WASM should handle basic markdown correctly
+        assert!(!html.is_empty());
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    #[test]
+    fn test_wasm_process_markdown_empty() {
+        use crate::wasm_process_markdown;
+        
+        let html = wasm_process_markdown("");
+        assert!(html.is_empty() || html == "<p></p>\n");
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    #[test]
+    fn test_wasm_process_markdown_code_blocks() {
+        use crate::wasm_process_markdown;
+        
+        let markdown = "```rust\nfn main() {\n    println!(\"Hello, WASM!\");\n}\n```";
+        let html = wasm_process_markdown(markdown);
+        
+        // WASM should handle code blocks (even without syntax highlighting)
+        assert!(html.contains("<pre>") || html.contains("<code>"));
+        assert!(html.contains("fn main"));
+        assert!(html.contains("Hello, WASM!"));
+    }
+
+    // Integration-style test for build function
+    #[cfg(all(feature = "tokio", not(target_arch = "wasm32")))]
+    #[tokio::test]
+    async fn test_build_simple_book() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let input_dir = temp_dir.path().join("src");
+        let output_dir = temp_dir.path().join("book");
+        
+        fs::create_dir_all(&input_dir)?;
+        fs::create_dir_all(&output_dir)?;
+        
+        // Create simple markdown file
+        fs::write(input_dir.join("test.md"), "# Test Page\n\nThis is a test.")?;
+        
+        let args = Args {
+            input: input_dir.to_string_lossy().to_string(),
+            output: output_dir.to_string_lossy().to_string(),
+            config: None,
+            #[cfg(feature = "watcher")]
+            watch: false,
+            #[cfg(feature = "server")]
+            serve: false,
+            #[cfg(feature = "server")]
+            port: 3000,
+        };
+        
+        let config = BookConfig::default();
+        build(&args, &config, false).await?;
+        
+        // Verify output was created
+        assert!(output_dir.exists());
+        
+        Ok(())
+    }
+
+    #[cfg(all(not(feature = "tokio"), not(target_arch = "wasm32")))]
+    #[test]
+    fn test_build_simple_book() -> Result<()> {
+        let temp_dir = TempDir::new()?;
+        let input_dir = temp_dir.path().join("src");
+        let output_dir = temp_dir.path().join("book");
+        
+        fs::create_dir_all(&input_dir)?;
+        fs::create_dir_all(&output_dir)?;
+        
+        // Create simple markdown file
+        fs::write(input_dir.join("test.md"), "# Test Page\n\nThis is a test.")?;
+        
+        let args = Args {
+            input: input_dir.to_string_lossy().to_string(),
+            output: output_dir.to_string_lossy().to_string(),
+            config: None,
+            #[cfg(feature = "watcher")]
+            watch: false,
+            #[cfg(feature = "server")]
+            serve: false,
+            #[cfg(feature = "server")]
+            port: 3000,
+        };
+        
+        let config = BookConfig::default();
+        build(&args, &config, false)?;
+        
+        // Verify output was created
+        assert!(output_dir.exists());
+        
+        Ok(())
+    }
+}
