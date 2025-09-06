@@ -5,7 +5,6 @@ use md_book::core::{build, Args};
 #[cfg(any(feature = "server", feature = "watcher"))]
 use futures::future;
 
-
 #[cfg(feature = "server")]
 use md_book::serve_book;
 #[cfg(feature = "server")]

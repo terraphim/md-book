@@ -1,0 +1,51 @@
+[build]
+  command = "cargo run -- -i test_input -o dist"
+  publish = "dist"
+
+[build.environment]
+  RUST_VERSION = "1.70.0"
+
+# Redirect rules for better navigation
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# Cache optimization for static assets
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Vary = "Accept-Encoding"
+
+[[headers]]
+  for = "/js/*"  
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    Vary = "Accept-Encoding"
+
+[[headers]]
+  for = "/img/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML pages - always revalidate for fresh content
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Security headers for all pages
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Enable Netlify Functions (optional)
+[functions]
+  directory = "netlify/functions"
+  included_files = ["netlify/functions/**"]

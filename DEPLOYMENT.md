@@ -1,8 +1,15 @@
-# MD-Book Cloudflare Deployment
+# MD-Book Deployment Guide
 
-This document provides comprehensive instructions for deploying MD-Book to Cloudflare Pages and Workers.
+This document provides comprehensive instructions for deploying MD-Book to various hosting platforms including Cloudflare Pages, Workers, and Netlify.
 
-## Quick Start
+## Deployment Options
+
+MD-Book supports multiple hosting platforms:
+
+- **[Cloudflare Pages](#cloudflare-deployment)** - Unlimited bandwidth, Workers integration, advanced caching
+- **[Netlify](#netlify-deployment)** - Simple deployment, forms, branch previews, generous free tier
+
+## Quick Start (Cloudflare)
 
 ### 1. Initial Setup
 
@@ -62,7 +69,9 @@ USE_1PASSWORD=false ./scripts/deploy.sh production
 ./scripts/deploy.sh staging
 ```
 
-## Architecture Overview
+## Cloudflare Deployment
+
+### Architecture Overview
 
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
@@ -456,6 +465,249 @@ API_URL = "https://api.yourdomain.com"
 [env.staging.vars]
 API_URL = "https://staging-api.yourdomain.com"
 ```
+
+## Netlify Deployment
+
+MD-Book can also be deployed to Netlify, which offers a simple drag-and-drop deployment option and Git-based continuous deployment.
+
+### Quick Netlify Deployment
+
+#### Option 1: Drag and Drop
+1. **Build your site locally:**
+   ```bash
+   # Build with default input/output
+   cargo run -- -i docs -o dist
+   
+   # Or use custom directories
+   cargo run -- -i your-content -o build
+   ```
+
+2. **Deploy to Netlify:**
+   - Go to [Netlify Drop](https://app.netlify.com/drop)
+   - Drag your `dist` (or `build`) folder to the deploy area
+   - Your site will be live instantly with a random URL
+   - Optionally set a custom subdomain
+
+#### Option 2: Git-based Deployment
+1. **Connect your repository:**
+   - Go to [Netlify](https://app.netlify.com/)
+   - Click "Add new site" → "Import an existing project"
+   - Connect your Git provider and select your repository
+
+2. **Configure build settings:**
+   ```yaml
+   # Build command
+   cargo run -- -i docs -o dist
+   
+   # Publish directory  
+   dist
+   
+   # Environment variables (optional)
+   RUST_VERSION=1.70.0
+   ```
+
+#### Option 3: Netlify CLI
+```bash
+# Install Netlify CLI
+npm install -g netlify-cli
+
+# Login to Netlify
+netlify login
+
+# Build your site
+cargo run -- -i docs -o dist
+
+# Deploy to draft URL
+netlify deploy --dir=dist
+
+# Deploy to production
+netlify deploy --prod --dir=dist
+```
+
+### Netlify Configuration File
+
+Create `netlify.toml` in your project root:
+
+```toml
+[build]
+  command = "cargo run -- -i docs -o dist"
+  publish = "dist"
+
+[build.environment]
+  RUST_VERSION = "1.70.0"
+
+# Redirect rules for SPA-like behavior
+[[redirects]]
+  from = "/*"
+  to = "/404.html"
+  status = 404
+
+# Headers for better caching
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "/js/*"  
+  [headers.values]
+    Cache-Control = "public, max-age=31536000"
+
+[[headers]]
+  for = "*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Enable Netlify Functions (optional)
+[functions]
+  directory = "netlify/functions"
+```
+
+### GitHub Actions for Netlify
+
+Create `.github/workflows/netlify-deploy.yml`:
+
+```yaml
+name: Deploy to Netlify
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.70.0
+          
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Build site
+        run: |
+          cargo run -- -i docs -o dist
+          
+      - name: Deploy to Netlify
+        uses: nwtgck/actions-netlify@v3.0
+        with:
+          publish-dir: './dist'
+          production-branch: main
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          deploy-message: "Deploy from GitHub Actions"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+```
+
+### Netlify Features for MD-Book
+
+#### Form Handling
+Add contact forms to your documentation:
+
+```html
+<!-- In your markdown or template -->
+<form name="feedback" method="POST" data-netlify="true">
+  <p>
+    <label>Name: <input type="text" name="name" required /></label>
+  </p>
+  <p>
+    <label>Email: <input type="email" name="email" required /></label>
+  </p>
+  <p>
+    <label>Message: <textarea name="message" required></textarea></label>
+  </p>
+  <p>
+    <button type="submit">Send Feedback</button>
+  </p>
+</form>
+```
+
+#### Branch Previews
+- Every pull request gets a preview URL
+- Perfect for reviewing documentation changes
+- Automatic cleanup when PR is merged/closed
+
+#### Custom Domains
+```toml
+# In netlify.toml
+[build]
+  command = "cargo run -- -i docs -o dist"
+  publish = "dist"
+
+# Custom domain configuration
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+```
+
+### Netlify vs Cloudflare Comparison
+
+| Feature | Netlify | Cloudflare Pages |
+|---------|---------|-----------------|
+| **Deployment** | Git-based, CLI, Drag & Drop | Git-based, CLI, API |
+| **Build Time** | 15min free tier | Unlimited |
+| **Bandwidth** | 100GB/month free | Unlimited |
+| **Forms** | Built-in form handling | Requires Workers |
+| **Functions** | Netlify Functions | Cloudflare Workers |
+| **CDN** | Global CDN | Global CDN (faster) |
+| **Custom Headers** | Via netlify.toml | Via _headers file |
+| **Redirects** | Built-in | Built-in |
+| **Branch Previews** | ✅ | ✅ |
+| **Custom Domains** | Free SSL | Free SSL |
+| **Analytics** | Paid add-on | Built-in |
+
+### Migration from Cloudflare to Netlify
+
+If you want to migrate from Cloudflare to Netlify:
+
+1. **Export your build:**
+   ```bash
+   # Build locally
+   cargo run -- -i docs -o dist
+   ```
+
+2. **Create netlify.toml:**
+   ```toml
+   [build]
+     command = "cargo run -- -i docs -o dist"
+     publish = "dist"
+   ```
+
+3. **Set up redirects:**
+   ```toml
+   # Convert Cloudflare _redirects to netlify.toml
+   [[redirects]]
+     from = "/old-path/*"
+     to = "/new-path/:splat"
+     status = 301
+   ```
+
+4. **Deploy:**
+   ```bash
+   netlify init
+   netlify deploy --prod
+   ```
 
 ## Support and Resources
 

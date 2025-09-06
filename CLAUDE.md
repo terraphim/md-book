@@ -139,7 +139,32 @@ The project includes an optional Cloudflare Worker for enhanced functionality:
 ./scripts/deploy-worker.sh staging
 ```
 
+### Netlify Deployment
+
+MD-Book also supports deployment to Netlify for simpler hosting needs:
+
+#### Quick Netlify Deployment
+```bash
+# Build the site
+cargo run -- -i test_input -o dist
+
+# Deploy with Netlify CLI (install: npm install -g netlify-cli)
+netlify deploy --prod --dir=dist
+
+# Or use drag-and-drop at https://app.netlify.com/drop
+```
+
 #### Configuration Files
+- **`netlify.toml`**: Netlify configuration with build settings and headers
+- **`.github/workflows/netlify-deploy.yml`**: GitHub Actions for automated deployment
+
+#### Netlify Features
+- **Drag-and-drop deployment** for quick prototypes
+- **Branch previews** for pull requests  
+- **Form handling** built into static HTML
+- **Generous free tier** (100GB bandwidth/month)
+
+### Cloudflare Configuration Files
 - **`wrangler.toml`**: Main Cloudflare Pages configuration
 - **`worker/wrangler.toml`**: Cloudflare Worker configuration
 - **`.env.example`**: Environment variables template

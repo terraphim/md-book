@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Documentation | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script type="module" src="/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+</head>
+<body>
+    <div class="container index-container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/index.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <main class="content index-content">
+            
+                <div class="index-header">
+                    <h1>Documentation</h1>
+                </div>
+                <div class="card-grid">
+                    
+                        <div class="section-group">
+                            <h2>Guide</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Getting Started</h3>
+                                        <sl-button href="/getting-started.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                        <div class="section-group">
+                            <h2>test_input</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Advanced Configuration</h3>
+                                        <sl-button href="/test_input/advanced.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Getting Started</h3>
+                                        <sl-button href="/test_input/getting-started.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                </div>
+            
+        </main>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+</body>
+</html> 

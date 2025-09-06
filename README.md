@@ -90,6 +90,37 @@ cargo run -- -i input -o output --serve
 cargo run -- -i input -o output --watch --serve --port 8080
 ```
 
+## Deployment
+
+MD-Book supports deployment to multiple platforms:
+
+### Cloudflare Pages (Recommended)
+```bash
+# Setup (includes 1Password integration)
+./scripts/setup-cloudflare.sh
+
+# Deploy to production  
+./scripts/deploy.sh production
+```
+
+### Netlify
+```bash
+# Build site
+cargo run -- -i docs -o dist
+
+# Deploy with CLI
+netlify deploy --prod --dir=dist
+
+# Or drag & drop at https://app.netlify.com/drop
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment documentation including:
+- 1Password integration for secure secret management
+- GitHub Actions workflows
+- Custom domains and SSL
+- Performance optimization
+- Platform comparison
+
 # TODO
 
 - [ ] Rust specific synax highlight. Good first issue.
