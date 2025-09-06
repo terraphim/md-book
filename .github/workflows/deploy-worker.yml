@@ -36,23 +36,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js (for wrangler compatibility)
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
           
-      - name: Cache npm global packages
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+          
+      - name: Cache Bun global packages
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-npm-global-wrangler-${{ env.NODE_VERSION }}
+          path: ~/.bun/install/global
+          key: ${{ runner.os }}-bun-global-wrangler-${{ hashFiles('**/package.json') }}
           restore-keys: |
-            ${{ runner.os }}-npm-global-wrangler-
-            ${{ runner.os }}-npm-global-
+            ${{ runner.os }}-bun-global-wrangler-
+            ${{ runner.os }}-bun-global-
             
       - name: Install Wrangler CLI
-        run: npm install -g wrangler
+        run: bun install -g wrangler
         
       - name: Validate Worker code
         run: |
