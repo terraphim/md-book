@@ -1,6 +1,8 @@
 use anyhow::Result;
 use std::path::PathBuf;
 use thiserror::Error;
+
+#[cfg(feature = "search")]
 use jiff::Zoned;
 
 #[derive(Error, Debug)]
@@ -28,12 +30,17 @@ pub enum PagefindError {
     WasmError { message: String },
 }
 
-
+#[cfg(feature = "search")]
 #[derive(Debug)]
 pub struct PagefindBuilder {
     source_path: PathBuf,
 }
 
+#[cfg(not(feature = "search"))]
+#[derive(Debug)]
+pub struct PagefindBuilder;
+
+#[cfg(feature = "search")]
 impl PagefindBuilder {
     pub async fn new(source_path: PathBuf) -> Result<Self, PagefindError> {
         // Validate source path exists
@@ -90,11 +97,31 @@ impl PagefindBuilder {
     }
 }
 
+#[cfg(not(feature = "search"))]
+impl PagefindBuilder {
+    pub async fn new(_source_path: PathBuf) -> Result<Self, PagefindError> {
+        Err(PagefindError::IndexingFailed { 
+            message: "Search feature not enabled".to_string() 
+        })
+    }
+    
+    pub async fn build(&self) -> Result<(), PagefindError> {
+        Err(PagefindError::IndexingFailed { 
+            message: "Search feature not enabled".to_string() 
+        })
+    }
+    
+    pub fn source_path(&self) -> Option<&PathBuf> {
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use tempfile::TempDir;
     
+    #[cfg(feature = "search")]
     #[tokio::test]
     async fn test_pagefind_builder_new() {
         let temp_dir = TempDir::new().unwrap();
@@ -107,6 +134,7 @@ mod tests {
         assert_eq!(builder.source_path(), Some(&source_path));
     }
     
+    #[cfg(feature = "search")]
     #[tokio::test]
     async fn test_invalid_source_path() {
         let invalid_path = PathBuf::from("/nonexistent/path");
@@ -120,4 +148,4 @@ mod tests {
             _ => panic!("Expected SourcePathNotFound error"),
         }
     }
-} 
+}

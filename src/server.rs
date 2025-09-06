@@ -1,9 +1,14 @@
+#[cfg(feature = "server")]
 use warp::Filter;
 use anyhow::Result;
+#[cfg(feature = "server")]
 use tokio::sync::broadcast;
+#[cfg(feature = "server")]
 use futures::{SinkExt, StreamExt};
+#[cfg(feature = "server")]
 use warp::ws::{Message, WebSocket};
 
+#[cfg(feature = "server")]
 pub async fn serve_book(output_dir: String, port: u16, reload_tx: broadcast::Sender<()>) -> Result<()> {
     let static_files = warp::fs::dir(output_dir.clone())
         .or(warp::fs::file(format!("{}/index.html", output_dir)));
@@ -23,6 +28,7 @@ pub async fn serve_book(output_dir: String, port: u16, reload_tx: broadcast::Sen
     Ok(())
 }
 
+#[cfg(feature = "server")]
 async fn handle_live_reload(ws: WebSocket, reload_tx: broadcast::Sender<()>) {
     let mut rx = reload_tx.subscribe();
     let (mut ws_tx, _) = ws.split();
