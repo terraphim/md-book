@@ -7,7 +7,7 @@
             <span class="header-title">{{ config.book.title }}</span>
         </div>
         <div class="header-right">
-            <sl-input placeholder="Search docs..." size="small" clearable class="header-search">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
                 <sl-icon name="search" slot="prefix"></sl-icon>
             </sl-input>
             <div class="header-links">

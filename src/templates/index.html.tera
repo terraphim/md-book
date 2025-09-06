@@ -8,7 +8,11 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
     <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
     <script type="module" src="/js/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
 </head>
 <body>
     <div class="container index-container">
@@ -51,5 +55,8 @@
             {% endif %}
         </main>
     </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
 </body>
 </html> 

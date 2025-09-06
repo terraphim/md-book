@@ -22,6 +22,9 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, broadcast};
 mod server; // Import the server module
+use std::path::PathBuf;
+pub mod pagefind_service;
+use pagefind_service::PagefindBuilder;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -80,7 +83,7 @@ async fn main() -> Result<()> {
     let config = config::load_config(args.config.as_deref())?;
     
     // Initial build
-    build(&args, &config, watch_enabled)?;
+    build(&args, &config, watch_enabled).await?;
 
     if args.watch || args.serve {
         let (reload_tx, _) = broadcast::channel(16);
@@ -114,7 +117,9 @@ async fn main() -> Result<()> {
 
             handles.push(tokio::spawn(async move {
                 if let Err(e) = watch_files(watch_paths, move || {
-                    build(&args, &config, watch_enabled)
+                    let args = args.clone();
+                    let config = config.clone();
+                    async move { build(&args, &config, watch_enabled).await }
                 }, reload_tx).await {
                     eprintln!("Watch error: {}", e);
                 }
@@ -137,9 +142,10 @@ fn get_templates_dir(config: &BookConfig) -> Option<String> {
     }
 }
 
-async fn watch_files<F>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
+async fn watch_files<F, Fut>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
 where
-    F: Fn() -> Result<()> + Send + Sync + 'static,
+    F: Fn() -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = Result<()>> + Send,
 {
     use tokio::time::Duration;
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -175,7 +181,7 @@ where
                 if pending {
                     pending = false;
                     println!("Rebuilding...");
-                    if let Err(e) = rebuild() {
+                    if let Err(e) = rebuild().await {
                         eprintln!("Rebuild error: {}", e);
                     } else {
                         let _ = reload_tx.send(());
@@ -186,7 +192,7 @@ where
     }
 }
 
-fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
+pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     // Initialize Tera with configured templates directory
     let mut tera = Tera::default();
     
@@ -381,6 +387,10 @@ fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
         .context("Failed to render index page")?;
     fs::write(format!("{}/index.html", args.output), rendered)
         .context("Failed to write index.html")?;
+
+    // After generating HTML files, run Pagefind indexing
+    let pagefind = PagefindBuilder::new(PathBuf::from(&args.output)).await?;
+    pagefind.build().await?;
 
     Ok(())
 }
