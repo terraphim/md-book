@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -94,7 +96,9 @@ jobs:
         
       - name: Run performance benchmarks
         if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
-        run: ./scripts/bench.sh
+        run: |
+          chmod +x ./scripts/bench.sh
+          ./scripts/bench.sh
         continue-on-error: false  # Fail CI if significant regressions detected
         
       - name: Test documentation build
@@ -277,23 +281,41 @@ jobs:
             const fs = require('fs');
             const path = 'benchmark-results/current.json';
             
-            if (fs.existsSync(path)) {
-              const results = fs.readFileSync(path, 'utf8');
-              const body = `## 📊 Performance Benchmark Results\n\nBenchmark completed successfully. Check the uploaded artifacts for detailed results.\n\n<details>\n<summary>Raw Results</summary>\n\n\`\`\`json\n${results.slice(0, 2000)}\n\`\`\`\n\n</details>`;
+            try {
+              let body;
               
-              github.rest.issues.createComment({
+              if (fs.existsSync(path)) {
+                const results = fs.readFileSync(path, 'utf8');
+                const truncatedResults = results.slice(0, 2000);
+                const wasTruncated = results.length > 2000;
+                
+                body = `## 📊 Performance Benchmark Results\n\nBenchmark completed successfully. Check the uploaded artifacts for detailed results.\n\n<details>\n<summary>Raw Results ${wasTruncated ? '(truncated)' : ''}</summary>\n\n\`\`\`json\n${truncatedResults}${wasTruncated ? '\n...\n[Results truncated - see artifacts for full output]' : ''}\n\`\`\`\n\n</details>`;
+              } else {
+                body = '## ⚠️ Performance Benchmark Results\n\nBenchmark completed but no results file was generated. Please check the workflow logs and uploaded artifacts.';
+              }
+              
+              await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: body
               });
-            } else {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: '## ❌ Performance Benchmark Failed\n\nBenchmark execution failed. Please check the workflow logs.'
-              });
+              
+            } catch (error) {
+              console.error('Failed to post benchmark comment:', error);
+              
+              // Try to post a simple error message
+              try {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: '## ❌ Performance Benchmark Failed\n\nFailed to post benchmark results. Check workflow logs for details.'
+                });
+              } catch (commentError) {
+                console.error('Failed to post error comment:', commentError);
+                // Don't fail the workflow if we can't post comments
+              }
             }
 
   docs:
