@@ -18,7 +18,8 @@ env:
 jobs:
   build-and-deploy:
     name: Build and Deploy to Netlify
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for faster builds and deployments
+    runs-on: self-hosted
     
     steps:
       - name: Checkout repository

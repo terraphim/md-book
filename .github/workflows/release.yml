@@ -12,7 +12,8 @@ permissions:
 jobs:
   create-release:
     name: Create Release
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for release creation
+    runs-on: self-hosted
     outputs:
       upload_url: ${{ steps.release.outputs.upload_url }}
       version: ${{ steps.version.outputs.version }}
@@ -252,7 +253,8 @@ jobs:
   build-deb:
     name: Build Debian Package
     needs: [create-release]
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for Debian package builds
+    runs-on: self-hosted
     
     steps:
       - name: Checkout repository
@@ -318,7 +320,8 @@ jobs:
   docker:
     name: Build Docker Image
     needs: [create-release]
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for Docker builds
+    runs-on: self-hosted
     
     steps:
       - name: Checkout repository
@@ -359,7 +362,8 @@ jobs:
   publish-crate:
     name: Publish to crates.io
     needs: [build-release, build-deb]
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for crate publishing
+    runs-on: self-hosted
     if: github.event_name == 'push' && !contains(github.ref, '-')  # Only for stable releases
     
     steps:
@@ -393,7 +397,8 @@ jobs:
   finalize-release:
     name: Finalize Release
     needs: [create-release, build-release, build-deb, docker]
-    runs-on: ubuntu-latest
+    # Use self-hosted runner for release finalization
+    runs-on: self-hosted
     if: always() && needs.create-release.result == 'success'
     
     steps:
