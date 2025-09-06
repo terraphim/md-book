@@ -11,16 +11,13 @@ pub enum MarkdownFormat {
     Mdx,
 }
 
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-#[derive(Default)]
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
 pub struct MarkdownInput {
     #[serde(default)]
     pub format: MarkdownFormat,
     #[serde(default)]
     pub frontmatter: bool,
 }
-
 
 #[config]
 #[derive(Debug, Default, serde::Serialize, Clone)]
@@ -33,7 +30,7 @@ pub struct BookConfig {
     #[serde(default)]
     pub markdown: MarkdownInput,
     #[serde(default)]
-    pub paths: Paths
+    pub paths: Paths,
 }
 
 #[config]
@@ -86,7 +83,7 @@ pub struct HtmlOutput {
     #[serde(default)]
     pub allow_html: bool,
     pub playground: PlaygroundConfig,
-    pub search: SearchConfig
+    pub search: SearchConfig,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -115,11 +112,21 @@ pub struct SearchConfig {
     pub heading_split_level: u32,
 }
 
-fn default_limit_results() -> u32 { 20 }
-fn default_boost_title() -> u32 { 2 }
-fn default_boost_hierarchy() -> u32 { 2 }
-fn default_boost_paragraph() -> u32 { 1 }
-fn default_heading_split_level() -> u32 { 2 }
+fn default_limit_results() -> u32 {
+    20
+}
+fn default_boost_title() -> u32 {
+    2
+}
+fn default_boost_hierarchy() -> u32 {
+    2
+}
+fn default_boost_paragraph() -> u32 {
+    1
+}
+fn default_heading_split_level() -> u32 {
+    2
+}
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct Paths {
@@ -132,9 +139,7 @@ fn default_templates_dir() -> String {
 }
 
 pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
-    let mut layers = vec![
-        Layer::Env(Some("MDBOOK_".to_string())),
-    ];
+    let mut layers = vec![Layer::Env(Some("MDBOOK_".to_string()))];
 
     // Add default book.toml if it exists
     if std::path::Path::new("book.toml").exists() {
@@ -147,7 +152,7 @@ pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
             // and is TOML
             if path.ends_with(".toml") {
                 layers.push(Layer::Toml(path.into()));
-            } else if path.ends_with(".json")    {
+            } else if path.ends_with(".json") {
                 layers.push(Layer::Json(path.into()));
             } else {
                 anyhow::bail!("Unsupported config file type: {}", path);
@@ -157,4 +162,4 @@ pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
 
     let config = BookConfig::with_layers(&layers)?;
     Ok(config)
-} 
+}

@@ -1,0 +1,40 @@
+name = "md-book-worker"
+main = "src/index.js"
+compatibility_date = "2024-09-06"
+compatibility_flags = ["nodejs_compat"]
+
+# Worker routing - only handle specific paths
+routes = [
+  { pattern = "md-book.pages.dev/api/*", zone_name = "pages.dev" },
+  { pattern = "md-book.pages.dev/legacy/*", zone_name = "pages.dev" },
+  { pattern = "md-book.pages.dev/old/*", zone_name = "pages.dev" }
+]
+
+[env.production]
+name = "md-book-worker"
+
+[env.staging]
+name = "md-book-worker-staging"
+
+# KV namespaces for storing data
+# [[kv_namespaces]]
+# binding = "FEEDBACK"
+# id = "your-kv-namespace-id"
+# preview_id = "your-preview-kv-namespace-id"
+
+# D1 Database for more complex data storage
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "md-book-db"
+# database_id = "your-d1-database-id"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+# Limits and resources
+[limits]
+cpu_ms = 50  # 50ms CPU time limit for API endpoints

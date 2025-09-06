@@ -1,14 +1,14 @@
 pub mod config;
-pub mod pagefind_service;
 pub mod core;
+pub mod pagefind_service;
 
 // Optional server module for native builds only
 #[cfg(feature = "server")]
 pub mod server;
 
 pub use config::BookConfig;
-pub use pagefind_service::{PagefindBuilder, PagefindError};
 pub use core::{build, Args, PageInfo};
+pub use pagefind_service::{PagefindBuilder, PagefindError};
 
 // Re-export server functionality when available
 #[cfg(feature = "server")]

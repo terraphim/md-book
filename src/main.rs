@@ -1,41 +1,46 @@
 use anyhow::Result;
-use md_book::core::{build, Args};
 use md_book::config;
+use md_book::core::{build, Args};
 
 #[cfg(any(feature = "server", feature = "watcher"))]
 use futures::future;
 
-#[cfg(feature = "server")]
-use tokio::sync::broadcast;
+
 #[cfg(feature = "server")]
 use md_book::serve_book;
+#[cfg(feature = "server")]
+use tokio::sync::broadcast;
 
 #[cfg(feature = "watcher")]
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 #[cfg(feature = "watcher")]
 use tokio::time::Duration;
 
-use std::path::Path;
 use clap::Parser;
+use std::path::Path;
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    
+
     #[cfg(any(feature = "watcher", feature = "server"))]
     let watch_enabled = {
         #[cfg(feature = "watcher")]
-        { args.watch }
+        {
+            args.watch
+        }
         #[cfg(not(feature = "watcher"))]
-        { false }
+        {
+            false
+        }
     };
-    
+
     #[cfg(not(any(feature = "watcher", feature = "server")))]
     let watch_enabled = false;
-    
+
     // Load configuration
     let config = config::load_config(args.config.as_deref())?;
-    
+
     // Initial build
     #[cfg(any(feature = "server", feature = "watcher"))]
     build(&args, &config, watch_enabled).await?;
@@ -46,24 +51,32 @@ async fn main() -> Result<()> {
     {
         let should_watch = {
             #[cfg(feature = "watcher")]
-            { args.watch }
+            {
+                args.watch
+            }
             #[cfg(not(feature = "watcher"))]
-            { false }
+            {
+                false
+            }
         };
-        
+
         let should_serve = {
             #[cfg(feature = "server")]
-            { args.serve }
+            {
+                args.serve
+            }
             #[cfg(not(feature = "server"))]
-            { false }
+            {
+                false
+            }
         };
-        
+
         if should_watch || should_serve {
             #[cfg(feature = "server")]
             let (reload_tx, _) = broadcast::channel(16);
             #[cfg(not(feature = "server"))]
             let reload_tx = ();
-            
+
             let mut handles = vec![];
 
             // Start server if requested
@@ -72,7 +85,7 @@ async fn main() -> Result<()> {
                 let output_dir = args.output.clone();
                 let port = args.port;
                 let reload_tx = reload_tx.clone();
-                
+
                 handles.push(tokio::spawn(async move {
                     if let Err(e) = serve_book(output_dir, port, reload_tx).await {
                         eprintln!("Server error: {}", e);
@@ -94,16 +107,26 @@ async fn main() -> Result<()> {
                 let reload_tx = reload_tx.clone();
 
                 handles.push(tokio::spawn(async move {
-                    if let Err(e) = watch_files(watch_paths, move || {
-                        let args = args.clone();
-                        let config = config.clone();
-                        async move { 
-                            #[cfg(feature = "tokio")]
-                            { build(&args, &config, watch_enabled).await }
-                            #[cfg(not(feature = "tokio"))]
-                            { build(&args, &config, watch_enabled) }
-                        }
-                    }, reload_tx).await {
+                    if let Err(e) = watch_files(
+                        watch_paths,
+                        move || {
+                            let args = args.clone();
+                            let config = config.clone();
+                            async move {
+                                #[cfg(feature = "tokio")]
+                                {
+                                    build(&args, &config, watch_enabled).await
+                                }
+                                #[cfg(not(feature = "tokio"))]
+                                {
+                                    build(&args, &config, watch_enabled)
+                                }
+                            }
+                        },
+                        reload_tx,
+                    )
+                    .await
+                    {
                         eprintln!("Watch error: {}", e);
                     }
                 }));
@@ -111,7 +134,7 @@ async fn main() -> Result<()> {
 
             // Keep the main task running
             if !handles.is_empty() {
-                futures::future::join_all(handles).await;
+                let _ = future::join_all(handles).await;
             }
         }
     }
@@ -135,7 +158,7 @@ where
     Fut: std::future::Future<Output = Result<()>> + Send,
 {
     let (tx, mut rx) = tokio::sync::mpsc::channel(32);
-    
+
     let mut watcher = RecommendedWatcher::new(
         move |res| {
             if let Ok(event) = res {

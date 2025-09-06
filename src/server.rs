@@ -1,17 +1,21 @@
-#[cfg(feature = "server")]
-use warp::Filter;
 use anyhow::Result;
-#[cfg(feature = "server")]
-use tokio::sync::broadcast;
 #[cfg(feature = "server")]
 use futures::{SinkExt, StreamExt};
 #[cfg(feature = "server")]
+use tokio::sync::broadcast;
+#[cfg(feature = "server")]
 use warp::ws::{Message, WebSocket};
+#[cfg(feature = "server")]
+use warp::Filter;
 
 #[cfg(feature = "server")]
-pub async fn serve_book(output_dir: String, port: u16, reload_tx: broadcast::Sender<()>) -> Result<()> {
-    let static_files = warp::fs::dir(output_dir.clone())
-        .or(warp::fs::file(format!("{}/index.html", output_dir)));
+pub async fn serve_book(
+    output_dir: String,
+    port: u16,
+    reload_tx: broadcast::Sender<()>,
+) -> Result<()> {
+    let static_files =
+        warp::fs::dir(output_dir.clone()).or(warp::fs::file(format!("{}/index.html", output_dir)));
 
     // Add WebSocket route for live reload
     let reload = warp::path("live-reload")

@@ -8,6 +8,13 @@ use std::fs;
 use tera::{Context as TeraContext, Tera};
 use walkdir::WalkDir;
 
+use crate::config::{BookConfig, MarkdownFormat};
+use crate::pagefind_service::PagefindBuilder;
+use markdown::mdast::Node;
+use markdown::to_mdast;
+use std::collections::BTreeMap;
+use std::path::Path;
+use std::path::PathBuf;
 #[cfg(feature = "syntax-highlighting")]
 use syntect::highlighting::ThemeSet;
 #[cfg(feature = "syntax-highlighting")]
@@ -16,13 +23,6 @@ use syntect::html::{ClassStyle, ClassedHTMLGenerator};
 use syntect::parsing::SyntaxSet;
 #[cfg(feature = "syntax-highlighting")]
 use syntect::util::LinesWithEndings;
-use markdown::mdast::Node;
-use markdown::to_mdast;
-use crate::config::{BookConfig, MarkdownFormat};
-use std::path::Path;
-use std::collections::BTreeMap;
-use std::path::PathBuf;
-use crate::pagefind_service::PagefindBuilder;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -99,7 +99,7 @@ fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<(
 #[cfg(feature = "tokio")]
 async fn build_sync_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     build_sync_impl_sync(args, config, watch_enabled)?;
-    
+
     // After generating HTML files, run Pagefind indexing if search feature is enabled
     #[cfg(all(feature = "search", feature = "tokio"))]
     {
@@ -114,14 +114,14 @@ async fn build_sync_impl(args: &Args, config: &BookConfig, watch_enabled: bool) 
             }
         }
     }
-    
+
     Ok(())
 }
 
 fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     // Initialize Tera with configured templates directory
     let mut tera = Tera::default();
-    
+
     // Add template files from the configured directory
     let template_files = [
         ("page", "page.html.tera"),
@@ -147,14 +147,14 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
                 _ => return Err(anyhow::anyhow!("Unknown template file: {}", file)),
             }
         };
-        
+
         tera.add_raw_template(name, &template_content)
             .with_context(|| format!("Failed to add template: {}", name))?;
     }
-    
+
     // Create output directory if it doesn't exist
     fs::create_dir_all(&args.output)?;
-    
+
     // Copy static assets
     copy_static_assets(&args.output, &config.paths.templates, config)?;
 
@@ -176,13 +176,16 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     for entry in &entries {
         let rel_path = entry.path().strip_prefix(&args.input)?;
         let parent_dir = rel_path.parent().and_then(|p| p.to_str()).unwrap_or("");
-        
+
         let content = fs::read_to_string(entry.path())?;
         let page_info = PageInfo {
-            title: extract_title(&content)
-                .unwrap_or_else(|| entry.path().file_stem()
+            title: extract_title(&content).unwrap_or_else(|| {
+                entry
+                    .path()
+                    .file_stem()
                     .map(|s| s.to_string_lossy().into_owned())
-                    .unwrap_or_else(|| "Untitled".to_string())),
+                    .unwrap_or_else(|| "Untitled".to_string())
+            }),
             path: format!("/{}", rel_path.with_extension("html").display()),
         };
 
@@ -191,7 +194,8 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         if parent_dir.is_empty() {
             root_pages.push(page_info);
         } else {
-            section_map.entry(parent_dir.to_string())
+            section_map
+                .entry(parent_dir.to_string())
                 .or_default()
                 .push(page_info);
         }
@@ -199,7 +203,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
 
     // Convert the map to sections
     let mut sections = Vec::new();
-    
+
     // Add root pages first if they exist
     if !root_pages.is_empty() {
         sections.push(Section {
@@ -210,10 +214,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
 
     // Add other sections
     for (title, pages) in section_map {
-        sections.push(Section {
-            title,
-            pages,
-        });
+        sections.push(Section { title, pages });
     }
 
     let total_pages = all_pages.len();
@@ -225,7 +226,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     // Initialize syntax highlighting if feature is enabled
     #[cfg(feature = "syntax-highlighting")]
     let ss = SyntaxSet::load_defaults_newlines();
-    
+
     #[cfg(feature = "syntax-highlighting")]
     {
         // Add syntax highlighting CSS
@@ -234,7 +235,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         let theme = &ts.themes["Solarized (light)"];
         let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
             .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
-        
+
         fs::write(format!("{}/css/syntax.css", args.output), syntax_css)?;
     }
 
@@ -242,49 +243,60 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     for (current_page, entry) in entries.iter().enumerate() {
         if entry.path().extension().is_some_and(|ext| ext == "md") {
             let rel_path = entry.path().strip_prefix(&args.input)?;
-            let html_path = format!("{}/{}", args.output, rel_path.with_extension("html").display());
-            
+            let html_path = format!(
+                "{}/{}",
+                args.output,
+                rel_path.with_extension("html").display()
+            );
+
             if let Some(parent) = Path::new(&html_path).parent() {
                 fs::create_dir_all(parent)?;
             }
-            
+
             let markdown_content = fs::read_to_string(entry.path())?;
             #[cfg(feature = "syntax-highlighting")]
             let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
             #[cfg(not(feature = "syntax-highlighting"))]
             let html_content = process_markdown_basic(&markdown_content, config)?;
-            
+
             let previous = if current_page > 0 {
                 Some(all_pages[current_page - 1].clone())
             } else {
                 None
             };
-            
+
             let next = if current_page + 1 < total_pages {
                 Some(all_pages[current_page + 1].clone())
             } else {
                 None
             };
-            
+
             let page_data = PageData {
-                title: extract_title(&markdown_content)
-                    .unwrap_or_else(|| entry.path().file_stem()
+                title: extract_title(&markdown_content).unwrap_or_else(|| {
+                    entry
+                        .path()
+                        .file_stem()
                         .map(|s| s.to_string_lossy().into_owned())
-                        .unwrap_or_else(|| "Untitled".to_string())),
+                        .unwrap_or_else(|| "Untitled".to_string())
+                }),
                 content: html_content,
                 sections: sections.clone(),
                 previous,
                 next,
             };
-            
+
             let mut context = TeraContext::new();
             context.insert("year", &current_year);
             context.insert("page", &page_data);
             context.insert("config", &config);
-            context.insert("current_path", &rel_path.with_extension("html").display().to_string());
+            context.insert(
+                "current_path",
+                &rel_path.with_extension("html").display().to_string(),
+            );
             context.insert("watch_enabled", &watch_enabled);
-            
-            let rendered = tera.render("page", &context)
+
+            let rendered = tera
+                .render("page", &context)
                 .with_context(|| format!("Failed to render page: {}", html_path))?;
             fs::write(&html_path, rendered)
                 .with_context(|| format!("Failed to write file: {}", html_path))?;
@@ -299,7 +311,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     context.insert("current_path", &"index.html");
 
     let index_page = all_pages.iter().find(|p| p.path == "/index.html");
-    
+
     if let Some(index) = index_page {
         // If index.md exists, use its content
         let index_path = Path::new(&args.input).join("index.md");
@@ -309,7 +321,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
         #[cfg(not(feature = "syntax-highlighting"))]
         let html_content = process_markdown_basic(&markdown_content, config)?;
-        
+
         context.insert("has_index", &true);
         context.insert("title", &index.title);
         context.insert("content", &html_content);
@@ -318,8 +330,9 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         context.insert("has_index", &false);
         context.insert("title", &"Documentation");
     }
-    
-    let rendered = tera.render("index", &context)
+
+    let rendered = tera
+        .render("index", &context)
         .context("Failed to render index page")?;
     fs::write(format!("{}/index.html", args.output), rendered)
         .context("Failed to write index.html")?;
@@ -329,7 +342,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     {
         println!("Skipping search indexing (search or tokio feature not enabled)");
     }
-    
+
     Ok(())
 }
 
@@ -343,7 +356,7 @@ fn extract_title(markdown: &str) -> Option<String> {
 fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfig) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
-    
+
     // Copy CSS directory
     let css_source = format!("{}/css", templates_dir);
     let css_dest = format!("{}/css/", output_dir);
@@ -351,7 +364,8 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
     if std::path::Path::new(&css_source).exists() {
         for entry in WalkDir::new(&css_source) {
             let entry = entry?;
-            let dest_path = css_dest.clone() + entry.path().strip_prefix(&css_source)?.to_str().unwrap();
+            let dest_path =
+                css_dest.clone() + entry.path().strip_prefix(&css_source)?.to_str().unwrap();
             if entry.file_type().is_file() {
                 fs::copy(entry.path(), dest_path)?;
             }
@@ -365,7 +379,8 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
     if std::path::Path::new(&js_source).exists() {
         for entry in WalkDir::new(&js_source) {
             let entry = entry?;
-            let dest_path = js_dest.clone() + entry.path().strip_prefix(&js_source)?.to_str().unwrap();
+            let dest_path =
+                js_dest.clone() + entry.path().strip_prefix(&js_source)?.to_str().unwrap();
             if entry.file_type().is_file() {
                 fs::copy(entry.path(), dest_path)?;
             }
@@ -379,25 +394,28 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
         let entry = entry?;
         let dest_path = img_dest.clone() + entry.path().strip_prefix(img_source)?.to_str().unwrap();
         if entry.file_type().is_file() {
-            fs::copy(entry.path(), dest_path).context(format!("Failed to copy img file: {:?}", entry.path()))?;
+            fs::copy(entry.path(), dest_path)
+                .context(format!("Failed to copy img file: {:?}", entry.path()))?;
         }
     }
 
+    fs::write(
+        format!("{}/components/doc-toc.js", output_dir),
+        include_str!("templates/components/doc-toc.js"),
+    )
+    .context("Failed to write TOC component")?;
 
-        fs::write(
-            format!("{}/components/doc-toc.js", output_dir),
-            include_str!("templates/components/doc-toc.js"),
-        ).context("Failed to write TOC component")?;
+    fs::write(
+        format!("{}/components/simple-block.js", output_dir),
+        include_str!("templates/components/simple-block.js"),
+    )
+    .context("Failed to write Simple Block component")?;
 
-        fs::write(
-            format!("{}/components/simple-block.js", output_dir),
-            include_str!("templates/components/simple-block.js"),
-        ).context("Failed to write Simple Block component")?;
-
-        fs::write(
-            format!("{}/components/search-modal.js", output_dir),
-            include_str!("templates/components/search-modal.js"),
-        ).context("Failed to write Search Modal component")?;
+    fs::write(
+        format!("{}/components/search-modal.js", output_dir),
+        include_str!("templates/components/search-modal.js"),
+    )
+    .context("Failed to write Search Modal component")?;
 
     Ok(())
 }
@@ -406,7 +424,8 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
 fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Result<String> {
     let syntax = match language {
         Some("rust") => {
-            let syntax = ss.find_syntax_by_extension("rs")
+            let syntax = ss
+                .find_syntax_by_extension("rs")
                 .ok_or_else(|| anyhow::anyhow!("Rust syntax not found"))?;
             // Check if code block has editable tag
             if code.contains("<--editable-->") {
@@ -415,20 +434,23 @@ fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Res
             } else {
                 process_rust_code(code, syntax, ss)?
             }
-        },
+        }
         Some("mermaid") => {
             // For markdown, preserve the content exactly as is
-            format!("<pre class=\"code\"><code class=\"language-mermaid\">{}</code></pre>", 
-                   html_escape::encode_text(code))
-        },
+            format!(
+                "<pre class=\"code\"><code class=\"language-mermaid\">{}</code></pre>",
+                html_escape::encode_text(code)
+            )
+        }
         Some(lang) => {
-            let syntax = ss.find_syntax_by_extension(lang)
+            let syntax = ss
+                .find_syntax_by_extension(lang)
                 .or_else(|| ss.find_syntax_by_name(lang))
                 .or_else(|| ss.find_syntax_by_token(lang))
                 .or_else(|| Some(ss.find_syntax_plain_text()))
                 .ok_or_else(|| anyhow::anyhow!("Syntax not found for language: {:?}", lang))?;
             process_generic_code(code, syntax, ss)?
-        },
+        }
         None => {
             let syntax = ss.find_syntax_plain_text();
             process_generic_code(code, syntax, ss)?
@@ -438,31 +460,38 @@ fn process_code_block(code: &str, language: Option<&str>, ss: &SyntaxSet) -> Res
 }
 
 #[cfg(feature = "syntax-highlighting")]
-fn process_rust_code(code: &str, syntax: &syntect::parsing::SyntaxReference, ss: &SyntaxSet) -> Result<String> {
-    let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
-        syntax,
-        ss,
-        ClassStyle::Spaced
-    );
+fn process_rust_code(
+    code: &str,
+    syntax: &syntect::parsing::SyntaxReference,
+    ss: &SyntaxSet,
+) -> Result<String> {
+    let mut html_generator =
+        ClassedHTMLGenerator::new_with_class_style(syntax, ss, ClassStyle::Spaced);
 
     for line in LinesWithEndings::from(code) {
-        html_generator.parse_html_for_line_which_includes_newline(line)
+        html_generator
+            .parse_html_for_line_which_includes_newline(line)
             .map_err(|e| anyhow::anyhow!("HTML generation error: {:?}", e))?;
     }
     let html = html_generator.finalize();
-    Ok(format!("<pre class=\"code rust\"><code>{}</code></pre>", html))
+    Ok(format!(
+        "<pre class=\"code rust\"><code>{}</code></pre>",
+        html
+    ))
 }
 
 #[cfg(feature = "syntax-highlighting")]
-fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, ss: &SyntaxSet) -> Result<String> {
-    let mut html_generator = ClassedHTMLGenerator::new_with_class_style(
-        syntax,
-        ss,
-        ClassStyle::Spaced
-    );
+fn process_generic_code(
+    code: &str,
+    syntax: &syntect::parsing::SyntaxReference,
+    ss: &SyntaxSet,
+) -> Result<String> {
+    let mut html_generator =
+        ClassedHTMLGenerator::new_with_class_style(syntax, ss, ClassStyle::Spaced);
 
     for line in LinesWithEndings::from(code) {
-        html_generator.parse_html_for_line_which_includes_newline(line)
+        html_generator
+            .parse_html_for_line_which_includes_newline(line)
             .map_err(|e| anyhow::anyhow!("HTML generation error: {:?}", e))?;
     }
     let html = html_generator.finalize();
@@ -470,7 +499,11 @@ fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, 
 }
 
 #[cfg(feature = "syntax-highlighting")]
-fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &BookConfig) -> Result<String> {
+fn process_markdown_with_highlighting(
+    content: &str,
+    ss: &SyntaxSet,
+    config: &BookConfig,
+) -> Result<String> {
     let parse_options = match config.markdown.format {
         MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
         MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
@@ -497,11 +530,18 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
 
     let ast = to_mdast(content, &options.parse)
         .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
-    
+
     let mut parts = Vec::new();
     let mut last_pos = 0;
-    
-    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize, config: &BookConfig) -> Result<()> {
+
+    fn process_node(
+        node: &Node,
+        ss: &SyntaxSet,
+        content: &str,
+        parts: &mut Vec<String>,
+        last_pos: &mut usize,
+        config: &BookConfig,
+    ) -> Result<()> {
         match node {
             Node::Code(code) => {
                 if let Some(pos) = &code.position {
@@ -514,11 +554,12 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                                 MarkdownFormat::Markdown => markdown::ParseOptions::default(),
                             };
 
-                            let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
-                                markdown::CompileOptions::gfm()
-                            } else {
-                                markdown::CompileOptions::default()
-                            };
+                            let compile_options =
+                                if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+                                    markdown::CompileOptions::gfm()
+                                } else {
+                                    markdown::CompileOptions::default()
+                                };
 
                             let mut options = markdown::Options {
                                 parse: parse_options,
@@ -529,20 +570,22 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
                             options.parse.constructs.html_flow = config.output.html.allow_html;
                             options.parse.constructs.html_text = config.output.html.allow_html;
                             options.compile.allow_dangerous_html = config.output.html.allow_html;
-                            options.compile.allow_dangerous_protocol = config.output.html.allow_html;
+                            options.compile.allow_dangerous_protocol =
+                                config.output.html.allow_html;
 
-                            let temp_html = to_html_with_options(text, &options)
-                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+                            let temp_html = to_html_with_options(text, &options).map_err(|e| {
+                                anyhow::anyhow!("Markdown conversion error: {:?}", e)
+                            })?;
                             parts.push(temp_html);
                         }
                     }
-                    
+
                     let highlighted = process_code_block(&code.value, code.lang.as_deref(), ss)?;
                     parts.push(highlighted);
-                    
+
                     *last_pos = pos.end.offset;
                 }
-            },
+            }
             _ => {
                 if let Some(children) = node.children() {
                     for child in children {
@@ -553,9 +596,9 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
         }
         Ok(())
     }
-    
+
     process_node(&ast, ss, content, &mut parts, &mut last_pos, config)?;
-    
+
     if last_pos < content.len() {
         let remaining = &content[last_pos..];
         if !remaining.trim().is_empty() {
@@ -582,11 +625,13 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &Bo
             options.compile.allow_dangerous_html = config.output.html.allow_html;
             options.compile.allow_dangerous_protocol = config.output.html.allow_html;
 
-            parts.push(to_html_with_options(remaining, &options)
-                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
+            parts.push(
+                to_html_with_options(remaining, &options)
+                    .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?,
+            );
         }
     }
-    
+
     Ok(parts.join(""))
 }
 

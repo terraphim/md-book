@@ -1,0 +1,73 @@
+name = "md-book"
+compatibility_date = "2024-09-06"
+
+[env.production]
+name = "md-book"
+
+[env.staging]
+name = "md-book-staging"
+
+# Pages configuration
+[pages]
+# Output directory from the Rust build process
+build_output_dir = "dist"
+# Build command will be handled in GitHub Actions
+build_command = ""
+
+# Environment variables for Cloudflare Pages
+[vars]
+NODE_VERSION = "20"
+RUST_VERSION = "1.70.0"
+
+# Custom domains (optional - configure in Cloudflare dashboard)
+# [pages.custom_domains]
+# production = "your-domain.com"
+# staging = "staging.your-domain.com"
+
+# Headers for security and optimization
+[[pages.headers]]
+for = "/*"
+[pages.headers.values]
+X-Content-Type-Options = "nosniff"
+X-Frame-Options = "DENY"
+X-XSS-Protection = "1; mode=block"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Cache control for static assets
+[[pages.headers]]
+for = "/css/*"
+[pages.headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[pages.headers]]
+for = "/js/*"
+[pages.headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[pages.headers]]
+for = "/img/*"
+[pages.headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+
+[[pages.headers]]
+for = "/pagefind/*"
+[pages.headers.values]
+Cache-Control = "public, max-age=3600"
+
+# HTML files should be revalidated
+[[pages.headers]]
+for = "/*.html"
+[pages.headers.values]
+Cache-Control = "public, max-age=0, must-revalidate"
+
+# Redirects (example)
+# [[pages.redirects]]
+# from = "/old-path"
+# to = "/new-path"
+# status = 301
+
+# Error pages
+[pages.error_pages]
+"404.html" = "/404.html"
+"500.html" = "/500.html"

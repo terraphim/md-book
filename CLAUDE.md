@@ -82,6 +82,158 @@ The project uses a layered configuration approach (priority order):
 
 Supports TOML, JSON, and YAML configuration files with shell expansion for paths.
 
+## Deployment and CI/CD
+
+### Cloudflare Pages Deployment
+
+MD-Book is configured for automated deployment to Cloudflare Pages with the following features:
+
+#### Automated Deployments
+- **Production**: Deploys automatically on push to `main`/`master` branch
+- **Preview**: Creates preview deployments for pull requests
+- **Manual**: Can be triggered manually via GitHub Actions
+
+#### Deployment Commands
+```bash
+# Full automated deployment (runs tests, builds, deploys)
+./scripts/deploy.sh production
+
+# Deploy to staging
+./scripts/deploy.sh staging
+
+# Skip tests for faster deployment
+SKIP_TESTS=true ./scripts/deploy.sh production
+
+# Deploy without Cloudflare Worker
+DEPLOY_WORKER=false ./scripts/deploy.sh production
+```
+
+#### GitHub Actions Workflows
+- **`.github/workflows/deploy.yml`**: Main deployment workflow for Cloudflare Pages
+- **`.github/workflows/deploy-worker.yml`**: Cloudflare Worker deployment
+- **`.github/workflows/ci.yml`**: Comprehensive CI pipeline with testing and benchmarks
+
+#### Required Secrets
+Set these in your GitHub repository settings:
+```
+CLOUDFLARE_API_TOKEN=your_token_here
+CLOUDFLARE_ACCOUNT_ID=your_account_id_here
+```
+
+### Cloudflare Worker
+
+The project includes an optional Cloudflare Worker for enhanced functionality:
+
+#### Worker Features
+- **API Endpoints**: `/api/health`, `/api/search/suggestions`, `/api/analytics/event`, `/api/feedback`
+- **Legacy Redirects**: Handles URL redirects for moved content
+- **Security Headers**: Adds comprehensive security headers to all responses
+- **Edge Functions**: Runs at Cloudflare's edge for optimal performance
+
+#### Worker Deployment
+```bash
+# Deploy worker to production
+./scripts/deploy-worker.sh production
+
+# Deploy worker to staging
+./scripts/deploy-worker.sh staging
+```
+
+#### Configuration Files
+- **`wrangler.toml`**: Main Cloudflare Pages configuration
+- **`worker/wrangler.toml`**: Cloudflare Worker configuration
+- **`.env.example`**: Environment variables template
+
+#### Required Cloudflare Secrets
+For deployment to work, you need two secrets from Cloudflare:
+
+**`CLOUDFLARE_API_TOKEN`** (Required for authentication)
+- **Purpose**: Authenticates with Cloudflare API to deploy pages and manage resources
+- **Permissions**: `Cloudflare Pages:Edit`, `Zone:Read`, `Account:Read`
+- **Get it**: [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens) → Create Token → Custom Token
+
+**`CLOUDFLARE_ACCOUNT_ID`** (Required for account identification)
+- **Purpose**: Identifies which Cloudflare account to deploy resources to
+- **Get it**: [Cloudflare Dashboard](https://dash.cloudflare.com/) → Copy "Account ID" from right sidebar
+
+**Setup Instructions:**
+1. **For GitHub Actions**: Add both as repository secrets in Settings → Secrets and variables → Actions
+2. **For Local Development**: Set as environment variables or add to `.env` file (never commit `.env`)
+
+### Build Pipeline
+
+1. **Prerequisites Check**: Validates Rust, Node.js, and required tools
+2. **Testing Phase**: Runs format checks, linting, unit tests, and frontend tests
+3. **Build Phase**: Compiles optimized release binary and generates static site
+4. **Deployment Phase**: Deploys to Cloudflare Pages and optionally deploys Worker
+5. **Verification**: Confirms deployment success and provides live URLs
+
+### Performance Optimizations
+
+#### Caching Strategy
+- **Static Assets**: Long-term caching (1 year) for CSS, JS, images
+- **Search Index**: Medium-term caching (1 hour) for Pagefind assets
+- **HTML Pages**: Immediate revalidation for content updates
+
+#### Security Headers
+- Content Security Policy (CSP)
+- X-Frame-Options, X-XSS-Protection
+- Strict Transport Security (HSTS)
+- Content-Type-Options
+
+### Monitoring and Analytics
+
+#### Built-in Features
+- Health check endpoint: `/api/health`
+- Performance benchmarks in CI pipeline
+- Build artifact uploads for debugging
+- Deployment summaries in GitHub Actions
+
+#### Custom Analytics
+- Event tracking via `/api/analytics/event`
+- User feedback collection via `/api/feedback`
+- Error reporting integration (configurable)
+
+### Environment Management
+
+#### Production Environment
+- URL: `https://md-book.pages.dev`
+- Automatic deployment from main branch
+- Full feature set enabled
+- Production-grade caching and security
+
+#### Staging Environment
+- URL: `https://md-book-staging.pages.dev`
+- Manual deployment for testing
+- Same features as production
+- Used for pre-production validation
+
+#### Preview Environments
+- URL: `https://preview-{pr-number}.md-book.pages.dev`
+- Created automatically for pull requests
+- Allows testing changes before merge
+- Automatically updated on PR changes
+
+### Troubleshooting Deployment
+
+#### Common Issues
+1. **Missing Environment Variables**: Ensure `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` are set
+2. **Build Failures**: Check Rust version compatibility and dependencies
+3. **Asset Loading**: Verify static asset paths and CDN configuration
+4. **Search Not Working**: Ensure Pagefind is properly configured and indexed
+
+#### Debug Commands
+```bash
+# Test build locally
+cargo run -- -i test_input -o dist
+
+# Validate worker locally
+cd worker && wrangler dev
+
+# Check deployment status
+wrangler pages deployment list --project-name=md-book
+```
+
 ## Development Guidelines
 
 ### Rust & Async Programming Expert Guidelines
