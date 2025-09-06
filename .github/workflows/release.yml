@@ -1,0 +1,383 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      version: ${{ steps.version.outputs.version }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Get version from tag
+        id: version
+        run: |
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+          echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          
+      - name: Validate version matches Cargo.toml
+        run: |
+          CARGO_VERSION=$(grep '^version = ' Cargo.toml | head -n1 | cut -d'"' -f2)
+          TAG_VERSION="${{ steps.version.outputs.version }}"
+          if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+            echo "Version mismatch: Cargo.toml has $CARGO_VERSION, tag has $TAG_VERSION"
+            exit 1
+          fi
+          
+      - name: Create GitHub release
+        id: release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          release_name: md-book ${{ steps.version.outputs.version }}
+          draft: true
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
+          body: |
+            ## Changes
+            
+            * TODO: Add changelog entries
+            
+            ## Installation
+            
+            ### Pre-built binaries
+            
+            Pre-built binaries are available for Linux, macOS, and Windows.
+            
+            ### From source
+            
+            ```bash
+            cargo install md-book
+            ```
+            
+            ### Docker
+            
+            ```bash
+            docker run --rm -v $(pwd):/workspace ghcr.io/terraphim/md-book:${{ steps.version.outputs.version }}
+            ```
+
+  build-release:
+    name: Build Release
+    needs: [create-release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux targets
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive-suffix: tar.gz
+            
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            archive-suffix: tar.gz
+            cross: true
+            
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            archive-suffix: tar.gz
+            cross: true
+            
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            archive-suffix: tar.gz
+            cross: true
+            
+          # macOS targets
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            archive-suffix: tar.gz
+            
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            archive-suffix: tar.gz
+            
+          # Windows targets
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            archive-suffix: zip
+            
+          - target: x86_64-pc-windows-gnu
+            os: windows-latest
+            archive-suffix: zip
+            cross: true
+            
+    runs-on: ${{ matrix.os }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+          
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Install cross-compilation tools
+        if: matrix.cross
+        run: |
+          cargo install cross --git https://github.com/cross-rs/cross
+          
+      - name: Build release binary
+        run: |
+          if [ "${{ matrix.cross }}" = "true" ]; then
+            cross build --release --target ${{ matrix.target }}
+          else
+            cargo build --release --target ${{ matrix.target }}
+          fi
+        shell: bash
+        
+      - name: Generate completions and man pages (Unix only)
+        if: matrix.os != 'windows-latest'
+        run: |
+          mkdir -p completions man
+          target/${{ matrix.target }}/release/md-book --generate-completions bash > completions/md-book.bash || true
+          target/${{ matrix.target }}/release/md-book --generate-completions fish > completions/md-book.fish || true
+          target/${{ matrix.target }}/release/md-book --generate-completions zsh > completions/md-book.zsh || true
+          target/${{ matrix.target }}/release/md-book --generate-man > man/md-book.1 || true
+        continue-on-error: true
+        
+      - name: Create archive directory
+        run: |
+          mkdir -p archive
+          cp target/${{ matrix.target }}/release/md-book${{ matrix.os == 'windows-latest' && '.exe' || '' }} archive/
+          cp README.md LICENSE* archive/ 2>/dev/null || true
+        shell: bash
+        
+      - name: Add completions and man pages to archive (Unix only)
+        if: matrix.os != 'windows-latest'
+        run: |
+          if [ -d completions ] && [ "$(ls -A completions)" ]; then
+            cp -r completions archive/
+          fi
+          if [ -d man ] && [ "$(ls -A man)" ]; then
+            cp -r man archive/
+          fi
+        continue-on-error: true
+        
+      - name: Create tar.gz archive (Unix)
+        if: matrix.archive-suffix == 'tar.gz'
+        run: |
+          cd archive
+          tar -czf ../md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz *
+          
+      - name: Create zip archive (Windows)
+        if: matrix.archive-suffix == 'zip'
+        run: |
+          cd archive
+          7z a ../md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip *
+        shell: cmd
+        
+      - name: Generate checksums
+        run: |
+          if [ "${{ matrix.archive-suffix }}" = "tar.gz" ]; then
+            ARCHIVE="md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.tar.gz"
+          else
+            ARCHIVE="md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.zip"
+          fi
+          
+          if command -v sha256sum >/dev/null; then
+            sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          elif command -v shasum >/dev/null; then
+            shasum -a 256 "$ARCHIVE" > "$ARCHIVE.sha256"
+          else
+            echo "No checksum utility found"
+            exit 1
+          fi
+        shell: bash
+        
+      - name: Upload release archive
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive-suffix }}
+          asset_name: md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive-suffix }}
+          asset_content_type: ${{ matrix.archive-suffix == 'zip' && 'application/zip' || 'application/gzip' }}
+          
+      - name: Upload checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive-suffix }}.sha256
+          asset_name: md-book-${{ needs.create-release.outputs.version }}-${{ matrix.target }}.${{ matrix.archive-suffix }}.sha256
+          asset_content_type: text/plain
+
+  build-deb:
+    name: Build Debian Package
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-deb-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+        
+      - name: Build Debian package
+        run: |
+          cargo deb --no-build --no-strip
+          DEB_FILE=$(find target/debian -name "*.deb" | head -n1)
+          cp "$DEB_FILE" "md-book_${{ needs.create-release.outputs.version }}_amd64.deb"
+          
+      - name: Generate checksum
+        run: |
+          sha256sum "md-book_${{ needs.create-release.outputs.version }}_amd64.deb" > "md-book_${{ needs.create-release.outputs.version }}_amd64.deb.sha256"
+          
+      - name: Upload Debian package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: md-book_${{ needs.create-release.outputs.version }}_amd64.deb
+          asset_name: md-book_${{ needs.create-release.outputs.version }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+          
+      - name: Upload Debian package checksum
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: md-book_${{ needs.create-release.outputs.version }}_amd64.deb.sha256
+          asset_name: md-book_${{ needs.create-release.outputs.version }}_amd64.deb.sha256
+          asset_content_type: text/plain
+
+  docker:
+    name: Build Docker Image
+    needs: [create-release]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  publish-crate:
+    name: Publish to crates.io
+    needs: [build-release, build-deb]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && !contains(github.ref, '-')  # Only for stable releases
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+          
+      - name: Publish to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: cargo publish --no-verify
+
+  finalize-release:
+    name: Finalize Release
+    needs: [create-release, build-release, build-deb, docker]
+    runs-on: ubuntu-latest
+    if: always() && needs.create-release.result == 'success'
+    
+    steps:
+      - name: Mark release as published
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const releases = await github.rest.repos.listReleases({ owner, repo });
+            const release = releases.data.find(r => r.tag_name === '${{ needs.create-release.outputs.tag }}');
+            
+            if (release && release.draft) {
+              await github.rest.repos.updateRelease({
+                owner,
+                repo,
+                release_id: release.id,
+                draft: false
+              });
+              console.log('Release marked as published');
+            }

@@ -1,0 +1,20 @@
+[toolchain]
+# Specify the Rust toolchain version
+channel = "stable"
+
+# Components to install with the toolchain
+components = [
+    "rustfmt",
+    "clippy",
+    "rust-src",      # For IDE support and cargo expand
+    "rust-analyzer", # Language server for IDE support
+]
+
+# Targets to install with the toolchain
+targets = [
+    "wasm32-unknown-unknown", # For WebAssembly builds
+    "x86_64-pc-windows-gnu",  # For Windows cross-compilation
+]
+
+# Profile to use for this toolchain
+profile = "default"

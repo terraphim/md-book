@@ -4,18 +4,31 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }} | {{ config.book.title }}</title>
-    <link rel="stylesheet" href="/css/styles.css">
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
     <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script type="module" src="/js/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
 </head>
 <body>
     <div class="container index-container">
         {% include "header" %}
         <main class="content index-content">
             {% if has_index %}
-                <article class="main-article">
-                    {{ content | safe }}
+                
+                    {% if config.output.html.allow_html %}
+                        <!-- HTML is allowed -->
+                        {{ content | safe }}
+                    {% else %}
+                    <article class="main-article">
+                        HTML is not allowed
+                        {{ content }}
+                    </article>
+                {% endif %}
                 </article>
             {% else %}
                 <div class="index-header">
@@ -29,7 +42,7 @@
                                 {% for page in section.pages %}
                                     <sl-card class="doc-card">
                                         <h3 slot="header">{{ page.title }}</h3>
-                                        <sl-button href="{{ page.path }}" variant="primary">
+                                        <sl-button href="{{ page.path }}" variant="default">
                                             Read More
                                             <sl-icon slot="suffix" name="arrow-right"></sl-icon>
                                         </sl-button>
@@ -42,5 +55,8 @@
             {% endif %}
         </main>
     </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
 </body>
 </html> 

@@ -1,4 +1,12 @@
-# MD book is a mdbook replacement with some extra features
+# MD book is a mdbook replacement with extra features to make docs beautiful
+## Features
+* parse md, mdx or gfm files thanks to markdown-rs
+* tera templates for easy hacking
+* Beautiful default styling
+* Right hand TOC to navigate around the page.
+* Create index.md to create a content for home page, alternatively it will create a list of cards with all the pages as index.
+* Code blocks with syntax highlighting on server side using syntect
+
 ## Run
 Checkout the source code and run:
 
@@ -83,6 +91,7 @@ cargo run -- -i input -o output --watch --serve --port 8080
 ```
 
 # TODO
-- [ ] Rust specific synax highlight (Good first issue)
-- [ ] Search (WIP)
-- [ ] Mathjax 
+
+- [ ] Rust specific synax highlight. Good first issue.
+- [ ] Search [WIP]
+- [ ] Mathjax

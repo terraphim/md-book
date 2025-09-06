@@ -13,7 +13,7 @@ use syntect::util::LinesWithEndings;
 use markdown::mdast::Node;
 use markdown::to_mdast;
 mod config;
-use config::BookConfig;
+use config::{BookConfig, MarkdownFormat};
 use tokio;
 use notify::{Config as NotifyConfig, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
@@ -22,6 +22,9 @@ use std::collections::BTreeMap;
 use std::sync::Arc;
 use tokio::sync::{Mutex, broadcast};
 mod server; // Import the server module
+use std::path::PathBuf;
+pub mod pagefind_service;
+use pagefind_service::PagefindBuilder;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -75,12 +78,12 @@ struct PageInfo {
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    
+    let watch_enabled = args.watch;
     // Load configuration
     let config = config::load_config(args.config.as_deref())?;
     
     // Initial build
-    build(&args, &config)?;
+    build(&args, &config, watch_enabled).await?;
 
     if args.watch || args.serve {
         let (reload_tx, _) = broadcast::channel(16);
@@ -114,7 +117,9 @@ async fn main() -> Result<()> {
 
             handles.push(tokio::spawn(async move {
                 if let Err(e) = watch_files(watch_paths, move || {
-                    build(&args, &config)
+                    let args = args.clone();
+                    let config = config.clone();
+                    async move { build(&args, &config, watch_enabled).await }
                 }, reload_tx).await {
                     eprintln!("Watch error: {}", e);
                 }
@@ -137,9 +142,10 @@ fn get_templates_dir(config: &BookConfig) -> Option<String> {
     }
 }
 
-async fn watch_files<F>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
+async fn watch_files<F, Fut>(paths: Vec<String>, rebuild: F, reload_tx: broadcast::Sender<()>) -> Result<()>
 where
-    F: Fn() -> Result<()> + Send + Sync + 'static,
+    F: Fn() -> Fut + Send + Sync + 'static,
+    Fut: std::future::Future<Output = Result<()>> + Send,
 {
     use tokio::time::Duration;
     use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -163,7 +169,7 @@ where
     }
 
     // Debounce timer
-    let mut debounce = tokio::time::interval(Duration::from_millis(100));
+    let mut debounce = tokio::time::interval(Duration::from_millis(500));
     let mut pending = false;
 
     loop {
@@ -175,7 +181,7 @@ where
                 if pending {
                     pending = false;
                     println!("Rebuilding...");
-                    if let Err(e) = rebuild() {
+                    if let Err(e) = rebuild().await {
                         eprintln!("Rebuild error: {}", e);
                     } else {
                         let _ = reload_tx.send(());
@@ -186,7 +192,7 @@ where
     }
 }
 
-fn build(args: &Args, config: &BookConfig) -> Result<()> {
+pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     // Initialize Tera with configured templates directory
     let mut tera = Tera::default();
     
@@ -212,7 +218,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
                 "sidebar.html.tera" => include_str!("templates/sidebar.html.tera").to_string(),
                 "footer.html.tera" => include_str!("templates/footer.html.tera").to_string(),
                 "header.html.tera" => include_str!("templates/header.html.tera").to_string(),
-                _ => panic!("Unknown template file: {}", file),
+                _ => return Err(anyhow::anyhow!("Unknown template file: {}", file)),
             }
         };
         
@@ -224,7 +230,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
-    copy_static_assets(&args.output, &config.paths.templates)?;
+    copy_static_assets(&args.output, &config.paths.templates, &config)?;
 
     // Collect all pages first
     let mut all_pages = Vec::new();
@@ -295,6 +301,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     
     // Add syntax highlighting CSS
     let ts = ThemeSet::load_defaults();
+    // TODO: Make this configurable
     let theme = &ts.themes["Solarized (light)"];
     let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
         .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
@@ -312,7 +319,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
             }
             
             let markdown_content = fs::read_to_string(entry.path())?;
-            let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
+            let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
             
             let previous = if current_page > 0 {
                 Some(all_pages[current_page - 1].clone())
@@ -342,6 +349,7 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
             context.insert("page", &page_data);
             context.insert("config", &config);
             context.insert("current_path", &rel_path.with_extension("html").display().to_string());
+            context.insert("watch_enabled", &watch_enabled);
             
             let rendered = tera.render("page", &context)
                 .with_context(|| format!("Failed to render page: {}", html_path))?;
@@ -360,10 +368,11 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     let index_page = all_pages.iter().find(|p| p.path == "/index.html");
     
     if let Some(index) = index_page {
+        // If index.md exists, use its content
         let index_path = Path::new(&args.input).join("index.md");
         let markdown_content = fs::read_to_string(&index_path)
             .with_context(|| format!("Failed to read index file: {}", index_path.display()))?;
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss)?;
+        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
         
         context.insert("has_index", &true);
         context.insert("title", &index.title);
@@ -379,6 +388,9 @@ fn build(args: &Args, config: &BookConfig) -> Result<()> {
     fs::write(format!("{}/index.html", args.output), rendered)
         .context("Failed to write index.html")?;
 
+    // After generating HTML files, run Pagefind indexing
+    let pagefind = PagefindBuilder::new(PathBuf::from(&args.output)).await?;
+    pagefind.build().await?;
     Ok(())
 }
 
@@ -389,7 +401,7 @@ fn extract_title(markdown: &str) -> Option<String> {
         .map(|line| line[2..].trim().to_string())
 }
 
-fn copy_static_assets(output_dir: &str, templates_dir: &str) -> Result<()> {
+fn copy_static_assets(output_dir: &str, templates_dir: &str, config: &BookConfig) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
@@ -420,12 +432,28 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str) -> Result<()> {
             }
         }
     }
-    
-    // Copy only TOC web component
-    fs::write(
-        format!("{}/components/doc-toc.js", output_dir),
-        include_str!("templates/components/doc-toc.js"),
-    ).context("Failed to write TOC component")?;
+    // Copy img directory from templates
+    let img_source = "src/templates/img";
+    let img_dest = format!("{}/img/", output_dir);
+    fs::create_dir_all(&img_dest)?;
+    for entry in WalkDir::new(img_source) {
+        let entry = entry?;
+        let dest_path = img_dest.clone() + entry.path().strip_prefix(img_source)?.to_str().unwrap();
+        if entry.file_type().is_file() {
+            fs::copy(entry.path(), dest_path).context(format!("Failed to copy img file: {:?}", entry.path()))?;
+        }
+    }
+
+
+        fs::write(
+            format!("{}/components/doc-toc.js", output_dir),
+            include_str!("templates/components/doc-toc.js"),
+        ).context("Failed to write TOC component")?;
+
+        fs::write(
+            format!("{}/components/simple-block.js", output_dir),
+            include_str!("templates/components/simple-block.js"),
+        ).context("Failed to write Simple Block component")?;
 
     Ok(())
 }
@@ -494,27 +522,73 @@ fn process_generic_code(code: &str, syntax: &syntect::parsing::SyntaxReference, 
     Ok(format!("<pre class=\"code\"><code>{}</code></pre>", html))
 }
 
-fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<String> {
-    let ast = to_mdast(content, &markdown::ParseOptions::default())
+fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet, config: &BookConfig) -> Result<String> {
+    let parse_options = match config.markdown.format {
+        MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+        MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+        MarkdownFormat::Markdown => markdown::ParseOptions::default(),
+    };
+
+    let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+        markdown::CompileOptions::gfm()
+    } else {
+        markdown::CompileOptions::default()
+    };
+
+    let mut options = markdown::Options {
+        parse: parse_options,
+        compile: compile_options,
+    };
+
+    // Modify constructs for HTML and frontmatter
+    options.parse.constructs.frontmatter = config.markdown.frontmatter;
+    options.parse.constructs.html_flow = config.output.html.allow_html;
+    options.parse.constructs.html_text = config.output.html.allow_html;
+    options.compile.allow_dangerous_html = config.output.html.allow_html;
+    options.compile.allow_dangerous_protocol = config.output.html.allow_html;
+
+    let ast = to_mdast(content, &options.parse)
         .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
     
     let mut parts = Vec::new();
     let mut last_pos = 0;
     
-    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize) -> Result<()> {
+    fn process_node(node: &Node, ss: &SyntaxSet, content: &str, parts: &mut Vec<String>, last_pos: &mut usize, config: &BookConfig) -> Result<()> {
         match node {
             Node::Code(code) => {
-                // Add text before this code block
                 if let Some(pos) = &code.position {
                     if *last_pos < pos.start.offset {
                         let text = &content[*last_pos..pos.start.offset];
                         if !text.trim().is_empty() {
-                            parts.push(to_html_with_options(text, &markdown::Options::gfm())
-                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
+                            let parse_options = match config.markdown.format {
+                                MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+                                MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+                                MarkdownFormat::Markdown => markdown::ParseOptions::default(),
+                            };
+
+                            let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+                                markdown::CompileOptions::gfm()
+                            } else {
+                                markdown::CompileOptions::default()
+                            };
+
+                            let mut options = markdown::Options {
+                                parse: parse_options,
+                                compile: compile_options,
+                            };
+
+                            options.parse.constructs.frontmatter = config.markdown.frontmatter;
+                            options.parse.constructs.html_flow = config.output.html.allow_html;
+                            options.parse.constructs.html_text = config.output.html.allow_html;
+                            options.compile.allow_dangerous_html = config.output.html.allow_html;
+                            options.compile.allow_dangerous_protocol = config.output.html.allow_html;
+
+                            let temp_html = to_html_with_options(text, &options)
+                                .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?;
+                            parts.push(temp_html);
                         }
                     }
                     
-                    // Process code block with syntax highlighting
                     let highlighted = process_code_block(&code.value, code.lang.as_deref(), ss)?;
                     parts.push(highlighted);
                     
@@ -522,10 +596,9 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<S
                 }
             },
             _ => {
-                // Process children recursively
                 if let Some(children) = node.children() {
                     for child in children {
-                        process_node(child, ss, content, parts, last_pos)?;
+                        process_node(child, ss, content, parts, last_pos, config)?;
                     }
                 }
             }
@@ -533,14 +606,35 @@ fn process_markdown_with_highlighting(content: &str, ss: &SyntaxSet) -> Result<S
         Ok(())
     }
     
-    // Process the AST
-    process_node(&ast, ss, content, &mut parts, &mut last_pos)?;
+    process_node(&ast, ss, content, &mut parts, &mut last_pos, config)?;
     
-    // Add any remaining content
     if last_pos < content.len() {
         let remaining = &content[last_pos..];
         if !remaining.trim().is_empty() {
-            parts.push(to_html_with_options(remaining, &markdown::Options::gfm())
+            let parse_options = match config.markdown.format {
+                MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),
+                MarkdownFormat::Gfm => markdown::ParseOptions::gfm(),
+                MarkdownFormat::Markdown => markdown::ParseOptions::default(),
+            };
+
+            let compile_options = if matches!(config.markdown.format, MarkdownFormat::Gfm) {
+                markdown::CompileOptions::gfm()
+            } else {
+                markdown::CompileOptions::default()
+            };
+
+            let mut options = markdown::Options {
+                parse: parse_options,
+                compile: compile_options,
+            };
+
+            options.parse.constructs.frontmatter = config.markdown.frontmatter;
+            options.parse.constructs.html_flow = config.output.html.allow_html;
+            options.parse.constructs.html_text = config.output.html.allow_html;
+            options.compile.allow_dangerous_html = config.output.html.allow_html;
+            options.compile.allow_dangerous_protocol = config.output.html.allow_html;
+
+            parts.push(to_html_with_options(remaining, &options)
                 .map_err(|e| anyhow::anyhow!("Markdown conversion error: {:?}", e))?);
         }
     }

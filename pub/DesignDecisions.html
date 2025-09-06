@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Design Decisions | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/yourusername/yourrepo" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                <a href="https://github.com/yourusername/yourrepo/edit/main/DesignDecisions.html" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">Guide</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/Architecture.html" 
+                   >
+                    Architecture
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/CODE_OF_CONDUCT.html" 
+                   >
+                    Code of Conduct
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/CONTRIBUTE.html" 
+                   >
+                    Contributing
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/DesignDecisions.html" 
+                   class="active">
+                    Design Decisions
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/Introduction.html" 
+                   >
+                    Introduction
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/README.html" 
+                   >
+                    Terraphim documentation
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/SUMMARY.html" 
+                   >
+                    Summary
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/Use-cases.html" 
+                   >
+                    Use cases for Terraphim AI
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/index.html" 
+                   >
+                    Documentation Title
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">kg</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/kg/haystack.html" 
+                   >
+                    Haystack
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/kg/service.html" 
+                   >
+                    Terraphim Service
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/kg/terraphim-graph.html" 
+                   >
+                    Terraphim-graph
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">scorers</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/scorers/Title-Scorer.html" 
+                   >
+                    Title-Scorer
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/scorers/terraphim-graph.html" 
+                   >
+                    Terraphim Graph scorer
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Design Decisions</h1>
+                <h1>Design Decisions</h1>
+
+                <div class="nav-footer">
+                    
+                    <sl-button href="/CONTRIBUTE.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Contributing
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/Introduction.html" variant="default" class="nav-next">
+                        Introduction
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2024 Documentation. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/yourusername/yourrepo" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    <script src="/js/live-reload.js"></script>
+</body>
+</html> 
