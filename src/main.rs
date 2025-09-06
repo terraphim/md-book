@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use jiff::Zoned;
+use jiff::{Zoned, Unit};
 use markdown::to_html_with_options;
 use serde::Serialize;
 use std::fs;
@@ -391,7 +391,6 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
     // After generating HTML files, run Pagefind indexing
     let pagefind = PagefindBuilder::new(PathBuf::from(&args.output)).await?;
     pagefind.build().await?;
-
     Ok(())
 }
 
