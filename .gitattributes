@@ -1,0 +1,33 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Force batch scripts to always use CRLF line endings so they work on Windows
+*.{cmd,[cC][mM][dD]} text eol=crlf
+*.{bat,[bB][aA][tT]} text eol=crlf
+
+# Force bash scripts to always use LF line endings so they work on Unix
+*.sh text eol=lf
+
+# Declare files that will always have LF line endings on checkout
+*.{json,yml,yaml,toml,md,rs} text eol=lf
+
+# Declare files that should not be normalized (binary files)
+*.{png,jpg,jpeg,gif,ico,svg,woff,woff2,eot,ttf} binary
+*.{zip,gz,tar,7z,rar} binary
+*.{pdf,doc,docx,xls,xlsx,ppt,pptx} binary
+*.{exe,dll,so,dylib} binary
+
+# Linguist vendored paths (exclude from language statistics)
+src/templates/js/vendor/* linguist-vendored
+pub/* linguist-vendored
+target/* linguist-vendored
+
+# Export ignore (exclude from git archive)
+.github export-ignore
+tests export-ignore
+benches export-ignore
+examples export-ignore
+docs export-ignore
+*.md export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
