@@ -12,13 +12,10 @@ github_edit_url_base = "https://github.com/terraphim/terraphim-ai/edit/main/docs
 # Optional: Custom templates directory (defaults to "templates")
 templates = "src/templates"
 
-[paths]
-# Optional: Custom templates directory (defaults to "templates")
-templates = "src/templates"
-
 [rust]
 # Rust related features are not implemented yet
 edition = "2018"
+
 [markdown]
 format = "markdown"  # mdx or "gfm" or "markdown"
 frontmatter = false # not implemented

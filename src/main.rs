@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-use jiff::{Zoned, Unit};
+use jiff::Zoned;
 use markdown::to_html_with_options;
 use serde::Serialize;
 use std::fs;
@@ -14,13 +14,9 @@ use markdown::mdast::Node;
 use markdown::to_mdast;
 mod config;
 use config::{BookConfig, MarkdownFormat};
-use tokio;
-use notify::{Config as NotifyConfig, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
-use std::time::Duration;
 use std::collections::BTreeMap;
-use std::sync::Arc;
-use tokio::sync::{Mutex, broadcast};
+use tokio::sync::broadcast;
 mod server; // Import the server module
 use std::path::PathBuf;
 pub mod pagefind_service;
@@ -28,7 +24,7 @@ use pagefind_service::PagefindBuilder;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
-struct Args {
+pub struct Args {
     /// Input directory containing markdown files
     #[arg(short, long)]
     input: String,
@@ -230,7 +226,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
     fs::create_dir_all(&args.output)?;
     
     // Copy static assets
-    copy_static_assets(&args.output, &config.paths.templates, &config)?;
+    copy_static_assets(&args.output, &config.paths.templates, config)?;
 
     // Collect all pages first
     let mut all_pages = Vec::new();
@@ -241,7 +237,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
     let mut entries: Vec<_> = WalkDir::new(&args.input)
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| e.path().extension().map_or(false, |ext| ext == "md"))
+        .filter(|e| e.path().extension().is_some_and(|ext| ext == "md"))
         .collect();
 
     // Sort entries by path to ensure consistent ordering
@@ -257,7 +253,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
                 .unwrap_or_else(|| entry.path().file_stem()
                     .map(|s| s.to_string_lossy().into_owned())
                     .unwrap_or_else(|| "Untitled".to_string())),
-            path: format!("/{}", rel_path.with_extension("html").display().to_string()),
+            path: format!("/{}", rel_path.with_extension("html").display()),
         };
 
         all_pages.push(page_info.clone());
@@ -310,7 +306,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
 
     // Process each markdown file
     for (current_page, entry) in entries.iter().enumerate() {
-        if entry.path().extension().map_or(false, |ext| ext == "md") {
+        if entry.path().extension().is_some_and(|ext| ext == "md") {
             let rel_path = entry.path().strip_prefix(&args.input)?;
             let html_path = format!("{}/{}", args.output, rel_path.with_extension("html").display());
             
@@ -319,7 +315,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
             }
             
             let markdown_content = fs::read_to_string(entry.path())?;
-            let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
+            let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
             
             let previous = if current_page > 0 {
                 Some(all_pages[current_page - 1].clone())
@@ -372,7 +368,7 @@ pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Res
         let index_path = Path::new(&args.input).join("index.md");
         let markdown_content = fs::read_to_string(&index_path)
             .with_context(|| format!("Failed to read index file: {}", index_path.display()))?;
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, &config)?;
+        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
         
         context.insert("has_index", &true);
         context.insert("title", &index.title);
@@ -401,7 +397,7 @@ fn extract_title(markdown: &str) -> Option<String> {
         .map(|line| line[2..].trim().to_string())
 }
 
-fn copy_static_assets(output_dir: &str, templates_dir: &str, config: &BookConfig) -> Result<()> {
+fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfig) -> Result<()> {
     // Create components directory
     fs::create_dir_all(format!("{}/components", output_dir))?;
     
@@ -454,6 +450,11 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, config: &BookConfig
             format!("{}/components/simple-block.js", output_dir),
             include_str!("templates/components/simple-block.js"),
         ).context("Failed to write Simple Block component")?;
+
+        fs::write(
+            format!("{}/components/search-modal.js", output_dir),
+            include_str!("templates/components/search-modal.js"),
+        ).context("Failed to write Search Modal component")?;
 
     Ok(())
 }

@@ -3,19 +3,17 @@ use twelf::{config, Layer};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum MarkdownFormat {
+    #[default]
     Markdown,
     Gfm,
     Mdx,
 }
 
-impl Default for MarkdownFormat {
-    fn default() -> Self {
-        MarkdownFormat::Markdown
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Default)]
 pub struct MarkdownInput {
     #[serde(default)]
     pub format: MarkdownFormat,
@@ -23,14 +21,6 @@ pub struct MarkdownInput {
     pub frontmatter: bool,
 }
 
-impl Default for MarkdownInput {
-    fn default() -> Self {
-        Self {
-            format: MarkdownFormat::default(),
-            frontmatter: false,
-        }
-    }
-}
 
 #[config]
 #[derive(Debug, Default, serde::Serialize, Clone)]
