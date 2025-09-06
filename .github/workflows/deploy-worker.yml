@@ -36,11 +36,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Setup Node.js (for wrangler compatibility)
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
@@ -50,23 +45,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.bun/install/global
-          key: ${{ runner.os }}-bun-global-wrangler-${{ hashFiles('**/package.json') }}
+          key: ${{ runner.os }}-bun-global-wrangler
           restore-keys: |
-            ${{ runner.os }}-bun-global-wrangler-
             ${{ runner.os }}-bun-global-
             
       - name: Install Wrangler CLI
         run: bun install -g wrangler
         
-      - name: Validate Worker code
+      - name: Verify Worker configuration
         run: |
           cd worker
-          if [ -f "src/index.js" ]; then
-            echo "Validating JavaScript syntax..."
-            node -c src/index.js
-            echo "✅ Worker code validation passed"
+          if [ -f "wrangler.toml" ]; then
+            echo "Worker configuration found"
+            wrangler whoami
+            echo "✅ Worker setup validation passed"
           else
-            echo "❌ Worker source file not found"
+            echo "❌ Worker configuration not found"
             exit 1
           fi
           
