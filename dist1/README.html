@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Terraphim documentation | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/yourusername/yourrepo" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                <a href="https://github.com/yourusername/yourrepo/edit/main/README.html" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">Guide</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/CODE_OF_CONDUCT.html" 
+                   >
+                    Code of Conduct
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/DesignDecisions.html" 
+                   >
+                    Design Decisions
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/Architecture.html" 
+                   >
+                    Architecture
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/SUMMARY.html" 
+                   >
+                    Summary
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/CONTRIBUTE.html" 
+                   >
+                    Contributing
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/Introduction.html" 
+                   >
+                    Introduction
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/README.html" 
+                   class="active">
+                    Terraphim documentation
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/index.html" 
+                   >
+                    Documentation Title
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/Use-cases.html" 
+                   >
+                    Use cases for Terraphim AI
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">scorers</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/scorers/terraphim-graph.html" 
+                   >
+                    Terraphim Graph scorer
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/scorers/Title-Scorer.html" 
+                   >
+                    Title-Scorer
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">kg</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/kg/terraphim-graph.html" 
+                   >
+                    Terraphim-graph
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/kg/service.html" 
+                   >
+                    Terraphim Service
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/kg/haystack.html" 
+                   >
+                    Haystack
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Terraphim documentation</h1>
+                <h1>Terraphim documentation</h1>
+<p>This folder is a source for Terraphim documentation as well as demonstration for Terraphim Engineer role:</p>
+<p><a href="./kg">kg</a> folder is an example of personal knowledge graph used for testing and fixtures</p>
+<p>Example configuration for this KG:</p>
+<pre class="code"><code><span class="source json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>Terraphim Engineer<span class="punctuation definition string end json">&quot;</span></span>: <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>shortname<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>terraphim-engineer<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>name<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>Terraphim Engineer<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>relevance_function<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>terraphim-graph<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>theme<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>superhero<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>kg<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>automata_path<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>Local<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>data/term_to_id_test.json<span class="punctuation definition string end json">&quot;</span></span>
+    </span><span class="punctuation section dictionary end json">}</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>knowledge_graph_local<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>input_type<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>markdown<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>path<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>/Users/alex/projects/terraphim/terraphim-ai/docs/src/kg<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>public<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="constant language json">true</span><span class="punctuation separator dictionary pair json">,</span></span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>publish<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="constant language json">true</span>
+    </span><span class="punctuation section dictionary end json">}</span></span>
+  </span><span class="punctuation section dictionary end json">}</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+  <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>haystacks<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure array json"><span class="punctuation section array begin json">[</span>
+    <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>path<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>/Users/alex/projects/terraphim/terraphim-ai/docs/src/<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+      <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>service<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>Ripgrep<span class="punctuation definition string end json">&quot;</span></span>
+    </span><span class="punctuation section dictionary end json">}</span></span>
+  <span class="punctuation section array end json">]</span></span>
+</span><span class="punctuation section dictionary end json">}</span></span>,</span></code></pre>
+                <div class="nav-footer">
+                    
+                    <sl-button href="/scorers/Title-Scorer.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Title-Scorer
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/index.html" variant="default" class="nav-next">
+                        Documentation Title
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2024 Documentation. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/yourusername/yourrepo" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+</body>
+</html> 

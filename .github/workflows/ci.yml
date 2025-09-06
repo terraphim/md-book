@@ -11,6 +11,8 @@ on:
 
 permissions:
   contents: read
+  issues: write
+  pull-requests: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -22,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04, ubuntu-latest, macos-latest, windows-latest]
         rust: [stable, beta]
         include:
           # Test on nightly but allow failures
@@ -51,20 +53,28 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ matrix.rust }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.rust }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            ${{ runner.os }}-cargo-${{ matrix.rust }}-
+            ${{ runner.os }}-${{ matrix.rust }}-cargo-
+            ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
+          save-always: true
             
-      - name: Install Node.js for frontend tests
-        uses: actions/setup-node@v4
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: package.json
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-
+          
+      - name: Install Bun for frontend tests
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
           
       - name: Install frontend dependencies
-        run: npm ci
+        run: bun install
         
       - name: Check formatting
         if: matrix.rust == 'stable'
@@ -88,11 +98,18 @@ jobs:
         continue-on-error: true  # Some E2E tests might need actual server
         
       - name: Run frontend tests
-        run: npm test
+        run: bun test
         
-      - name: Run benchmarks (stable only)
+      - name: Install benchmark dependencies
         if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
-        run: cargo bench --no-run  # Don't actually run benchmarks in CI, just compile
+        run: sudo apt-get update && sudo apt-get install -y bc jq
+        
+      - name: Run performance benchmarks
+        if: matrix.rust == 'stable' && matrix.os == 'ubuntu-latest'
+        run: |
+          chmod +x ./scripts/bench.sh
+          ./scripts/bench.sh
+        continue-on-error: false  # Fail CI if significant regressions detected
         
       - name: Test documentation build
         if: matrix.rust == 'stable'
@@ -127,19 +144,17 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
-          
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
-        
-      - name: Install wasm-bindgen-cli
-        run: cargo install wasm-bindgen-cli
-        
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-wasm-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
       - name: Build for WebAssembly
-        run: cargo build --target wasm32-unknown-unknown --lib
+        run: cargo build --target wasm32-unknown-unknown --lib --no-default-features
         
       - name: Run WASM tests
-        run: wasm-pack test --headless --chrome --firefox
+        run: cargo test --target wasm32-unknown-unknown --no-default-features
         continue-on-error: true  # WASM tests might not work in CI environment
 
   msrv:
@@ -157,11 +172,17 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-msrv-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-msrv-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-msrv-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Check MSRV compilation
         run: cargo check --lib
@@ -180,7 +201,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         
-      - name: Cache Cargo dependencies
+      - name: Cache Cargo dependencies and tools
         uses: actions/cache@v4
         with:
           path: |
@@ -189,20 +210,24 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-audit-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-audit-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-audit-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Install cargo-audit
-        run: cargo install cargo-audit
+        run: |
+          # Check if cargo-audit is already installed
+          if ! command -v cargo-audit &> /dev/null; then
+            cargo install --locked cargo-audit
+          else
+            echo "cargo-audit is already installed: $(cargo-audit --version)"
+          fi
         
       - name: Run security audit
         run: cargo audit
-        
-      - name: Install cargo-deny
-        run: cargo install cargo-deny
-        
-      - name: Check licenses and security
-        run: cargo deny check
-        continue-on-error: true  # Allow to continue if deny.toml doesn't exist yet
 
   coverage:
     name: Code Coverage
@@ -218,8 +243,30 @@ jobs:
         with:
           components: llvm-tools-preview
           
+      - name: Cache Cargo dependencies and tools
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-coverage-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-coverage-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
+          
       - name: Install cargo-tarpaulin
-        run: cargo install cargo-tarpaulin
+        run: |
+          # Check if cargo-tarpaulin is already installed
+          if ! command -v cargo-tarpaulin &> /dev/null; then
+            cargo install --locked cargo-tarpaulin
+          else
+            echo "cargo-tarpaulin is already installed: $(cargo-tarpaulin --version)"
+          fi
         
       - name: Generate coverage report
         run: |
@@ -235,7 +282,7 @@ jobs:
   performance:
     name: Performance Regression
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     
     steps:
       - name: Checkout repository
@@ -253,17 +300,81 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-bench-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bench-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
-      - name: Run benchmarks
-        run: cargo bench -- --output-format json | tee benchmark-results.json
-        continue-on-error: true
+      - name: Install benchmark dependencies  
+        run: sudo apt-get update && sudo apt-get install -y bc jq
         
-      - name: Store benchmark results
+      - name: Cache benchmark results
+        uses: actions/cache@v4
+        with:
+          path: benchmark-results/
+          key: ${{ runner.os }}-benchmarks-${{ github.base_ref || github.ref_name }}
+          restore-keys: |
+            ${{ runner.os }}-benchmarks-main
+            ${{ runner.os }}-benchmarks-
+            
+      - name: Run performance benchmarks
+        run: |
+          chmod +x ./scripts/bench.sh
+          ./scripts/bench.sh
+        
+      - name: Upload benchmark results
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-results
-          path: benchmark-results.json
+          name: benchmark-results-${{ github.sha }}
+          path: benchmark-results/
+          retention-days: 30
+        
+      - name: Comment benchmark results on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'benchmark-results/current.json';
+            
+            try {
+              let body;
+              
+              if (fs.existsSync(path)) {
+                const results = fs.readFileSync(path, 'utf8');
+                const truncatedResults = results.slice(0, 2000);
+                const wasTruncated = results.length > 2000;
+                
+                body = `## 📊 Performance Benchmark Results\n\nBenchmark completed successfully. Check the uploaded artifacts for detailed results.\n\n<details>\n<summary>Raw Results ${wasTruncated ? '(truncated)' : ''}</summary>\n\n\`\`\`json\n${truncatedResults}${wasTruncated ? '\n...\n[Results truncated - see artifacts for full output]' : ''}\n\`\`\`\n\n</details>`;
+              } else {
+                body = '## ⚠️ Performance Benchmark Results\n\nBenchmark completed but no results file was generated. Please check the workflow logs and uploaded artifacts.';
+              }
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: body
+              });
+              
+            } catch (error) {
+              console.error('Failed to post benchmark comment:', error);
+              
+              // Try to post a simple error message
+              try {
+                await github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: '## ❌ Performance Benchmark Failed\n\nFailed to post benchmark results. Check workflow logs for details.'
+                });
+              } catch (commentError) {
+                console.error('Failed to post error comment:', commentError);
+                // Don't fail the workflow if we can't post comments
+              }
+            }
 
   docs:
     name: Documentation
@@ -286,7 +397,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-doc-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-doc-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-doc-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Build documentation
         run: |

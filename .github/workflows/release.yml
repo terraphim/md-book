@@ -135,12 +135,31 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-release-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-release-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.target }}-release-cargo-
+            ${{ runner.os }}-${{ matrix.target }}-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
+      - name: Cache cross-compilation tool
+        if: matrix.cross
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cross
+          key: ${{ runner.os }}-cross-${{ hashFiles('~/.cargo/bin/cross') }}
+          restore-keys: |
+            ${{ runner.os }}-cross-
+            
       - name: Install cross-compilation tools
         if: matrix.cross
         run: |
-          cargo install cross --git https://github.com/cross-rs/cross
+          if ! command -v cross &> /dev/null; then
+            cargo install cross --git https://github.com/cross-rs/cross
+          else
+            echo "cross is already installed: $(cross --version)"
+          fi
           
       - name: Build release binary
         run: |
@@ -242,7 +261,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         
-      - name: Cache Cargo dependencies
+      - name: Cache Cargo dependencies and tools
         uses: actions/cache@v4
         with:
           path: |
@@ -251,10 +270,20 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-deb-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-deb-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-deb-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Install cargo-deb
-        run: cargo install cargo-deb
+        run: |
+          if ! command -v cargo-deb &> /dev/null; then
+            cargo install cargo-deb
+          else
+            echo "cargo-deb is already installed: $(cargo-deb --version)"
+          fi
         
       - name: Build Debian package
         run: |
@@ -349,7 +378,12 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-publish-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-publish-cargo-
+            ${{ runner.os }}-stable-cargo-
+            ${{ runner.os }}-cargo-
+          save-always: true
           
       - name: Publish to crates.io
         env:

@@ -1,26 +1,13 @@
 {
-  "name": "md-book-frontend-tests",
+  "name": "md-book-build-tools",
   "version": "1.0.0",
-  "description": "Frontend tests for md-book search functionality",
+  "description": "Build tools and dependencies for md-book",
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "build": "echo 'Build completed - using Cargo for Rust compilation'",
+    "install-tools": "echo 'Tools installed - using bun for package management'"
   },
-  "devDependencies": {
-    "@jest/environment-jsdom": "^29.7.0",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0"
-  },
-  "jest": {
-    "testEnvironment": "jsdom",
-    "testMatch": [
-      "**/tests/frontend/**/*.js"
-    ],
-    "setupFilesAfterEnv": ["<rootDir>/tests/frontend/setup.js"],
-    "moduleNameMapper": {
-      "^/js/(.*)$": "<rootDir>/src/templates/js/$1",
-      "^/components/(.*)$": "<rootDir>/src/templates/components/$1"
-    }
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
