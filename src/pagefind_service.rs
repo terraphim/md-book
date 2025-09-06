@@ -28,12 +28,6 @@ pub enum PagefindError {
     WasmError { message: String },
 }
 
-const CONFIGS: &[&str] = &[
-    "pagefind.json",
-    "pagefind.yml",
-    "pagefind.yaml",
-    "pagefind.toml",
-];
 
 #[derive(Debug)]
 pub struct PagefindBuilder {
