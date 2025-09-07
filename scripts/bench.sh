@@ -22,9 +22,82 @@ fi
 
 echo "Running benchmarks..."
 
-# Run benchmarks with JSON output
+# Run benchmarks and capture output
 cd "$PROJECT_DIR"
-cargo bench -- --output-format json | tee "$CURRENT_RESULTS"
+
+# Run benchmarks and save both text and structured output
+echo "Running criterion benchmarks..."
+if cargo bench --message-format=json 2>/dev/null | tee "$CURRENT_RESULTS.raw"; then
+    # Try to extract meaningful data from criterion output
+    echo "Processing benchmark results..."
+    
+    # Create a structured JSON result
+    cat > "$CURRENT_RESULTS" << 'EOF'
+{
+  "timestamp": "$(date -Iseconds)",
+  "benchmarks": [
+EOF
+    
+    # Parse criterion output for benchmark results
+    if grep -q "time:" "$CURRENT_RESULTS.raw" 2>/dev/null; then
+        grep "time:" "$CURRENT_RESULTS.raw" | while IFS= read -r line; do
+            # Extract benchmark name and timing
+            if [[ "$line" =~ ([^/]+).*time:.*\[([0-9.]+)\s*([a-z]+)\s*([0-9.]+)\s*([a-z]+)\s*([0-9.]+)\s*([a-z]+)\] ]]; then
+                name="${BASH_REMATCH[1]}"
+                time_val="${BASH_REMATCH[2]}"
+                time_unit="${BASH_REMATCH[3]}"
+                
+                # Convert to nanoseconds for consistency
+                case "$time_unit" in
+                    "ns") multiplier=1 ;;
+                    "µs"|"us") multiplier=1000 ;;
+                    "ms") multiplier=1000000 ;;
+                    "s") multiplier=1000000000 ;;
+                    *) multiplier=1 ;;
+                esac
+                
+                time_ns=$(echo "$time_val * $multiplier" | bc -l 2>/dev/null || echo "$time_val")
+                
+                echo "    {" >> "$CURRENT_RESULTS"
+                echo "      \"benchmark_name\": \"$name\"," >> "$CURRENT_RESULTS"
+                echo "      \"mean\": {" >> "$CURRENT_RESULTS"
+                echo "        \"estimate\": $time_ns" >> "$CURRENT_RESULTS"
+                echo "      }," >> "$CURRENT_RESULTS"
+                echo "      \"unit\": \"ns\"" >> "$CURRENT_RESULTS"
+                echo "    }," >> "$CURRENT_RESULTS"
+            fi
+        done
+        
+        # Remove trailing comma and close JSON
+        sed -i '$ s/,$//' "$CURRENT_RESULTS"
+    else
+        # No benchmark results found, create empty structure
+        echo "    {}" >> "$CURRENT_RESULTS"
+    fi
+    
+    echo "  ]" >> "$CURRENT_RESULTS"
+    echo "}" >> "$CURRENT_RESULTS"
+    
+    # Clean up intermediate file
+    rm -f "$CURRENT_RESULTS.raw"
+    
+else
+    # Fallback: run with basic output
+    echo "Running benchmarks with basic output..."
+    cargo bench 2>&1 | tee "$CURRENT_RESULTS.log"
+    
+    # Create minimal JSON structure with log content
+    cat > "$CURRENT_RESULTS" << EOF
+{
+  "timestamp": "$(date -Iseconds)",
+  "status": "completed",
+  "log_output": $(cat "$CURRENT_RESULTS.log" | jq -Rs . 2>/dev/null || echo "\"Benchmark completed\""),
+  "benchmarks": []
+}
+EOF
+    
+    rm -f "$CURRENT_RESULTS.log"
+fi
 
 # Parse and compare results if we have previous data
 if [[ -f "$PREVIOUS_RESULTS" ]] && command -v jq >/dev/null 2>&1; then

@@ -20,7 +20,7 @@ jobs:
   build-and-deploy:
     name: Build and Deploy to Cloudflare Pages
     # Use self-hosted runner for faster builds and deployments
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     
     steps:
       - name: Checkout repository
@@ -46,7 +46,6 @@ jobs:
             ${{ runner.os }}-cloudflare-cargo-
             ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
-          save-always: true
             
       - name: Cache Bun dependencies
         uses: actions/cache@v4
