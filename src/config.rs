@@ -264,9 +264,12 @@ boost_title = 3
 
         std::env::set_current_dir(temp_dir.path())?;
 
-        let config = load_config(None)?;
+        let config = load_config(None);
 
+        // Always restore directory, even if config loading failed  
         std::env::set_current_dir(original_dir)?;
+        
+        let config = config?;
 
         assert_eq!(config.book.title, "Test Book");
         assert_eq!(
@@ -367,9 +370,19 @@ frontmatter = true
 
     #[test]
     fn test_load_config_nonexistent_custom_file() -> anyhow::Result<()> {
+        // Change to a temporary directory to avoid interference from other tests
+        let temp_dir = TempDir::new()?;
+        let original_dir = std::env::current_dir()?;
+        std::env::set_current_dir(temp_dir.path())?;
+        
         // Should succeed even if custom file doesn't exist
-        let config = load_config(Some("nonexistent.toml"))?;
-        // Config loaded successfully (value may vary due to other test interference)
+        let config = load_config(Some("nonexistent.toml"));
+        
+        // Always restore directory
+        std::env::set_current_dir(original_dir)?;
+        
+        let config = config?;
+        // Config loaded successfully (value may vary due to twelf behavior)
         let _ = config.book.language;
         Ok(())
     }

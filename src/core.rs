@@ -387,15 +387,17 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
         }
     }
     // Copy img directory from templates
-    let img_source = "src/templates/img";
+    let img_source = format!("{}/img", templates_dir);
     let img_dest = format!("{}/img/", output_dir);
     fs::create_dir_all(&img_dest)?;
-    for entry in WalkDir::new(img_source) {
-        let entry = entry?;
-        let dest_path = img_dest.clone() + entry.path().strip_prefix(img_source)?.to_str().unwrap();
-        if entry.file_type().is_file() {
-            fs::copy(entry.path(), dest_path)
-                .context(format!("Failed to copy img file: {:?}", entry.path()))?;
+    if std::path::Path::new(&img_source).exists() {
+        for entry in WalkDir::new(&img_source) {
+            let entry = entry?;
+            let dest_path = img_dest.clone() + entry.path().strip_prefix(&img_source)?.to_str().unwrap();
+            if entry.file_type().is_file() {
+                fs::copy(entry.path(), dest_path)
+                    .context(format!("Failed to copy img file: {:?}", entry.path()))?;
+            }
         }
     }
 
