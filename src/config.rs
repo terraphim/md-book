@@ -205,14 +205,14 @@ mod tests {
 
     #[test]
     fn test_book_config_defaults() {
-        // Test basic config loading works 
+        // Test basic config loading works
         let config = BookConfig::with_layers(&[Layer::Env(Some("MDBOOK_".to_string()))]).unwrap();
 
         // Test that we can access config fields (values may be empty due to twelf behavior)
         assert!(!config.book.logo.is_empty() || config.book.logo.is_empty()); // Always passes, just tests field access
         assert!(!config.rust.edition.is_empty() || config.rust.edition.is_empty()); // Always passes
         assert!(!config.paths.templates.is_empty() || config.paths.templates.is_empty()); // Always passes
-        
+
         // Test that search config is accessible
         let _ = config.output.html.search.limit_results;
         let _ = config.output.html.search.boost_title;
