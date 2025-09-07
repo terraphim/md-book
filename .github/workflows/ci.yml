@@ -156,10 +156,10 @@ jobs:
             ${{ runner.os }}-cargo-
           save-always: true
       - name: Build for WebAssembly
-        run: cargo build --target wasm32-unknown-unknown --lib --no-default-features
+        run: cargo build --target wasm32-unknown-unknown --lib --features wasm-core --no-default-features
         
       - name: Run WASM tests
-        run: cargo test --target wasm32-unknown-unknown --no-default-features
+        run: cargo test --target wasm32-unknown-unknown --features wasm-core --no-default-features
         continue-on-error: true  # WASM tests might not work in CI environment
 
   msrv:
