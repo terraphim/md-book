@@ -32,7 +32,7 @@ jobs:
             rust: nightly
             allow-failure: true
           # Use self-hosted runner for Linux stable builds
-          - os: self-hosted
+          - os: [self-hosted, linux, x64]
             rust: stable
             allow-failure: false
     runs-on: ${{ matrix.os }}
@@ -129,7 +129,7 @@ jobs:
   wasm:
     name: WebAssembly Tests
     # Use self-hosted runner for WASM builds
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     
     steps:
       - name: Checkout repository
@@ -165,7 +165,7 @@ jobs:
   msrv:
     name: Minimum Supported Rust Version
     # Use self-hosted runner for MSRV checks
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     
     steps:
       - name: Checkout repository
@@ -199,7 +199,7 @@ jobs:
   security:
     name: Security Audit
     # Use self-hosted runner for security audits
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     
     steps:
       - name: Checkout repository
@@ -239,7 +239,7 @@ jobs:
   coverage:
     name: Code Coverage
     # Use self-hosted runner for coverage analysis
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
@@ -290,7 +290,7 @@ jobs:
   performance:
     name: Performance Regression
     # Use self-hosted runner for performance benchmarks
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     
     steps:
@@ -388,7 +388,7 @@ jobs:
   docs:
     name: Documentation
     # Use self-hosted runner for documentation builds
-    runs-on: self-hosted
+    runs-on: [self-hosted, linux, x64]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     
     steps:
