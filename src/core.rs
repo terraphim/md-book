@@ -668,7 +668,7 @@ fn process_markdown_basic(content: &str, config: &BookConfig) -> Result<String> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::{BookConfig, MarkdownFormat};
+    use crate::config::BookConfig;
     use std::fs;
     use tempfile::TempDir;
 
@@ -712,7 +712,7 @@ mod tests {
         use clap::Parser;
 
         // Test that we can parse minimal required args
-        let args = Args::try_parse_from(&["md-book", "-i", "input", "-o", "output"]).unwrap();
+        let args = Args::try_parse_from(["md-book", "-i", "input", "-o", "output"]).unwrap();
         assert_eq!(args.input, "input");
         assert_eq!(args.output, "output");
         assert_eq!(args.config, None);
@@ -732,7 +732,7 @@ mod tests {
     fn test_args_with_server_options() {
         use clap::Parser;
 
-        let args = Args::try_parse_from(&[
+        let args = Args::try_parse_from([
             "md-book", "-i", "input", "-o", "output", "--serve", "--port", "8080",
         ])
         .unwrap();
