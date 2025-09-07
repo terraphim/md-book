@@ -1,61 +1,137 @@
 # @lessons-learned.md - Knowledge Retention
 
-## Pagefind Search Implementation Insights
+## Comprehensive Test Suite Implementation Insights
 
 ### Key Technical Learnings
 
-#### 1. Pagefind Architecture
-- **Static-first Design**: Pagefind generates static search bundles that work without servers
-- **Chunked Indexes**: Only loads necessary parts of search index on demand
-- **Rust Library**: v1.3.0 provides stable Rust API with feature parity to Node/Python
-- **Performance**: ~100x improvement in v1.0+ for indexing operations
+#### 1. Test Architecture Patterns
+- **Directory Structure**: Follow established patterns (mdBook's test organization)
+- **Test Utilities**: Centralize common testing logic in `tests/common/mod.rs`
+- **Feature Gating**: Use `#[cfg(feature = "...")]` for conditional test compilation
+- **Test Isolation**: Each test should use `tempfile::TempDir` for clean state
 
-#### 2. WASM Integration Patterns
-- **Conditional Compilation**: Use `#[cfg(target_arch = "wasm32")]` for WASM-specific code
-- **Feature Flags**: Separate native and WASM builds with cargo features
-- **CSP Considerations**: WebAssembly requires `wasm-unsafe-eval` directive
-- **Time Handling**: `jiff` crate provides better WASM compatibility than `chrono`
+#### 2. Rust Testing Best Practices
+- **Async Testing**: `#[tokio::test]` for async functions, avoid blocking operations
+- **Error Testing**: Test both success and failure cases with proper error messages
+- **Feature Combinations**: Test with `--no-default-features` and `--all-features`
+- **Target-Specific Tests**: Use `#[cfg(target_arch = "wasm32")]` for WASM tests
 
-#### 3. Async Rust Best Practices
-- **Tokio Integration**: Use `tokio::test` for async testing
-- **Error Propagation**: Custom error types with `thiserror` or `anyhow`
-- **Channel Patterns**: `tokio::sync::broadcast` for live reload notifications
-- **Structured Concurrency**: Prefer scoped tasks over fire-and-forget spawning
+#### 3. Test Utility Design
+- **Helper Classes**: Create reusable test structures like `TestBook`
+- **Factory Functions**: `create_simple_book()`, `create_complex_book()` for scenarios
+- **Custom Macros**: `assert_contains!()`, `assert_not_contains!()` for readable assertions
+- **Builder Patterns**: Fluent interfaces for test setup (`.with_config()`, `.build()`)
 
-#### 4. Testing Strategy Without Mocks
-- **Integration Testing**: Test real file system operations with temporary directories
-- **Browser Testing**: Use real Pagefind bundles in frontend tests
-- **Performance Testing**: Criterion for benchmarking with statistical analysis
-- **WASM Testing**: `wasm-bindgen-test` with browser or Node.js runners
+#### 4. Integration Testing Strategies
+- **Real File Operations**: Never mock file system - use temporary directories
+- **Complete Workflows**: Test entire build processes, not just units
+- **Configuration Scenarios**: Test different config formats and combinations
+- **Asset Handling**: Verify static assets are copied correctly
 
-#### 5. Frontend Integration Patterns
-- **Progressive Enhancement**: Search works with and without JavaScript
-- **Keyboard UX**: Standard `/` key shortcut for search activation
-- **URL Parameters**: `?q=search` support for shareable searches  
-- **Debounced Search**: Prevent excessive API calls during typing
-- **Local Storage**: Cache search history and preferences
+#### 5. End-to-End Testing Approaches  
+- **CLI Testing**: Test actual binary execution with `Command::new()`
+- **Output Validation**: Check both stdout/stderr and generated files
+- **Error Scenarios**: Test invalid arguments, missing files, permission errors
+- **Cross-Platform**: Ensure path handling works on Windows and Unix
 
-### Configuration Management
-- **Layered Config**: Environment vars → CLI args → config files → defaults
-- **Multiple Formats**: TOML, JSON, YAML support with `twelf` crate
-- **Shell Expansion**: Path variables expanded in config files
-- **Validation**: Early validation prevents runtime failures
+#### 6. WASM Testing Considerations
+- **Target Compilation**: Tests must work with `wasm32-unknown-unknown` target
+- **Feature Parity**: WASM and native builds should have identical functionality
+- **Browser Compatibility**: Use `wasm-bindgen-test` for browser-specific tests
+- **Performance**: WASM may have different performance characteristics
 
-### Performance Considerations
-- **Indexing Speed**: Target <2s for 1000 pages
-- **Memory Usage**: Monitor with Rust allocator profiling
-- **Bundle Size**: Pagefind generates optimized WASM bundles
-- **Search Latency**: Client-side search with <100ms response time
+### Test Organization Insights
 
-### Development Workflow
-- **Documentation Files**: `@memory.md`, `@scratchpad.md`, `@lessons-learned.md`
-- **Test-First**: Write tests before implementation
-- **Benchmarking**: Measure performance throughout development
-- **Feature Parity**: Ensure WASM and native builds have identical functionality
+#### Test Asset Management
+- **Realistic Data**: Use comprehensive test books with nested structures
+- **Multiple Formats**: Test Markdown, GFM, MDX with real content
+- **Configuration Examples**: TOML, JSON configs with various settings
+- **Expected Outputs**: Keep fixtures for regression testing
 
-### Common Pitfalls to Avoid
-- **Directory Changes**: Pagefind 1.x uses `pagefind/` not `_pagefind/`
-- **WASM Compatibility**: Not all Rust crates work in WASM
-- **CSP Violations**: WebAssembly needs proper security policy setup
-- **Async Blocking**: Don't block async runtimes with sync operations
-- **Test Isolation**: Clean up temporary files and state between tests
+#### Test Execution Patterns
+- **Parallel Execution**: Tests should not interfere with each other
+- **Resource Cleanup**: Always clean up temporary files and processes
+- **Test Speed**: Fast unit tests, slower integration tests
+- **CI Optimization**: Group tests by execution time and dependencies
+
+### Configuration Testing Learnings
+
+#### Layered Configuration Testing
+- **Precedence Testing**: Environment vars > CLI args > config files > defaults
+- **Validation Testing**: Invalid configs should fail gracefully
+- **Format Support**: TOML, JSON, YAML all need validation
+- **Default Behavior**: Empty configs should use sensible defaults
+
+#### Common Configuration Issues
+- **Default Values**: Ensure default functions return expected values
+- **Struct Fields**: All config fields need proper `#[serde(default)]` attributes
+- **Validation Logic**: Complex validation rules need thorough testing
+- **Error Messages**: Config errors should be user-friendly
+
+### Testing Markdown Processing
+
+#### Format-Specific Testing
+- **Basic Markdown**: Standard CommonMark compliance
+- **GFM Extensions**: Tables, strikethrough, task lists, autolinks
+- **MDX Support**: JSX-like syntax in markdown files
+- **Frontmatter**: YAML/TOML metadata extraction and processing
+
+#### Content Edge Cases
+- **Empty Files**: Handle gracefully without errors
+- **Invalid Markdown**: Don't crash on malformed input
+- **Large Files**: Performance testing with substantial content
+- **Unicode Content**: Proper encoding and character handling
+
+### Development Workflow Improvements
+
+#### Test-Driven Development
+- **Write Tests First**: Define expected behavior before implementation
+- **Red-Green-Refactor**: Failing test → implementation → cleanup
+- **Coverage Goals**: Aim for >80% unit test coverage
+- **Integration Focus**: Critical paths need integration tests
+
+#### Continuous Integration Optimization
+- **Test Grouping**: Unit → Integration → E2E execution order
+- **Parallel Execution**: Run independent test suites concurrently
+- **Failure Analysis**: Clear error messages and debug information
+- **Performance Tracking**: Monitor test execution times
+
+### Common Testing Pitfalls Avoided
+
+#### Test Implementation Issues
+- **Shared State**: Tests must be independent and isolated
+- **Hardcoded Paths**: Use relative paths and temporary directories
+- **Feature Dependencies**: Tests should work with various feature combinations
+- **Platform Assumptions**: Don't assume Unix-only or Windows-only behavior
+
+#### Assertion Best Practices
+- **Specific Assertions**: Test exact expected behavior, not just "no error"
+- **Readable Messages**: Custom assertion macros improve debugging
+- **Multiple Assertions**: Test different aspects of the same functionality
+- **Error Case Testing**: Verify error conditions produce correct errors
+
+### Performance Testing Insights
+- **Benchmarking Framework**: Use `criterion` for statistical analysis
+- **Real-World Data**: Test with realistic book sizes and content
+- **Memory Profiling**: Monitor memory usage during operations
+- **Regression Detection**: Track performance over time
+
+### Previous Learning: Pagefind Search Implementation
+
+#### Search Integration Architecture
+- **Static-first Design**: Pagefind generates static search bundles
+- **Chunked Indexes**: Efficient loading of search data
+- **WASM Compatibility**: WebAssembly support with proper CSP
+- **Performance Targets**: <2s indexing for 1000 pages
+
+#### Frontend Integration Patterns  
+- **Progressive Enhancement**: Works with and without JavaScript
+- **Keyboard UX**: Standard shortcuts and accessibility
+- **URL Integration**: Shareable search URLs
+- **Local Storage**: User preferences and search history
+
+### Development Documentation
+- **Living Documentation**: `@memory.md`, `@scratchpad.md`, `@lessons-learned.md`
+- **Knowledge Retention**: Capture insights during development
+- **Team Onboarding**: Document patterns and practices
+- **Historical Context**: Preserve decision rationale

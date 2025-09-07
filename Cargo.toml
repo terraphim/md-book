@@ -53,6 +53,8 @@ watcher = ["notify", "tokio/full"]
 search = ["pagefind", "tokio/rt", "tokio/macros"]
 syntax-highlighting = ["syntect"]
 wasm = ["wasm-bindgen"]
+# WASM-only features (no server/networking)
+wasm-core = ["wasm-bindgen"]
 # Minimal features for core functionality  
 core = ["tokio"]
 

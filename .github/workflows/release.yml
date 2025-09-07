@@ -142,7 +142,6 @@ jobs:
             ${{ runner.os }}-${{ matrix.target }}-cargo-
             ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
-          save-always: true
           
       - name: Cache cross-compilation tool
         if: matrix.cross
@@ -277,7 +276,6 @@ jobs:
             ${{ runner.os }}-deb-cargo-
             ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
-          save-always: true
           
       - name: Install cargo-deb
         run: |
@@ -387,7 +385,6 @@ jobs:
             ${{ runner.os }}-publish-cargo-
             ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
-          save-always: true
           
       - name: Publish to crates.io
         env:
