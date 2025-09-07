@@ -32,7 +32,7 @@ if cargo bench --message-format=json 2>/dev/null | tee "$CURRENT_RESULTS.raw"; t
     echo "Processing benchmark results..."
     
     # Create a structured JSON result
-    cat > "$CURRENT_RESULTS" << 'EOF'
+    cat > "$CURRENT_RESULTS" << EOF
 {
   "timestamp": "$(date -Iseconds)",
   "benchmarks": [
@@ -40,12 +40,16 @@ EOF
     
     # Parse criterion output for benchmark results
     if grep -q "time:" "$CURRENT_RESULTS.raw" 2>/dev/null; then
+        echo "Found benchmark results, parsing..."
         grep "time:" "$CURRENT_RESULTS.raw" | while IFS= read -r line; do
-            # Extract benchmark name and timing
-            if [[ "$line" =~ ([^/]+).*time:.*\[([0-9.]+)\s*([a-z]+)\s*([0-9.]+)\s*([a-z]+)\s*([0-9.]+)\s*([a-z]+)\] ]]; then
-                name="${BASH_REMATCH[1]}"
-                time_val="${BASH_REMATCH[2]}"
-                time_unit="${BASH_REMATCH[3]}"
+            echo "Parsing line: $line"
+            
+            # Use sed to extract benchmark name and median timing values
+            parsed=$(echo "$line" | sed -n 's/^\([^[:space:]]*\)[[:space:]]*time:[[:space:]]*\[\([0-9.]*\)[[:space:]]*\([a-z]*\)[[:space:]]*\([0-9.]*\)[[:space:]]*\([a-z]*\)[[:space:]]*\([0-9.]*\)[[:space:]]*\([a-z]*\)\].*/\1|\4|\5/p')
+            
+            if [[ -n "$parsed" ]]; then
+                IFS='|' read -r name time_val time_unit <<< "$parsed"
+                echo "Matched benchmark: $name, time: $time_val $time_unit"
                 
                 # Convert to nanoseconds for consistency
                 case "$time_unit" in
