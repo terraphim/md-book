@@ -3,12 +3,53 @@ set -e
 
 # Benchmark script for md-book performance testing
 # This script runs benchmarks and compares results with previous runs
+#
+# Usage: bench.sh [--quick]
+# --quick: Run only fast benchmarks suitable for CI
+
+# Parse command line arguments
+QUICK_MODE=false
+for arg in "$@"; do
+    case $arg in
+        --quick)
+            QUICK_MODE=true
+            shift
+            ;;
+        *)
+            # Unknown option
+            ;;
+    esac
+done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BENCHMARK_DIR="$PROJECT_DIR/benchmark-results"
 CURRENT_RESULTS="$BENCHMARK_DIR/current.json"
 PREVIOUS_RESULTS="$BENCHMARK_DIR/previous.json"
+
+# Trap handler to ensure cleanup and JSON creation on exit
+cleanup() {
+    local exit_code=$?
+    
+    # If current.json doesn't exist or is incomplete, create minimal structure
+    if [[ ! -f "$CURRENT_RESULTS" ]] || ! grep -q "}" "$CURRENT_RESULTS" 2>/dev/null; then
+        echo "Creating fallback JSON result..."
+        cat > "$CURRENT_RESULTS" << EOF
+{
+  "timestamp": "$(date -Iseconds)",
+  "status": "interrupted",
+  "benchmarks": []
+}
+EOF
+    fi
+    
+    # Clean up temporary files
+    rm -f "$CURRENT_RESULTS.raw" "$CURRENT_RESULTS.log"
+    
+    exit $exit_code
+}
+
+trap cleanup EXIT INT TERM
 
 echo "=== MD-Book Performance Benchmarks ==="
 
@@ -26,8 +67,24 @@ echo "Running benchmarks..."
 cd "$PROJECT_DIR"
 
 # Run benchmarks and save both text and structured output
-echo "Running criterion benchmarks..."
-if cargo bench --message-format=json 2>/dev/null | tee "$CURRENT_RESULTS.raw"; then
+if [[ "$QUICK_MODE" == "true" ]]; then
+    echo "Running quick benchmarks for CI..."
+    # Run only fast benchmarks with reduced sample size
+    if cargo bench --bench pagefind_bench -- "pagefind_init" --warm-up-time 1 --measurement-time 3 --sample-size 10 2>&1 | tee "$CURRENT_RESULTS.raw"; then
+        benchmark_success=true
+    else
+        benchmark_success=false
+    fi
+else
+    echo "Running full benchmarks..."
+    if cargo bench --message-format=json 2>/dev/null | tee "$CURRENT_RESULTS.raw"; then
+        benchmark_success=true
+    else
+        benchmark_success=false
+    fi
+fi
+
+if [[ "$benchmark_success" == "true" ]]; then
     # Try to extract meaningful data from criterion output
     echo "Processing benchmark results..."
     
@@ -38,18 +95,15 @@ if cargo bench --message-format=json 2>/dev/null | tee "$CURRENT_RESULTS.raw"; t
   "benchmarks": [
 EOF
     
-    # Parse criterion output for benchmark results
+    # Parse criterion output for benchmark results  
     if grep -q "time:" "$CURRENT_RESULTS.raw" 2>/dev/null; then
-        echo "Found benchmark results, parsing..."
-        grep "time:" "$CURRENT_RESULTS.raw" | while IFS= read -r line; do
-            echo "Parsing line: $line"
-            
+        # Process each line and build JSON entries
+        while IFS= read -r line; do
             # Use sed to extract benchmark name and median timing values
             parsed=$(echo "$line" | sed -n 's/^\([^[:space:]]*\)[[:space:]]*time:[[:space:]]*\[\([0-9.]*\)[[:space:]]*\([a-z]*\)[[:space:]]*\([0-9.]*\)[[:space:]]*\([a-z]*\)[[:space:]]*\([0-9.]*\)[[:space:]]*\([a-z]*\)\].*/\1|\4|\5/p')
             
             if [[ -n "$parsed" ]]; then
                 IFS='|' read -r name time_val time_unit <<< "$parsed"
-                echo "Matched benchmark: $name, time: $time_val $time_unit"
                 
                 # Convert to nanoseconds for consistency
                 case "$time_unit" in
@@ -60,7 +114,8 @@ EOF
                     *) multiplier=1 ;;
                 esac
                 
-                time_ns=$(echo "$time_val * $multiplier" | bc -l 2>/dev/null || echo "$time_val")
+                # Use awk for floating point multiplication (more reliable than bc)
+                time_ns=$(awk "BEGIN {printf \"%.0f\", $time_val * $multiplier}")
                 
                 echo "    {" >> "$CURRENT_RESULTS"
                 echo "      \"benchmark_name\": \"$name\"," >> "$CURRENT_RESULTS"
@@ -70,12 +125,18 @@ EOF
                 echo "      \"unit\": \"ns\"" >> "$CURRENT_RESULTS"
                 echo "    }," >> "$CURRENT_RESULTS"
             fi
-        done
+        done < <(grep "time:" "$CURRENT_RESULTS.raw")
         
         # Remove trailing comma and close JSON
-        sed -i '$ s/,$//' "$CURRENT_RESULTS"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            # macOS sed requires different syntax
+            sed -i '' '$ s/,$//' "$CURRENT_RESULTS"
+        else
+            # Linux sed
+            sed -i '$ s/,$//' "$CURRENT_RESULTS"
+        fi
     else
-        # No benchmark results found, create empty structure
+        # No benchmark results found, create empty structure  
         echo "    {}" >> "$CURRENT_RESULTS"
     fi
     
