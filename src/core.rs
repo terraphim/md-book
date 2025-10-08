@@ -44,7 +44,7 @@ pub struct Args {
     #[cfg(feature = "watcher")]
     pub watch: bool,
 
-    /// Serve the book at http://localhost:3000
+    /// Serve the book at <http://localhost:3000>
     #[arg(short, long)]
     #[cfg(feature = "server")]
     pub serve: bool,
@@ -77,6 +77,12 @@ pub struct PageInfo {
 }
 
 #[cfg(feature = "tokio")]
+/// Build the book from markdown files to HTML
+///
+/// # Errors
+///
+/// Returns an error if the build process fails, including template rendering,
+/// file I/O errors, or search indexing failures
 pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
     build_impl(args, config, watch_enabled).await
 }
@@ -106,11 +112,11 @@ async fn build_sync_impl(args: &Args, config: &BookConfig, watch_enabled: bool) 
         match PagefindBuilder::new(PathBuf::from(&args.output)).await {
             Ok(pagefind) => {
                 if let Err(e) = pagefind.build().await {
-                    eprintln!("Search indexing failed: {}", e);
+                    eprintln!("Search indexing failed: {e}");
                 }
             }
             Err(e) => {
-                eprintln!("Failed to create search builder: {}", e);
+                eprintln!("Failed to create search builder: {e}");
             }
         }
     }
@@ -135,7 +141,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         let template_path = format!("{}/{}", config.paths.templates, file);
         let template_content = if Path::new(&template_path).exists() {
             fs::read_to_string(&template_path)
-                .with_context(|| format!("Failed to read template: {}", template_path))?
+                .with_context(|| format!("Failed to read template: {template_path}"))?
         } else {
             // Load default template content directly
             match file {
@@ -149,7 +155,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         };
 
         tera.add_raw_template(name, &template_content)
-            .with_context(|| format!("Failed to add template: {}", name))?;
+            .with_context(|| format!("Failed to add template: {name}"))?;
     }
 
     // Create output directory if it doesn't exist
@@ -180,11 +186,10 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         let content = fs::read_to_string(entry.path())?;
         let page_info = PageInfo {
             title: extract_title(&content).unwrap_or_else(|| {
-                entry
-                    .path()
-                    .file_stem()
-                    .map(|s| s.to_string_lossy().into_owned())
-                    .unwrap_or_else(|| "Untitled".to_string())
+                entry.path().file_stem().map_or_else(
+                    || "Untitled".to_string(),
+                    |s| s.to_string_lossy().into_owned(),
+                )
             }),
             path: format!("/{}", rel_path.with_extension("html").display()),
         };
@@ -218,7 +223,7 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
     }
 
     let total_pages = all_pages.len();
-    println!("Total pages: {}", total_pages);
+    println!("Total pages: {total_pages}");
 
     // Get current year using Jiff
     let current_year = Zoned::now().year().to_string();

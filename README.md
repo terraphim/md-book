@@ -39,6 +39,54 @@ Or anything you want to change in the src/templates folder. It's a standard Tera
 ![screen_resize](gif/screen_resize.gif)
 ![screen](gif/screen.gif)
 
+# Development
+
+## Quick Start
+
+1. **Clone and build:**
+   ```bash
+   git clone https://github.com/terraphim/md-book.git
+   cd md-book
+   cargo build
+   ```
+
+2. **Set up pre-commit hooks (recommended):**
+   ```bash
+   make install-pre-commit
+   # or manually:
+   ./scripts/setup-pre-commit.sh
+   ```
+
+3. **Run quality checks:**
+   ```bash
+   make qa              # Run all checks (format, lint, test)
+   make dev-check       # Complete development check
+   make ci-local        # Simulate CI checks locally
+   ```
+
+## Available Commands
+
+- `make help` - Show all available commands
+- `make check` - Run cargo check
+- `make fmt` - Check code formatting
+- `make fmt-fix` - Fix code formatting
+- `make clippy` - Run clippy lints
+- `make test` - Run unit tests
+- `make test-integration` - Run integration tests
+- `make test-all` - Run all tests
+- `make qa` - Run all quality checks
+- `make clean` - Clean build artifacts
+
+## Pre-commit Hooks
+
+The project includes pre-commit hooks that automatically run:
+- `cargo fmt --all -- --check` - Formatting check
+- `cargo clippy --all-targets --all-features -- -D warnings` - Linting
+- `cargo test --lib --bins` - Unit tests
+- `cargo check --all-targets --all-features` - Compilation check
+
+These run automatically on every commit to ensure code quality.
+
 # Configuration
 
 You can add a book.toml file to the input directory to configure the book.

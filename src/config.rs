@@ -120,19 +120,19 @@ pub struct SearchConfig {
     pub heading_split_level: u32,
 }
 
-fn default_limit_results() -> u32 {
+const fn default_limit_results() -> u32 {
     20
 }
-fn default_boost_title() -> u32 {
+const fn default_boost_title() -> u32 {
     2
 }
-fn default_boost_hierarchy() -> u32 {
+const fn default_boost_hierarchy() -> u32 {
     2
 }
-fn default_boost_paragraph() -> u32 {
+const fn default_boost_paragraph() -> u32 {
     1
 }
-fn default_heading_split_level() -> u32 {
+const fn default_heading_split_level() -> u32 {
     2
 }
 
@@ -146,6 +146,11 @@ fn default_templates_dir() -> String {
     "templates".to_string()
 }
 
+/// Load configuration from file or use defaults
+///
+/// # Errors
+///
+/// Returns an error if the configuration file cannot be read or parsed
 pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
     let mut layers = vec![Layer::Env(Some("MDBOOK_".to_string()))];
 
@@ -158,9 +163,15 @@ pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
     if let Some(path) = config_path {
         if std::path::Path::new(path).exists() {
             // and is TOML
-            if path.ends_with(".toml") {
+            if std::path::Path::new(path)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
+            {
                 layers.push(Layer::Toml(path.into()));
-            } else if path.ends_with(".json") {
+            } else if std::path::Path::new(path)
+                .extension()
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
+            {
                 layers.push(Layer::Json(path.into()));
             } else {
                 anyhow::bail!("Unsupported config file type: {}", path);

@@ -2,6 +2,11 @@
 name = "md-book"
 version = "0.1.0"
 edition = "2021"
+description = "A modern mdbook replacement written in Rust that generates beautiful HTML documentation from Markdown files"
+license = "MIT"
+repository = "https://github.com/terraphim/md-book"
+keywords = ["markdown", "documentation", "static-site", "mdbook", "html", "generator"]
+categories = ["development-tools", "web-programming", "text-processing"]
 
 [[bin]]
 name = "md-book"
