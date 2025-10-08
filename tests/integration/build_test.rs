@@ -1,6 +1,6 @@
 use std::fs;
 use anyhow::Result;
-use md_book::{Args, BookConfig, build};
+use md_book::{Args, BookConfig};
 
 mod common;
 use common::*;

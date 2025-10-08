@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use tempfile::TempDir;
 use anyhow::Result;
-use md_book::{Args, BookConfig, build};
+use md_book::{Args, BookConfig};
 
 pub struct TestBook {
     pub temp_dir: TempDir,
@@ -67,13 +67,13 @@ impl TestBook {
     #[cfg(feature = "tokio")]
     pub async fn build(&self) -> Result<()> {
         let args = self.args();
-        build(&args, &self.config, false).await
+        md_book::build(&args, &self.config, false).await
     }
     
     #[cfg(not(feature = "tokio"))]
     pub fn build(&self) -> Result<()> {
         let args = self.args();
-        build(&args, &self.config, false)
+        md_book::build(&args, &self.config, false)
     }
     
     pub fn output_exists<P: AsRef<Path>>(&self, path: P) -> bool {

@@ -90,7 +90,7 @@ jobs:
         run: cargo test --lib --bins
         
       - name: Run integration tests
-        run: cargo test --test integration
+        run: cargo test --test integration --features "tokio,search,syntax-highlighting"
         continue-on-error: true  # Pagefind CLI might not be available in CI
         
       - name: Run end-to-end tests
@@ -162,6 +162,49 @@ jobs:
           # Skip running tests since criterion dev dependency doesn't work on WASM
           echo "✅ WASM compilation verified by build step"
         continue-on-error: true  # WASM tests might not work in CI environment
+
+  feature-tests:
+    name: Feature Combination Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        features:
+          - ""  # No features
+          - "default"
+          - "server,watcher,search,syntax-highlighting"
+          - "wasm-core"
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Cache Cargo dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-feature-${{ matrix.features }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-feature-${{ matrix.features }}-cargo-
+            ${{ runner.os }}-stable-cargo-
+            
+      - name: Run tests with features
+        run: |
+          if [ "${{ matrix.features }}" = "default" ]; then
+            cargo test
+          elif [ "${{ matrix.features }}" = "" ]; then
+            cargo test --no-default-features
+          else
+            cargo test --no-default-features --features "${{ matrix.features }}"
+          fi
 
   msrv:
     name: Minimum Supported Rust Version
