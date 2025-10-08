@@ -182,6 +182,17 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         
+      - name: Set cache key
+        id: cache-key
+        run: |
+          if [ "${{ matrix.features }}" = "" ]; then
+            echo "key=${{ runner.os }}-feature-none-cargo-${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_OUTPUT
+          else
+            # Replace commas with dashes for cache key
+            sanitized=$(echo "${{ matrix.features }}" | sed 's/,/-/g')
+            echo "key=${{ runner.os }}-feature-$sanitized-cargo-${{ hashFiles('**/Cargo.lock') }}" >> $GITHUB_OUTPUT
+          fi
+          
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
         with:
@@ -191,9 +202,9 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-feature-${{ matrix.features }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ steps.cache-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-feature-${{ matrix.features }}-cargo-
+            ${{ runner.os }}-feature-${{ matrix.features != '' && matrix.features || 'none' }}-cargo-
             ${{ runner.os }}-stable-cargo-
             
       - name: Run tests with features
