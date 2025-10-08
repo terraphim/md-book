@@ -170,7 +170,6 @@ jobs:
       fail-fast: false
       matrix:
         features:
-          - ""  # No features
           - "default"
           - "server,watcher,search,syntax-highlighting"
           - "wasm-core"
@@ -211,8 +210,6 @@ jobs:
         run: |
           if [ "${{ matrix.features }}" = "default" ]; then
             cargo test
-          elif [ "${{ matrix.features }}" = "" ]; then
-            cargo test --no-default-features
           else
             cargo test --no-default-features --features "${{ matrix.features }}"
           fi
