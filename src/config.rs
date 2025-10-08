@@ -258,7 +258,7 @@ mod tests {
             return Ok(());
         }
 
-        let config = load_config(Some("test_book_mdbook/book.toml"))?;
+        let config = load_config(Some(book_toml_path.to_str().unwrap()))?;
 
         assert_eq!(config.book.title, "mdBook test book");
         assert_eq!(
