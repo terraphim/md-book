@@ -204,7 +204,7 @@ jobs:
             target/
           key: ${{ steps.cache-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-feature-${{ matrix.features != '' && matrix.features || 'none' }}-cargo-
+            ${{ runner.os }}-feature-cargo-
             ${{ runner.os }}-stable-cargo-
             
       - name: Run tests with features
