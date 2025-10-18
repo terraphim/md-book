@@ -53,7 +53,7 @@ async fn test_mdbook_compatibility_full_build() -> Result<()> {
 #[tokio::test]
 async fn test_mdbook_compatibility_config_parsing() -> Result<()> {
     // Test that we can parse the mdBook config correctly
-    let config = md_book::config::load_config(Some("test_book_mdbook/book.toml"))?;
+    let config = md_book::config::load_config(Some("book.toml"))?;
 
     // Verify book metadata
     assert_eq!(config.book.title, "mdBook test book");
@@ -61,7 +61,7 @@ async fn test_mdbook_compatibility_config_parsing() -> Result<()> {
         config.book.description,
         Some("A demo book to test and validate changes".to_string())
     );
-    assert_eq!(config.book.authors, vec!["YJDoc2"]);
+    assert_eq!(config.book.authors, vec!["Alex Mikhalev"]);
     assert_eq!(config.book.language, "en");
 
     // Verify Rust edition

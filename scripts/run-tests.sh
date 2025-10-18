@@ -127,8 +127,8 @@ run_test "Integration tests" "cargo test --test integration" true
 
 # End-to-end tests
 print_header "End-to-End Tests"
-run_test "Build pipeline tests" "cargo test --test build_test"
-run_test "Server functionality tests" "cargo test --test server_test" true
+run_test "Build pipeline tests" "cargo test --test integration build_test"
+run_test "Server functionality tests" "cargo test --test e2e" true
 
 # WASM tests (if wasm-pack is available)
 print_header "WebAssembly Tests"
