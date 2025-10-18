@@ -1,7 +1,7 @@
-use std::process::Command;
-use std::fs;
-use tempfile::TempDir;
 use anyhow::Result;
+use std::fs;
+use std::process::Command;
+use tempfile::TempDir;
 
 fn get_binary_path() -> String {
     let mut path = std::env::current_exe().unwrap();
@@ -13,7 +13,7 @@ fn get_binary_path() -> String {
 
 #[test]
 fn test_cli_help() {
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--help")
         .output()
         .expect("Failed to execute command");
@@ -27,7 +27,7 @@ fn test_cli_help() {
 
 #[test]
 fn test_cli_version() {
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--version")
         .output()
         .expect("Failed to execute command");
@@ -39,7 +39,7 @@ fn test_cli_version() {
 
 #[test]
 fn test_cli_missing_required_args() {
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .output()
         .expect("Failed to execute command");
 
@@ -58,7 +58,7 @@ fn test_cli_basic_build() -> Result<()> {
     fs::create_dir_all(&input_dir)?;
     fs::write(input_dir.join("README.md"), "# Test Book\n\nHello, world!")?;
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
         .arg("--output")
@@ -74,7 +74,10 @@ fn test_cli_basic_build() -> Result<()> {
 
     assert!(output.status.success(), "Command failed");
     assert!(output_dir.exists(), "Output directory not created");
-    assert!(output_dir.join("README.html").exists(), "HTML file not created");
+    assert!(
+        output_dir.join("README.html").exists(),
+        "HTML file not created"
+    );
 
     Ok(())
 }
@@ -88,10 +91,15 @@ fn test_cli_with_config_file() -> Result<()> {
 
     // Create input
     fs::create_dir_all(&input_dir)?;
-    fs::write(input_dir.join("test.md"), "# Config Test\n\nWith custom config.")?;
+    fs::write(
+        input_dir.join("test.md"),
+        "# Config Test\n\nWith custom config.",
+    )?;
 
     // Create config file
-    fs::write(&config_file, r#"
+    fs::write(
+        &config_file,
+        r#"
 [book]
 title = "CLI Test Book"
 description = "Testing CLI with config"
@@ -101,9 +109,10 @@ language = "en"
 [output.html]
 mathjax_support = false
 allow_html = false
-"#)?;
+"#,
+    )?;
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
         .arg("--output")
@@ -130,7 +139,7 @@ fn test_cli_invalid_input_directory() {
     let temp_dir = TempDir::new().unwrap();
     let output_dir = temp_dir.path().join("book");
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg("nonexistent_directory")
         .arg("--output")
@@ -157,11 +166,20 @@ fn test_cli_complex_directory_structure() -> Result<()> {
     fs::create_dir_all(input_dir.join("chapter2"))?;
 
     fs::write(input_dir.join("README.md"), "# Main Book\n\nRoot content.")?;
-    fs::write(input_dir.join("chapter1").join("intro.md"), "# Chapter 1\n\nIntroduction.")?;
-    fs::write(input_dir.join("chapter1").join("section1.md"), "## Section 1.1\n\nDetails.")?;
-    fs::write(input_dir.join("chapter2").join("advanced.md"), "# Chapter 2\n\nAdvanced topics.")?;
+    fs::write(
+        input_dir.join("chapter1").join("intro.md"),
+        "# Chapter 1\n\nIntroduction.",
+    )?;
+    fs::write(
+        input_dir.join("chapter1").join("section1.md"),
+        "## Section 1.1\n\nDetails.",
+    )?;
+    fs::write(
+        input_dir.join("chapter2").join("advanced.md"),
+        "# Chapter 2\n\nAdvanced topics.",
+    )?;
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
         .arg("--output")
@@ -196,10 +214,10 @@ fn test_cli_server_options() {
     fs::write(input_dir.join("test.md"), "# Server Test").unwrap();
 
     // Test that the CLI accepts server arguments without error
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
-        .arg("--output") 
+        .arg("--output")
         .arg(output_dir.to_str().unwrap())
         .arg("--port")
         .arg("8080")
@@ -213,7 +231,7 @@ fn test_cli_server_options() {
 }
 
 #[cfg(feature = "watcher")]
-#[test] 
+#[test]
 fn test_cli_watch_option() {
     let temp_dir = TempDir::new().unwrap();
     let input_dir = temp_dir.path().join("src");
@@ -222,12 +240,12 @@ fn test_cli_watch_option() {
     fs::create_dir_all(&input_dir).unwrap();
     fs::write(input_dir.join("test.md"), "# Watch Test").unwrap();
 
-    // Test that the CLI accepts watch argument 
-    let output = Command::new(&get_binary_path())
+    // Test that the CLI accepts watch argument
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
         .arg("--output")
-        .arg(output_dir.to_str().unwrap()) 
+        .arg(output_dir.to_str().unwrap())
         .arg("--help") // Use --help to check argument exists
         .output()
         .expect("Failed to execute command");
@@ -250,13 +268,16 @@ fn test_cli_with_book_toml_in_working_directory() -> Result<()> {
     // Create structure
     fs::create_dir_all(&input_dir)?;
     fs::write(input_dir.join("test.md"), "# Book TOML Test")?;
-    fs::write(&book_toml, r#"
+    fs::write(
+        &book_toml,
+        r#"
 [book]
 title = "Auto-detected Config"
 authors = ["Auto Tester"]
-"#)?;
+"#,
+    )?;
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg("src")
         .arg("--output")
@@ -285,9 +306,12 @@ fn test_cli_output_permissions() -> Result<()> {
     let output_dir = temp_dir.path().join("book");
 
     fs::create_dir_all(&input_dir)?;
-    fs::write(input_dir.join("permissions.md"), "# Permissions Test\n\nTesting file permissions.")?;
+    fs::write(
+        input_dir.join("permissions.md"),
+        "# Permissions Test\n\nTesting file permissions.",
+    )?;
 
-    let output = Command::new(&get_binary_path())
+    let output = Command::new(get_binary_path())
         .arg("--input")
         .arg(input_dir.to_str().unwrap())
         .arg("--output")
@@ -300,7 +324,7 @@ fn test_cli_output_permissions() -> Result<()> {
     // Check that output files have reasonable permissions
     let html_file = output_dir.join("permissions.html");
     assert!(html_file.exists());
-    
+
     let metadata = fs::metadata(&html_file)?;
     assert!(metadata.is_file());
     assert!(metadata.len() > 0); // File should have content

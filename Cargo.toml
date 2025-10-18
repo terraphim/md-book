@@ -2,6 +2,11 @@
 name = "md-book"
 version = "0.1.0"
 edition = "2021"
+description = "A modern mdbook replacement written in Rust that generates beautiful HTML documentation from Markdown files"
+license = "MIT"
+repository = "https://github.com/terraphim/md-book"
+keywords = ["markdown", "documentation", "static-site", "mdbook", "html", "generator"]
+categories = ["development-tools", "web-programming", "text-processing"]
 
 [[bin]]
 name = "md-book"
@@ -45,6 +50,7 @@ criterion = { version = "0.5", features = ["html_reports"] }
 tempfile = "3.8"
 wasm-bindgen-test = "0.3"
 tokio-test = "0.4"
+walkdir = "2.4"
 
 [features]
 default = ["server", "watcher", "search", "syntax-highlighting"]
@@ -57,6 +63,26 @@ wasm = ["wasm-bindgen"]
 wasm-core = ["wasm-bindgen"]
 # Minimal features for core functionality  
 core = ["tokio"]
+
+[[test]]
+name = "integration"
+path = "tests/integration/build_test.rs"
+
+[[test]]
+name = "mdbook_test_book"
+path = "tests/integration/mdbook_test_book.rs"
+
+[[test]]
+name = "mdbook_compatibility"
+path = "tests/integration/mdbook_compatibility.rs"
+
+[[test]]
+name = "e2e"
+path = "tests/e2e/cli_test.rs"
+
+[[test]]
+name = "mdbook_e2e"
+path = "tests/e2e/mdbook_test_book_e2e.rs"
 
 [[bench]]
 name = "pagefind_bench"

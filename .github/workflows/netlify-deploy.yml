@@ -50,7 +50,8 @@ jobs:
         run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets --all-features -- -D warnings
-          cargo test --lib --bins
+          cargo test --lib --bins --all-features
+          cargo test --test integration --features "tokio,search,syntax-highlighting"
           
       - name: Build MD-Book
         run: |
