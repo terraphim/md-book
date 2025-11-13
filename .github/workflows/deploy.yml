@@ -5,6 +5,16 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: false
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
 
 permissions:
   contents: read
@@ -155,8 +165,8 @@ jobs:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
-          CLOUDFLARE_API_TOKEN: "op://MD-Book-Deployment/Cloudflare/api_token"
-          CLOUDFLARE_ACCOUNT_ID: "op://MD-Book-Deployment/Cloudflare/account_id"
+          CLOUDFLARE_API_TOKEN: "op://TerraphimPlatform/md-book-cloudflare/api_token"
+          CLOUDFLARE_ACCOUNT_ID: "op://TerraphimPlatform/md-book-cloudflare/account_id"
         
       - name: Deploy to Cloudflare Pages (Production)
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
