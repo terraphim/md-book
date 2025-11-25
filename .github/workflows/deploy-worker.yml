@@ -30,8 +30,7 @@ env:
 jobs:
   deploy-worker:
     name: Deploy Worker to Cloudflare
-    # Use self-hosted runner for worker deployments
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository

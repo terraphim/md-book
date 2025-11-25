@@ -13,8 +13,8 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-VAULT_NAME="MD-Book-Deployment"
-CLOUDFLARE_ITEM="Cloudflare"
+VAULT_NAME="TerraphimPlatform"
+CLOUDFLARE_ITEM="md-book-cloudflare"
 REPO_NAME=""
 DRY_RUN=false
 

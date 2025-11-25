@@ -18,8 +18,29 @@ use tokio::time::Duration;
 use clap::Parser;
 use std::path::Path;
 
+#[cfg(any(
+    feature = "server",
+    feature = "watcher",
+    feature = "search",
+    feature = "core"
+))]
 #[tokio::main]
 async fn main() -> Result<()> {
+    main_impl().await
+}
+
+#[cfg(not(any(
+    feature = "server",
+    feature = "watcher",
+    feature = "search",
+    feature = "core"
+)))]
+fn main() -> Result<()> {
+    // For WASM builds without async features, use a synchronous main
+    main_impl_sync()
+}
+
+async fn main_impl() -> Result<()> {
     let args = Args::parse();
 
     #[cfg(any(feature = "watcher", feature = "server"))]
@@ -139,6 +160,24 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+#[allow(dead_code)]
+fn main_impl_sync() -> Result<()> {
+    let args = Args::parse();
+
+    // Load configuration
+    let _config = config::load_config(args.config.as_deref())?;
+
+    // Initial build (synchronous)
+    #[cfg(not(feature = "tokio"))]
+    {
+        md_book::core::build(&args, &_config, false)?;
+        Ok(())
+    }
+
+    #[cfg(feature = "tokio")]
+    anyhow::bail!("Cannot use sync main with tokio feature enabled")
 }
 
 fn get_templates_dir(config: &md_book::BookConfig) -> Option<String> {

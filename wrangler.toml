@@ -10,9 +10,7 @@ name = "md-book-staging"
 # Pages configuration
 [pages]
 # Output directory from the Rust build process
-build_output_dir = "dist"
-# Build command will be handled in GitHub Actions
-build_command = ""
+pages_build_output_dir = "dist"
 
 # Environment variables for Cloudflare Pages
 [vars]
