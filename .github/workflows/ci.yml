@@ -13,6 +13,8 @@ permissions:
   contents: read
   issues: write
   pull-requests: write
+  pages: write
+  id-token: write
 
 env:
   CARGO_TERM_COLOR: always
@@ -77,7 +79,10 @@ jobs:
           
       - name: Install frontend dependencies
         run: bun install
-        
+
+      - name: Install Pagefind CLI
+        run: npm install -g pagefind
+
       - name: Check formatting
         if: matrix.rust == 'stable'
         run: cargo fmt --all -- --check
@@ -91,13 +96,11 @@ jobs:
         
       - name: Run integration tests
         run: cargo test --test integration --features "tokio,search,syntax-highlighting"
-        continue-on-error: true  # Pagefind CLI might not be available in CI
         
       - name: Run end-to-end tests
         run: cargo test --test e2e
         env:
           RUST_LOG: debug
-        continue-on-error: true  # Some E2E tests might need actual server
         
       - name: Run frontend tests
         run: bun test
@@ -123,7 +126,6 @@ jobs:
           mkdir -p example_input
           echo "# Example\nThis is an example page." > example_input/index.md
           cargo run -- -i example_input -o example_output
-        continue-on-error: true
 
   wasm:
     name: WebAssembly Tests
