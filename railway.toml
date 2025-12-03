@@ -1,0 +1,13 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "cargo build --release"
+
+[deploy]
+startCommand = "cargo run --release -- -i test_input -o dist --serve --port $PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[env]
+RUST_VERSION = "1.70.0"

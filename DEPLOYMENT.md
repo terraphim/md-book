@@ -8,6 +8,13 @@ MD-Book supports multiple hosting platforms:
 
 - **[Cloudflare Pages](#cloudflare-deployment)** - Unlimited bandwidth, Workers integration, advanced caching
 - **[Netlify](#netlify-deployment)** - Simple deployment, forms, branch previews, generous free tier
+- **[Vercel](#vercel-deployment)** - Zero-config deployments, edge functions, serverless integration
+- **[GitHub Pages](#github-pages-deployment)** - Free hosting for public repos, Jekyll-free static sites
+- **[AWS Amplify](#aws-amplify-deployment)** - AWS integration, serverless backend, custom domains
+- **[Render](#render-deployment)** - Free SSL, auto-deploy from Git, DDoS protection
+- **[Railway](#railway-deployment)** - Simple deployments, automatic HTTPS, preview environments
+- **[Fly.io](#flyio-deployment)** - Edge deployment, global distribution, Dockerfile support
+- **[DigitalOcean App Platform](#digitalocean-app-platform-deployment)** - Simple pricing, managed infrastructure
 
 ## Quick Start (Cloudflare)
 
@@ -708,6 +715,772 @@ If you want to migrate from Cloudflare to Netlify:
    netlify init
    netlify deploy --prod
    ```
+
+## Vercel Deployment
+
+Vercel offers zero-configuration deployments with automatic HTTPS and global CDN.
+
+### Quick Vercel Deployment
+
+#### Option 1: Vercel CLI
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Build your site
+cargo run -- -i docs -o dist
+
+# Deploy to Vercel
+vercel --prod
+
+# Or deploy with custom configuration
+vercel deploy --prod --name md-book
+```
+
+#### Option 2: Git Integration
+1. **Connect repository:**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "Add New" → "Project"
+   - Import your Git repository
+
+2. **Configure build:**
+   - **Framework Preset**: Other
+   - **Build Command**: `cargo run -- -i docs -o dist`
+   - **Output Directory**: `dist`
+   - **Install Command**: Leave empty (Rust pre-installed)
+
+3. **Deploy:**
+   - Click "Deploy"
+   - Your site will be live in minutes
+
+#### Option 3: Manual Upload
+```bash
+# Build locally
+cargo run -- -i docs -o dist
+
+# Deploy with Vercel CLI
+cd dist && vercel --prod
+```
+
+### Vercel Configuration
+
+Create `vercel.json` in your project root:
+
+```json
+{
+  "version": 2,
+  "name": "md-book",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "buildCommand": "cargo run -- -i docs -o dist",
+  "devCommand": "cargo run -- -i docs -o dist --serve",
+  "installCommand": "echo 'Rust is pre-installed'",
+  "outputDirectory": "dist",
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1",
+      "status": 200
+    }
+  ],
+  "headers": [
+    {
+      "source": "/css/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "destination": "/:path*"
+    }
+  ]
+}
+```
+
+### GitHub Actions for Vercel
+
+Create `.github/workflows/vercel-deploy.yml`:
+
+```yaml
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.70.0
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build site
+        run: cargo run -- -i docs -o dist
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./dist
+```
+
+### Required Vercel Secrets
+
+Add to GitHub repository secrets:
+- `VERCEL_TOKEN` - Get from Vercel Dashboard → Settings → Tokens
+- `VERCEL_ORG_ID` - Found in Vercel project settings
+- `VERCEL_PROJECT_ID` - Found in Vercel project settings
+
+## GitHub Pages Deployment
+
+GitHub Pages offers free hosting for public repositories with custom domain support.
+
+### Quick GitHub Pages Deployment
+
+#### Option 1: GitHub Actions (Recommended)
+
+Create `.github/workflows/github-pages.yml`:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.70.0
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build site
+        run: cargo run -- -i docs -o _site
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+#### Option 2: Manual Deployment
+
+```bash
+# Build your site
+cargo run -- -i docs -o dist
+
+# Create gh-pages branch
+git checkout --orphan gh-pages
+git rm -rf .
+cp -r dist/* .
+git add .
+git commit -m "Deploy to GitHub Pages"
+git push origin gh-pages --force
+
+# Switch back to main
+git checkout main
+```
+
+### GitHub Pages Configuration
+
+1. **Enable GitHub Pages:**
+   - Go to repository Settings → Pages
+   - Source: "GitHub Actions" (for workflow) or "Deploy from branch" (for manual)
+   - Branch: `gh-pages` if using manual method
+
+2. **Custom Domain (Optional):**
+   - Add `CNAME` file to output directory:
+   ```bash
+   echo "docs.yourdomain.com" > dist/CNAME
+   ```
+
+3. **Base URL Configuration:**
+   - For project pages (username.github.io/repo-name), update links to use base path
+   - Modify templates to include base path in asset URLs
+
+### GitHub Pages Features
+
+- **Free SSL/TLS certificates** for custom domains
+- **Jekyll-free deployment** (disable Jekyll with `.nojekyll` file)
+- **CDN distribution** via GitHub's infrastructure
+- **Version control** built-in
+- **Branch-based deployment** strategies
+
+## AWS Amplify Deployment
+
+AWS Amplify provides fully managed hosting with AWS service integration.
+
+### Quick AWS Amplify Deployment
+
+#### Option 1: Amplify Console
+
+1. **Connect repository:**
+   - Go to [AWS Amplify Console](https://console.aws.amazon.com/amplify/)
+   - Click "New app" → "Host web app"
+   - Connect your Git provider
+
+2. **Configure build:**
+   ```yaml
+   version: 1
+   frontend:
+     phases:
+       preBuild:
+         commands:
+           - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+           - source $HOME/.cargo/env
+       build:
+         commands:
+           - cargo run -- -i docs -o dist
+     artifacts:
+       baseDirectory: dist
+       files:
+         - '**/*'
+     cache:
+       paths:
+         - target/**/*
+         - ~/.cargo/**/*
+   ```
+
+3. **Deploy:**
+   - Review settings
+   - Click "Save and deploy"
+
+#### Option 2: Amplify CLI
+
+```bash
+# Install Amplify CLI
+npm install -g @aws-amplify/cli
+
+# Configure Amplify
+amplify configure
+
+# Initialize project
+amplify init
+
+# Add hosting
+amplify add hosting
+
+# Build and deploy
+cargo run -- -i docs -o dist
+amplify publish
+```
+
+### AWS Amplify Configuration
+
+Create `amplify.yml`:
+
+```yaml
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        # Install Rust
+        - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        - source $HOME/.cargo/env
+        - rustc --version
+    build:
+      commands:
+        - cargo build --release
+        - cargo run --release -- -i docs -o dist
+  artifacts:
+    baseDirectory: dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - target/**/*
+      - ~/.cargo/**/*
+```
+
+### AWS Amplify Features
+
+- **Custom domains** with free SSL certificates
+- **Branch deployments** for staging/production
+- **Environment variables** management
+- **Serverless backend** integration (Lambda, DynamoDB)
+- **Authentication** via Amazon Cognito
+- **CI/CD** built-in
+- **Performance monitoring** and analytics
+
+## Render Deployment
+
+Render offers simple deployments with free SSL and automatic scaling.
+
+### Quick Render Deployment
+
+#### Option 1: Render Dashboard
+
+1. **Create Web Service:**
+   - Go to [Render Dashboard](https://dashboard.render.com/)
+   - Click "New +" → "Static Site"
+   - Connect your repository
+
+2. **Configure:**
+   - **Build Command**: `cargo run -- -i docs -o dist`
+   - **Publish Directory**: `dist`
+   - **Environment**: Select "Rust"
+
+3. **Deploy:**
+   - Click "Create Static Site"
+   - Automatic deployments on push
+
+#### Option 2: render.yaml
+
+Create `render.yaml` in repository root:
+
+```yaml
+services:
+  - type: web
+    name: md-book
+    env: static
+    buildCommand: cargo run -- -i docs -o dist
+    staticPublishPath: dist
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /css/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /js/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+```
+
+### Render Features
+
+- **Free SSL certificates** for custom domains
+- **DDoS protection** built-in
+- **Auto-deploy** from Git
+- **Preview environments** for pull requests
+- **Custom headers** and redirects
+- **Zero-downtime deploys**
+
+## Railway Deployment
+
+Railway provides simple deployments with automatic HTTPS and preview environments.
+
+### Quick Railway Deployment
+
+#### Option 1: Railway CLI
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Initialize project
+railway init
+
+# Link to project (or create new)
+railway link
+
+# Deploy
+cargo run -- -i docs -o dist
+railway up
+```
+
+#### Option 2: Railway Dashboard
+
+1. **Create Project:**
+   - Go to [Railway Dashboard](https://railway.app/dashboard)
+   - Click "New Project" → "Deploy from GitHub repo"
+   - Select your repository
+
+2. **Configure:**
+   - Railway auto-detects Rust projects
+   - Set build command: `cargo build --release && cargo run --release -- -i docs -o dist`
+   - Set start command: Static site serving
+
+3. **Deploy:**
+   - Automatic deployment begins
+   - Get deployment URL
+
+### Railway Configuration
+
+Create `railway.toml`:
+
+```toml
+[build]
+builder = "NIXPACKS"
+buildCommand = "cargo build --release"
+
+[deploy]
+startCommand = "cargo run --release -- -i docs -o dist --serve --port $PORT"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+```
+
+Or use `Procfile`:
+
+```
+web: cargo run --release -- -i docs -o dist --serve --port $PORT
+```
+
+### Railway Features
+
+- **Automatic HTTPS** for all deployments
+- **Preview environments** for branches and PRs
+- **Environment variables** management
+- **Database integration** (PostgreSQL, MySQL, Redis)
+- **Metrics and logging**
+- **Custom domains** with SSL
+
+## Fly.io Deployment
+
+Fly.io provides edge deployment with global distribution using containers.
+
+### Quick Fly.io Deployment
+
+#### Setup and Deploy
+
+```bash
+# Install flyctl
+curl -L https://fly.io/install.sh | sh
+
+# Login
+flyctl auth login
+
+# Launch app (creates fly.toml)
+flyctl launch
+
+# Deploy
+flyctl deploy
+```
+
+### Fly.io Configuration
+
+Create `fly.toml`:
+
+```toml
+app = "md-book"
+primary_region = "iad"
+
+[build]
+  [build.args]
+    RUST_VERSION = "1.70.0"
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/"
+```
+
+Create `Dockerfile`:
+
+```dockerfile
+# Build stage
+FROM rust:1.70 AS builder
+
+WORKDIR /app
+COPY . .
+
+RUN cargo build --release
+
+# Runtime stage
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /app/target/release/md-book /usr/local/bin/md-book
+COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/src/templates ./templates
+
+# Build the site
+RUN md-book -i docs -o dist
+
+# Serve static files
+EXPOSE 8080
+
+CMD ["md-book", "-i", "docs", "-o", "dist", "--serve", "--port", "8080"]
+```
+
+### Fly.io Features
+
+- **Global edge network** - Deploy to multiple regions
+- **Auto-scaling** based on demand
+- **Zero-downtime deploys**
+- **Built-in SSL/TLS**
+- **Private networking** between services
+- **Volume storage** for persistent data
+- **Custom domains** with automatic certificates
+
+## DigitalOcean App Platform Deployment
+
+DigitalOcean App Platform offers simple pricing and managed infrastructure.
+
+### Quick DigitalOcean Deployment
+
+#### Option 1: App Platform Console
+
+1. **Create App:**
+   - Go to [DigitalOcean App Platform](https://cloud.digitalocean.com/apps)
+   - Click "Create App"
+   - Connect your repository
+
+2. **Configure:**
+   - **Type**: Static Site
+   - **Build Command**: `cargo run -- -i docs -o dist`
+   - **Output Directory**: `dist`
+   - **Environment**: Rust
+
+3. **Deploy:**
+   - Review plan ($0 for static sites)
+   - Click "Launch Your App"
+
+#### Option 2: App Spec (YAML)
+
+Create `.do/app.yaml`:
+
+```yaml
+name: md-book
+region: nyc
+static_sites:
+  - name: web
+    github:
+      repo: yourusername/md-book
+      branch: main
+      deploy_on_push: true
+    build_command: cargo run -- -i docs -o dist
+    output_dir: dist
+    routes:
+      - path: /
+    environment_slug: rust
+    envs:
+      - key: RUST_VERSION
+        value: "1.70.0"
+    cors:
+      allow_origins:
+        - prefix: https://
+      allow_methods:
+        - GET
+        - OPTIONS
+        - POST
+      allow_headers:
+        - Content-Type
+```
+
+### DigitalOcean Features
+
+- **Free tier** for static sites
+- **Automatic SSL** certificates
+- **CDN** included
+- **Auto-deploy** from Git
+- **Preview deployments** for PRs
+- **Simple pricing** - No surprises
+- **Managed databases** integration
+- **Easy monitoring** and alerts
+
+## Platform Comparison Table
+
+| Feature | Cloudflare | Netlify | Vercel | GitHub Pages | AWS Amplify | Render | Railway | Fly.io | DigitalOcean |
+|---------|-----------|---------|--------|--------------|-------------|--------|---------|--------|--------------|
+| **Free Tier** | Unlimited | 100GB | 100GB | Unlimited | Free (pay-as-go) | Free | $5 credit | Free tier | Free static |
+| **Build Minutes** | Unlimited | 300/mo | 6000/mo | Unlimited | 1000/mo | 500/mo | Limited | N/A | 100/mo |
+| **Bandwidth** | Unlimited | 100GB | 100GB | 100GB/mo | 15GB | 100GB | 100GB | Limited | 100GB |
+| **Custom Domain** | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL | ✅ Free SSL |
+| **Auto Deploy** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Preview Deploys** | ✅ | ✅ | ✅ | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Edge Functions** | Workers | Functions | Functions | ❌ | Lambda | ❌ | Limited | ✅ | Functions |
+| **Global CDN** | ✅ 200+ | ✅ | ✅ | ✅ | ✅ | ✅ | Limited | ✅ Multi-region | ✅ |
+| **Analytics** | ✅ Built-in | Paid | Paid | Limited | ✅ | Basic | Basic | Basic | Basic |
+| **DDoS Protection** | ✅ Enterprise | Basic | ✅ | ✅ | ✅ AWS Shield | ✅ | Limited | ✅ | ✅ |
+| **Build Cache** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **Deployment Speed** | Very Fast | Fast | Fast | Medium | Fast | Fast | Fast | Medium | Fast |
+| **Ease of Setup** | Medium | Easy | Very Easy | Easy | Medium | Easy | Very Easy | Medium | Easy |
+
+## Choosing the Right Platform
+
+### Use **Cloudflare Pages** if you need:
+- Unlimited bandwidth and builds
+- Advanced edge computing with Workers
+- Best-in-class DDoS protection
+- Global CDN with 200+ locations
+
+### Use **Netlify** if you need:
+- Simple drag-and-drop deployment
+- Built-in form handling
+- Generous free tier
+- Easy custom domains
+
+### Use **Vercel** if you need:
+- Zero-config deployment
+- Excellent Next.js integration (future)
+- Edge functions
+- Great developer experience
+
+### Use **GitHub Pages** if you need:
+- Simple hosting for open source
+- Free for public repositories
+- Direct GitHub integration
+- Jekyll support (if needed)
+
+### Use **AWS Amplify** if you need:
+- AWS ecosystem integration
+- Serverless backend (Lambda, DynamoDB)
+- Enterprise features
+- Advanced authentication
+
+### Use **Render** if you need:
+- Simple pricing
+- Free SSL and DDoS protection
+- PostgreSQL/Redis included in free tier
+- Preview environments
+
+### Use **Railway** if you need:
+- Simplest deployment experience
+- Database integration
+- Preview environments
+- Hobby projects
+
+### Use **Fly.io** if you need:
+- Global edge deployment
+- Container-based deployment
+- Multi-region by default
+- Low-latency worldwide
+
+### Use **DigitalOcean** if you need:
+- Simple pricing
+- Managed infrastructure
+- Free static site hosting
+- Great documentation
 
 ## Support and Resources
 
