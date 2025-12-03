@@ -680,6 +680,13 @@ mod tests {
     use std::fs;
     use tempfile::TempDir;
 
+    // Get project root directory (CARGO_MANIFEST_DIR) for absolute path resolution
+    fn project_root() -> std::path::PathBuf {
+        std::path::PathBuf::from(
+            std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()),
+        )
+    }
+
     #[test]
     fn test_extract_title_h1() {
         let markdown = "# Main Title\n\nSome content here.";
@@ -924,12 +931,17 @@ mod tests {
     fn test_copy_static_assets() -> Result<()> {
         let temp_dir = TempDir::new()?;
         let output_dir = temp_dir.path().join("output");
-        let templates_dir = "src/templates";
+        // Use absolute path to avoid issues when other tests change working directory
+        let templates_dir = project_root().join("src/templates");
 
         fs::create_dir_all(&output_dir)?;
 
         let config = BookConfig::default();
-        copy_static_assets(output_dir.to_str().unwrap(), templates_dir, &config)?;
+        copy_static_assets(
+            output_dir.to_str().unwrap(),
+            templates_dir.to_str().unwrap(),
+            &config,
+        )?;
 
         // Check that some assets were copied (if templates exist)
         let _has_assets = output_dir.join("css").exists()

@@ -84,7 +84,7 @@ pub struct Output {
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct HtmlOutput {
-    #[serde(default, alias = "mathjax-support")]
+    #[serde(default)]
     pub mathjax_support: bool,
     #[serde(default)]
     pub allow_html: bool,
@@ -98,7 +98,7 @@ pub struct HtmlOutput {
 pub struct PlaygroundConfig {
     #[serde(default)]
     pub editable: bool,
-    #[serde(default, alias = "line-numbers")]
+    #[serde(default)]
     pub line_numbers: bool,
 }
 
@@ -106,17 +106,17 @@ pub struct PlaygroundConfig {
 pub struct SearchConfig {
     #[serde(default = "default_limit_results")]
     pub limit_results: u32,
-    #[serde(default, alias = "use-boolean-and")]
+    #[serde(default)]
     pub use_boolean_and: bool,
-    #[serde(default = "default_boost_title", alias = "boost-title")]
+    #[serde(default = "default_boost_title")]
     pub boost_title: u32,
-    #[serde(default = "default_boost_hierarchy", alias = "boost-hierarchy")]
+    #[serde(default = "default_boost_hierarchy")]
     pub boost_hierarchy: u32,
-    #[serde(default = "default_boost_paragraph", alias = "boost-paragraph")]
+    #[serde(default = "default_boost_paragraph")]
     pub boost_paragraph: u32,
     #[serde(default)]
     pub expand: bool,
-    #[serde(default = "default_heading_split_level", alias = "heading-split-level")]
+    #[serde(default = "default_heading_split_level")]
     pub heading_split_level: u32,
 }
 
@@ -187,7 +187,12 @@ pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
 mod tests {
     use super::*;
     use std::fs;
+    use std::sync::Mutex;
     use tempfile::TempDir;
+
+    // Mutex to serialize tests that change the current working directory
+    // This prevents race conditions when tests run in parallel
+    static CWD_MUTEX: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_markdown_format_default() {
@@ -231,11 +236,19 @@ mod tests {
 
     #[test]
     fn test_load_config_no_files() -> anyhow::Result<()> {
-        // Test loading config from a directory with no book.toml
-        let config = load_config(None);
+        // Lock mutex to prevent race conditions with other tests
+        let _guard = CWD_MUTEX.lock().unwrap();
 
-        // Should succeed even with no config files
-        let config = config?;
+        let temp_dir = TempDir::new()?;
+        let original_dir = std::env::current_dir()?;
+
+        // Change to temp directory so no book.toml exists
+        std::env::set_current_dir(temp_dir.path())?;
+
+        let config = load_config(None)?;
+
+        // Restore original directory
+        std::env::set_current_dir(original_dir)?;
 
         // Should have valid config (values may be empty strings due to twelf behavior)
         let _ = config.book.language.len();
@@ -246,11 +259,16 @@ mod tests {
 
     #[test]
     fn test_load_config_with_book_toml() -> anyhow::Result<()> {
-        // Test loading config with the main book.toml file
-        let current_dir = std::env::current_dir()?;
-        let book_toml_path = current_dir.join("book.toml");
+        // Lock mutex to prevent race conditions with other tests that change cwd
+        let _guard = CWD_MUTEX.lock().unwrap();
+
+        // Test loading config with a custom book.toml file
+        // Use CARGO_MANIFEST_DIR to get absolute path for test reliability
+        let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string());
+        let book_toml_path =
+            std::path::PathBuf::from(&manifest_dir).join("test_book_mdbook/book.toml");
         if !book_toml_path.exists() {
-            // Skip test if book.toml is not available
+            // Skip test if mdBook test book is not available
             return Ok(());
         }
 
@@ -261,7 +279,7 @@ mod tests {
             config.book.description,
             Some("A demo book to test and validate changes".to_string())
         );
-        assert_eq!(config.book.authors, vec!["Alex Mikhalev"]);
+        assert_eq!(config.book.authors, vec!["YJDoc2"]);
         assert_eq!(config.book.language, "en");
         assert_eq!(config.rust.edition, "2018");
         assert_eq!(config.output.html.search.limit_results, 20);
@@ -299,6 +317,9 @@ frontmatter = true
 
     #[test]
     fn test_load_config_with_custom_json() -> anyhow::Result<()> {
+        // Lock mutex to prevent race conditions with other tests that change cwd
+        let _guard = CWD_MUTEX.lock().unwrap();
+
         let temp_dir = TempDir::new()?;
 
         let custom_json_content = r#"
@@ -355,10 +376,20 @@ frontmatter = true
 
     #[test]
     fn test_load_config_nonexistent_custom_file() -> anyhow::Result<()> {
-        // Test with a nonexistent custom config file
-        let config = load_config(Some("nonexistent.toml"));
+        // Lock mutex to prevent race conditions with other tests
+        let _guard = CWD_MUTEX.lock().unwrap();
+
+        // Change to a temporary directory to avoid interference from other tests
+        let temp_dir = TempDir::new()?;
+        let original_dir = std::env::current_dir()?;
+        std::env::set_current_dir(temp_dir.path())?;
 
         // Should succeed even if custom file doesn't exist
+        let config = load_config(Some("nonexistent.toml"));
+
+        // Always restore directory
+        std::env::set_current_dir(original_dir)?;
+
         let config = config?;
         // Config loaded successfully (value may vary due to twelf behavior)
         let _ = config.book.language;
