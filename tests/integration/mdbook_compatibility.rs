@@ -67,7 +67,7 @@ async fn test_mdbook_compatibility_config_parsing() -> Result<()> {
     // Verify Rust edition
     assert_eq!(config.rust.edition, "2018");
 
-    // Verify HTML output settings
+    // Verify HTML output settings (MathJax not implemented yet, but config parses)
     assert!(config.output.html.mathjax_support);
 
     // Verify playground settings

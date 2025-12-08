@@ -83,6 +83,7 @@ pub struct Output {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub struct HtmlOutput {
     #[serde(default)]
     pub mathjax_support: bool,
@@ -95,6 +96,7 @@ pub struct HtmlOutput {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub struct PlaygroundConfig {
     #[serde(default)]
     pub editable: bool,
@@ -103,6 +105,7 @@ pub struct PlaygroundConfig {
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
 pub struct SearchConfig {
     #[serde(default = "default_limit_results")]
     pub limit_results: u32,
@@ -335,9 +338,9 @@ frontmatter = true
   },
   "output": {
     "html": {
-      "mathjax_support": true,
+      "mathjax-support": true,
       "search": {
-        "limit_results": 100
+        "limit-results": 100
       }
     }
   }
