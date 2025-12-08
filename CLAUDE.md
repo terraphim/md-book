@@ -174,6 +174,21 @@ let config = config::load_config(args.config.as_deref())?;
 - Wrap optional features with graceful fallbacks for network failures
 - See `.env.example` for required environment variables template
 
+### 1Password CLI Usage
+Use `op run` with an env file to inject secrets from 1Password:
+```bash
+# Using .env.1password file (recommended)
+op run --env-file=.env.1password --no-masking -- wrangler pages deploy dist --project-name md-book
+
+# Or export env vars first, then use op run
+export CLOUDFLARE_ACCOUNT_ID="op://TerraphimPlatform/md-book-cloudflare/account_id"
+export CLOUDFLARE_API_TOKEN="op://TerraphimPlatform/md-book-cloudflare/api_token"
+op run --no-masking -- wrangler pages deploy dist --project-name md-book
+```
+- Use `op://Vault/Item/field` syntax for secret references
+- Secrets must be in env vars or `--env-file` before `op run` scans them
+- `--no-masking` shows the actual output (useful for debugging)
+
 ## Deployment
 
 See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment documentation including:
