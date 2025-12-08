@@ -58,21 +58,14 @@ jobs:
           
       - name: Generate site
         run: |
-          # Create input directory with sample content if it doesn't exist
-          if [ ! -d "test_input" ]; then
-            mkdir -p test_input
-            echo "# Welcome to MD-Book" > test_input/index.md
-            echo "" >> test_input/index.md
-            echo "This is a modern mdbook replacement written in Rust." >> test_input/index.md
-            echo "" >> test_input/index.md
-            echo "## Features" >> test_input/index.md
-            echo "- Fast and efficient" >> test_input/index.md
-            echo "- Modern web technologies" >> test_input/index.md
-            echo "- Integrated search" >> test_input/index.md
-          fi
-          
-          # Build the site
-          cargo run --release -- -i test_input -o dist
+          # Clean any previous build
+          rm -rf dist
+
+          # Build the site using test_book_mdbook (full feature demo)
+          cargo run --release -- -i test_book_mdbook/src -o dist
+
+          # Verify the build output
+          echo "Generated $(find dist -type f | wc -l) files"
           
       - name: Create 404 page
         run: |

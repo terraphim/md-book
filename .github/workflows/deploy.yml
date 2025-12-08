@@ -88,34 +88,16 @@ jobs:
       - name: Build optimized release binary
         run: cargo build --release --all-features
         
-      - name: Prepare test input for build
-        run: |
-          # Use test_input as the source for the documentation site
-          if [ ! -d "test_input" ]; then
-            echo "Creating minimal test input..."
-            mkdir -p test_input
-            echo "# Welcome to MD-Book" > test_input/index.md
-            echo "This is a modern mdbook replacement written in Rust." >> test_input/index.md
-            echo "" >> test_input/index.md
-            echo "## Features" >> test_input/index.md
-            echo "- Fast HTML generation from Markdown" >> test_input/index.md
-            echo "- Integrated search with Pagefind" >> test_input/index.md
-            echo "- Live development server" >> test_input/index.md
-            echo "- Multiple markdown format support" >> test_input/index.md
-            
-            echo "# Getting Started" > test_input/getting-started.md
-            echo "Learn how to use MD-Book to generate beautiful documentation." >> test_input/getting-started.md
-          fi
-          
       - name: Generate static site
         run: |
           # Clean any previous build
           rm -rf dist
-          
-          # Generate the static site using the built binary
-          ./target/release/md-book -i test_input -o dist
-          
+
+          # Generate the static site using test_book_mdbook (full feature demo)
+          ./target/release/md-book -i test_book_mdbook/src -o dist
+
           # Verify the build output
+          echo "Generated $(find dist -type f | wc -l) files"
           ls -la dist/
           
       - name: Create 404 page
