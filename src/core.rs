@@ -369,8 +369,14 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
     if std::path::Path::new(&css_source).exists() {
         for entry in WalkDir::new(&css_source) {
             let entry = entry?;
-            let dest_path =
-                css_dest.clone() + entry.path().strip_prefix(&css_source)?.to_str().unwrap();
+            let dest_path = css_dest.clone()
+                + entry
+                    .path()
+                    .strip_prefix(&css_source)?
+                    .to_str()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Invalid UTF-8 in CSS path: {:?}", entry.path())
+                    })?;
             if entry.file_type().is_file() {
                 fs::copy(entry.path(), dest_path)?;
             }
@@ -384,8 +390,14 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
     if std::path::Path::new(&js_source).exists() {
         for entry in WalkDir::new(&js_source) {
             let entry = entry?;
-            let dest_path =
-                js_dest.clone() + entry.path().strip_prefix(&js_source)?.to_str().unwrap();
+            let dest_path = js_dest.clone()
+                + entry
+                    .path()
+                    .strip_prefix(&js_source)?
+                    .to_str()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Invalid UTF-8 in JS path: {:?}", entry.path())
+                    })?;
             if entry.file_type().is_file() {
                 fs::copy(entry.path(), dest_path)?;
             }
@@ -398,8 +410,14 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
     if std::path::Path::new(&img_source).exists() {
         for entry in WalkDir::new(&img_source) {
             let entry = entry?;
-            let dest_path =
-                img_dest.clone() + entry.path().strip_prefix(&img_source)?.to_str().unwrap();
+            let dest_path = img_dest.clone()
+                + entry
+                    .path()
+                    .strip_prefix(&img_source)?
+                    .to_str()
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Invalid UTF-8 in image path: {:?}", entry.path())
+                    })?;
             if entry.file_type().is_file() {
                 fs::copy(entry.path(), dest_path)
                     .context(format!("Failed to copy img file: {:?}", entry.path()))?;

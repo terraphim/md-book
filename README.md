@@ -169,6 +169,24 @@ See [DEPLOYMENT.md](DEPLOYMENT.md) for comprehensive deployment documentation in
 - Performance optimization
 - Platform comparison
 
+# Security Considerations
+
+## HTML in Markdown
+
+By default, raw HTML in markdown files is **disabled** for security. If you enable `allow_html` in your configuration:
+
+```toml
+[output.html]
+allow-html = true
+```
+
+**Warning:** This allows arbitrary HTML/JavaScript in your markdown files to be rendered. Only enable this if:
+- You trust all content authors
+- Your documentation is not user-generated
+- You understand the XSS (Cross-Site Scripting) implications
+
+The default `allow-html = false` setting is safe and recommended for most use cases.
+
 # TODO
 
 - [ ] Rust specific synax highlight. Good first issue.
