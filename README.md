@@ -36,8 +36,20 @@ Or anything you want to change in the src/templates folder. It's a standard Tera
 
 # Screenshots
 
-![screen_resize](gif/screen_resize.gif)
-![screen](gif/screen.gif)
+## Responsive Layout
+Desktop to mobile responsive design with card-based navigation.
+
+![Responsive Demo](gif/responsive-demo.webp)
+
+## Code & Navigation
+Syntax highlighting, page navigation, and content browsing.
+
+![Code Demo](gif/code-demo.webp)
+
+## Search
+Full-text search powered by Pagefind with instant results.
+
+![Search Demo](gif/search-demo.webp)
 
 # Development
 
