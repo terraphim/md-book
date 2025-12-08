@@ -10,7 +10,7 @@ on:
     - cron: '0 1 * * *'
 
 permissions:
-  contents: read
+  contents: write  # Required for gh-pages deployment
   issues: write
   pull-requests: write
   pages: write
