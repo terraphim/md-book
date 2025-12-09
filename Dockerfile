@@ -32,14 +32,14 @@ COPY --from=builder /app/target/release/md-book /usr/local/bin/md-book
 # Copy templates and static assets
 COPY src/templates ./templates
 
-# Copy test input for demo (replace with your content)
-COPY test_input ./test_input
+# Copy test input for demo
+COPY test_book_mdbook ./test_book_mdbook
 
 # Create output directory
 RUN mkdir -p dist
 
-# Build the site at container startup
-RUN md-book -i test_input -o dist
+# Build site at container startup
+RUN md-book -i test_book_mdbook -o dist
 
 # Expose port (configurable via PORT env var)
 EXPOSE 8080
@@ -49,4 +49,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:${PORT:-8080}/ || exit 1
 
 # Start the server
-CMD ["sh", "-c", "md-book -i test_input -o dist --serve --port ${PORT:-8080}"]
+CMD ["sh", "-c", "md-book -i test_book_mdbook -o dist --serve --port ${PORT:-8080}"]
