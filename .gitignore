@@ -5,6 +5,7 @@ Cargo.lock
 
 # Output directories
 /dist/
+/dist-*/
 /build/
 /out/
 /test_out
