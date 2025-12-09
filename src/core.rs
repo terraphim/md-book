@@ -425,23 +425,31 @@ fn copy_static_assets(output_dir: &str, templates_dir: &str, _config: &BookConfi
         }
     }
 
-    fs::write(
-        format!("{}/components/doc-toc.js", output_dir),
-        include_str!("templates/components/doc-toc.js"),
-    )
-    .context("Failed to write TOC component")?;
+    // Copy components from templates directory or use defaults
+    let components = [
+        ("doc-toc.js", include_str!("templates/components/doc-toc.js")),
+        (
+            "simple-block.js",
+            include_str!("templates/components/simple-block.js"),
+        ),
+        (
+            "search-modal.js",
+            include_str!("templates/components/search-modal.js"),
+        ),
+    ];
 
-    fs::write(
-        format!("{}/components/simple-block.js", output_dir),
-        include_str!("templates/components/simple-block.js"),
-    )
-    .context("Failed to write Simple Block component")?;
+    for (component_name, default_content) in components {
+        let custom_path = format!("{}/components/{}", templates_dir, component_name);
+        let content = if std::path::Path::new(&custom_path).exists() {
+            fs::read_to_string(&custom_path)
+                .with_context(|| format!("Failed to read custom component: {}", custom_path))?
+        } else {
+            default_content.to_string()
+        };
 
-    fs::write(
-        format!("{}/components/search-modal.js", output_dir),
-        include_str!("templates/components/search-modal.js"),
-    )
-    .context("Failed to write Search Modal component")?;
+        fs::write(format!("{}/components/{}", output_dir, component_name), content)
+            .with_context(|| format!("Failed to write {} component", component_name))?;
+    }
 
     Ok(())
 }

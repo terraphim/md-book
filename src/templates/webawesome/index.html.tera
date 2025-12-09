@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | {{ config.book.title }}</title>
+    <!-- Include Web Awesome assets -->
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/default.css" />
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script type="module" src="/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+</head>
+<body>
+    <div class="container index-container">
+        {% include "header" %}
+        <main class="content index-content">
+            {% if has_index %}
+
+                    {% if config.output.html.allow_html %}
+                        <!-- HTML is allowed -->
+                        {{ content | safe }}
+                    {% else %}
+                    <article class="main-article">
+                        HTML is not allowed
+                        {{ content }}
+                    </article>
+                {% endif %}
+                </article>
+            {% else %}
+                <div class="index-header">
+                    <h1>Documentation</h1>
+                </div>
+                <div class="card-grid">
+                    {% for section in sections %}
+                        <div class="section-group">
+                            <h2>{{ section.title }}</h2>
+                            <div class="card-group">
+                                {% for page in section.pages %}
+                                    <wa-card class="doc-card">
+                                        <h3 slot="header">{{ page.title }}</h3>
+                                        <wa-button href="{{ page.path }}" variant="neutral">
+                                            Read More
+                                            <wa-icon slot="suffix" name="arrow-right" library="system"></wa-icon>
+                                        </wa-button>
+                                    </wa-card>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </main>
+    </div>
+
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© {{ year }} {{ config.book.title }}. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="{{ config.book.github_url }}" class="footer-link">
+                <wa-icon name="brands/github"></wa-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>

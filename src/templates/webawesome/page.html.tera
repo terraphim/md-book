@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page.title }} | {{ config.book.title }}</title>
+    <!-- Include Web Awesome assets -->
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/default.css" />
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+
+</head>
+<body>
+    <div class="container">
+        {% include "header" %}
+        <div class="sidebar">
+            {% include "sidebar" %}
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>{{ page.title }}</h1>
+                {{ page.content | safe }}
+                <div class="nav-footer">
+                    {% if page.previous %}
+                    <wa-button href="{{ page.previous.path | safe }}" variant="neutral" class="nav-previous">
+                        <wa-icon slot="prefix" name="arrow-left" library="system"></wa-icon>
+                        {{ page.previous.title }}
+                    </wa-button>
+                    {% endif %}
+                    {% if page.next %}
+                    <wa-button href="{{ page.next.path | safe }}" variant="neutral" class="nav-next">
+                        {{ page.next.title }}
+                        <wa-icon slot="suffix" name="arrow-right" library="system"></wa-icon>
+                    </wa-button>
+                    {% endif %}
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+
+    {% include "footer" %}
+    {% if watch_enabled %}
+    <script src="/js/live-reload.js"></script>
+    {% endif %}
+</body>
+</html>

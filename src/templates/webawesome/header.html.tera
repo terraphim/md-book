@@ -1,0 +1,27 @@
+<header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">{{ config.book.title }}</span>
+        </div>
+        <div class="header-right">
+            <wa-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <wa-icon name="magnifying-glass" slot="prefix"></wa-icon>
+            </wa-input>
+            <div class="header-links">
+                <a href="{{ config.book.github_url }}" class="header-link" target="_blank">
+                    <wa-icon name="brands/github"></wa-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                {% if config.book.github_url %}
+                <a href="{{ config.book.github_edit_url_base }}{{ current_path | replace(from='.html', to='.md') }}" class="header-link" target="_blank">
+                    <wa-icon name="pen-to-square"></wa-icon>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</header>

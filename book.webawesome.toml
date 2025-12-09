@@ -1,0 +1,36 @@
+[book]
+title = "mdBook test book (Web Awesome Theme)"
+description = "A demo book to test and validate the Web Awesome theme"
+authors = ["Alex Mikhalev"]
+language = "en"
+logo = "/img/terraphim_gray.png"
+github_url = "https://github.com/terraphim/md-book"
+github_edit_url_base = "https://github.com/terraphim/terraphim-ai/edit/main/docs/src/"
+
+[paths]
+# Use Web Awesome theme
+templates = "src/templates/webawesome"
+
+[rust]
+edition = "2018"
+
+[markdown]
+format = "markdown"
+frontmatter = false
+
+[output.html]
+mathjax-support = true
+allow_html = true
+
+[output.html.playground]
+editable = true
+line-numbers = true
+
+[output.html.search]
+limit-results = 20
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 2
+boost-paragraph = 1
+expand = true
+heading-split-level = 2
