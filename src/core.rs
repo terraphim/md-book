@@ -260,9 +260,14 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
 
             let markdown_content = fs::read_to_string(entry.path())?;
             #[cfg(feature = "syntax-highlighting")]
-            let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
+            let html_content = convert_md_links_to_html(&process_markdown_with_highlighting(
+                &markdown_content,
+                &ss,
+                config,
+            )?);
             #[cfg(not(feature = "syntax-highlighting"))]
-            let html_content = process_markdown_basic(&markdown_content, config)?;
+            let html_content =
+                convert_md_links_to_html(&process_markdown_basic(&markdown_content, config)?);
 
             let previous = if current_page > 0 {
                 Some(all_pages[current_page - 1].clone())
@@ -323,9 +328,14 @@ fn build_sync_impl_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -
         let markdown_content = fs::read_to_string(&index_path)
             .with_context(|| format!("Failed to read index file: {}", index_path.display()))?;
         #[cfg(feature = "syntax-highlighting")]
-        let html_content = process_markdown_with_highlighting(&markdown_content, &ss, config)?;
+        let html_content = convert_md_links_to_html(&process_markdown_with_highlighting(
+            &markdown_content,
+            &ss,
+            config,
+        )?);
         #[cfg(not(feature = "syntax-highlighting"))]
-        let html_content = process_markdown_basic(&markdown_content, config)?;
+        let html_content =
+            convert_md_links_to_html(&process_markdown_basic(&markdown_content, config)?);
 
         context.insert("has_index", &true);
         context.insert("title", &index.title);
@@ -522,6 +532,83 @@ fn process_generic_code(
     }
     let html = html_generator.finalize();
     Ok(format!("<pre class=\"code\"><code>{}</code></pre>", html))
+}
+
+/// Converts internal .md links to .html links in HTML content.
+/// This ensures that links like `href="page.md"` become `href="page.html"`.
+/// External links (http://, https://, mailto:, etc.) are not modified.
+fn convert_md_links_to_html(html: &str) -> String {
+    let mut result = html.to_string();
+
+    // Convert href="...md" to href="...html" (double quotes)
+    // We need to be careful to only convert internal links, not external ones
+    let mut start = 0;
+    while let Some(href_pos) = result[start..].find("href=\"") {
+        let abs_pos = start + href_pos;
+        let url_start = abs_pos + 6; // Position after 'href="'
+
+        if let Some(quote_end) = result[url_start..].find('"') {
+            let url_end = url_start + quote_end;
+            let url = &result[url_start..url_end];
+
+            // Only convert if it's an internal link ending with .md
+            // Skip external links (http://, https://, mailto:, //, etc.)
+            if url.ends_with(".md")
+                && !url.starts_with("http://")
+                && !url.starts_with("https://")
+                && !url.starts_with("mailto:")
+                && !url.starts_with("//")
+            {
+                // Replace .md with .html
+                let new_url = format!("{}.html", &url[..url.len() - 3]);
+                result = format!(
+                    "{}href=\"{}\"{}",
+                    &result[..abs_pos],
+                    new_url,
+                    &result[url_end + 1..]
+                );
+                start = abs_pos + 6 + new_url.len() + 1;
+            } else {
+                start = url_end + 1;
+            }
+        } else {
+            break;
+        }
+    }
+
+    // Also handle single quotes (less common but possible)
+    start = 0;
+    while let Some(href_pos) = result[start..].find("href='") {
+        let abs_pos = start + href_pos;
+        let url_start = abs_pos + 6; // Position after "href='"
+
+        if let Some(quote_end) = result[url_start..].find('\'') {
+            let url_end = url_start + quote_end;
+            let url = &result[url_start..url_end];
+
+            if url.ends_with(".md")
+                && !url.starts_with("http://")
+                && !url.starts_with("https://")
+                && !url.starts_with("mailto:")
+                && !url.starts_with("//")
+            {
+                let new_url = format!("{}.html", &url[..url.len() - 3]);
+                result = format!(
+                    "{}href='{}'{}",
+                    &result[..abs_pos],
+                    new_url,
+                    &result[url_end + 1..]
+                );
+                start = abs_pos + 6 + new_url.len() + 1;
+            } else {
+                start = url_end + 1;
+            }
+        } else {
+            break;
+        }
+    }
+
+    result
 }
 
 #[cfg(feature = "syntax-highlighting")]
@@ -739,6 +826,56 @@ mod tests {
         let markdown = "# First Title\n\n## Second Title\n\n# Third Title";
         let title = extract_title(markdown);
         assert_eq!(title, Some("First Title".to_string()));
+    }
+
+    #[test]
+    fn test_convert_md_links_to_html() {
+        // Test basic .md to .html conversion
+        let html = r#"<a href="page.md">Link</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(result, r#"<a href="page.html">Link</a>"#);
+
+        // Test nested path
+        let html = r#"<a href="dir/subdir/page.md">Link</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(result, r#"<a href="dir/subdir/page.html">Link</a>"#);
+
+        // Test multiple links
+        let html = r#"<a href="page1.md">Link1</a> and <a href="page2.md">Link2</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(
+            result,
+            r#"<a href="page1.html">Link1</a> and <a href="page2.html">Link2</a>"#
+        );
+
+        // Test that external links are NOT converted
+        let html = r#"<a href="https://example.com/page.md">External</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(
+            result,
+            r#"<a href="https://example.com/page.md">External</a>"#
+        );
+
+        // Test http:// links are not converted
+        let html = r#"<a href="http://example.com/page.md">External</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(
+            result,
+            r#"<a href="http://example.com/page.md">External</a>"#
+        );
+
+        // Test that .html links are not modified
+        let html = r#"<a href="page.html">Link</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(result, r#"<a href="page.html">Link</a>"#);
+
+        // Test mixed internal and external links
+        let html = r#"<a href="local.md">Local</a> and <a href="https://ext.com/file.md">Ext</a>"#;
+        let result = convert_md_links_to_html(html);
+        assert_eq!(
+            result,
+            r#"<a href="local.html">Local</a> and <a href="https://ext.com/file.md">Ext</a>"#
+        );
     }
 
     #[test]
