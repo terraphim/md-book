@@ -45,27 +45,38 @@ jobs:
             ${{ runner.os }}-stable-cargo-
             ${{ runner.os }}-cargo-
             
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Pagefind CLI
+        run: npm install -g pagefind
+
       - name: Run tests
         run: |
           cargo fmt --all -- --check
           cargo clippy --all-targets --all-features -- -D warnings
           cargo test --lib --bins --all-features
           cargo test --test integration --features "tokio,search,syntax-highlighting"
-          
+
       - name: Build MD-Book
         run: |
-          cargo build --release
-          
+          cargo build --release --all-features
+
       - name: Generate site
         run: |
           # Clean any previous build
           rm -rf dist
 
           # Build the site using test_book_mdbook (full feature demo)
-          cargo run --release -- -i test_book_mdbook/src -o dist
+          ./target/release/md-book -i test_book_mdbook/src -o dist
 
           # Verify the build output
           echo "Generated $(find dist -type f | wc -l) files"
+
+          # Verify pagefind index was created
+          ls -la dist/pagefind/ || echo "Warning: pagefind directory not found"
           
       - name: Create 404 page
         run: |

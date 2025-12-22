@@ -76,7 +76,10 @@ jobs:
           
       - name: Install frontend dependencies
         run: bun install
-        
+
+      - name: Install Pagefind CLI
+        run: npm install -g pagefind
+
       - name: Run tests before deployment
         run: |
           cargo fmt --all -- --check
@@ -99,6 +102,15 @@ jobs:
           # Verify the build output
           echo "Generated $(find dist -type f | wc -l) files"
           ls -la dist/
+
+          # Verify pagefind search index was created
+          if [ -d "dist/pagefind" ]; then
+            echo "✓ Pagefind search index created successfully"
+            ls -la dist/pagefind/
+          else
+            echo "✗ ERROR: Pagefind search index not found!"
+            exit 1
+          fi
           
       - name: Create 404 page
         run: |
