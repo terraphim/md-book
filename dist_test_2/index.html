@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Documentation | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script type="module" src="/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+</head>
+<body>
+    <div class="container index-container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/index.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <main class="content index-content">
+            
+                <div class="index-header">
+                    <h1>Documentation</h1>
+                </div>
+                <div class="card-grid">
+                    
+                        <div class="section-group">
+                            <h2>src</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Demo Book</h3>
+                                        <sl-button href="/src/README.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Summary</h3>
+                                        <sl-button href="/src/SUMMARY.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Last numbered chapter</h3>
+                                        <sl-button href="/src/last.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Prefix Chapter</h3>
+                                        <sl-button href="/src/prefix.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Suffix Chapter</h3>
+                                        <sl-button href="/src/suffix.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                        <div class="section-group">
+                            <h2>src/headings</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Heading Navigation</h3>
+                                        <sl-button href="/src/headings/README.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Collapsed headings</h3>
+                                        <sl-button href="/src/headings/collapsed.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Current scrolls to bottom</h3>
+                                        <sl-button href="/src/headings/current-to-bottom.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Empty page</h3>
+                                        <sl-button href="/src/headings/empty.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Large text before first heading</h3>
+                                        <sl-button href="/src/headings/large-intro.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Headings with markup</h3>
+                                        <sl-button href="/src/headings/markup.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Normal text before first heading</h3>
+                                        <sl-button href="/src/headings/normal-intro.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                        <div class="section-group">
+                            <h2>src/individual</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Individual Common mark tags</h3>
+                                        <sl-button href="/src/individual/README.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Blockquote</h3>
+                                        <sl-button href="/src/individual/blockquote.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Code</h3>
+                                        <sl-button href="/src/individual/code.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Emphasis</h3>
+                                        <sl-button href="/src/individual/emphasis.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Chapter Heading</h3>
+                                        <sl-button href="/src/individual/heading.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Images</h3>
+                                        <sl-button href="/src/individual/image.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Line breaks</h3>
+                                        <sl-button href="/src/individual/linebreak.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Links and Horizontal Rule</h3>
+                                        <sl-button href="/src/individual/link_hr.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Lists</h3>
+                                        <sl-button href="/src/individual/list.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">MathJax</h3>
+                                        <sl-button href="/src/individual/mathjax.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Mixed</h3>
+                                        <sl-button href="/src/individual/mixed.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">paragraph</h3>
+                                        <sl-button href="/src/individual/paragraph.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Strikethrough</h3>
+                                        <sl-button href="/src/individual/strikethrough.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Tables</h3>
+                                        <sl-button href="/src/individual/table.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Tasks</h3>
+                                        <sl-button href="/src/individual/task.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                        <div class="section-group">
+                            <h2>src/languages</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Syntax Highlighting</h3>
+                                        <sl-button href="/src/languages/README.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Syntax Highlights</h3>
+                                        <sl-button href="/src/languages/highlight.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                        <div class="section-group">
+                            <h2>src/rust</h2>
+                            <div class="card-group">
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">Rust specific code examples</h3>
+                                        <sl-button href="/src/rust/README.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                                    <sl-card class="doc-card">
+                                        <h3 slot="header">fn main(){</h3>
+                                        <sl-button href="/src/rust/rust_codeblock.html" variant="default">
+                                            Read More
+                                            <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                                        </sl-button>
+                                    </sl-card>
+                                
+                            </div>
+                        </div>
+                    
+                </div>
+            
+        </main>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+</body>
+</html> 

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>🦀 MD-Book: Modern Documentation Generator | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script type="module" src="/components/simple-block.js"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+</head>
+<body>
+    <div class="container index-container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/index.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <main class="content index-content">
+            
+                
+                    
+                    <article class="main-article">
+                        HTML is not allowed
+                        <h1>🦀 MD-Book: Modern Documentation Generator</h1>
+<p><a href="https://crates.io/crates/md-book"><img src="https://img.shields.io/crates/v/md-book.svg" alt="Crates.io" /></a>
+<a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+<a href="https://github.com/terraphim/md-book/actions"><img src="https://github.com/terraphim/md-book/workflows/CI/badge.svg" alt="Build Status" /></a></p>
+<blockquote>
+<p><strong>A modern mdBook replacement written in Rust that generates beautiful HTML documentation from Markdown files</strong></p>
+</blockquote>
+<p>Welcome to the <strong>official MD-Book documentation</strong> - this site itself is generated using MD-Book, demonstrating all its capabilities in real-world usage.</p>
+<h2>🎯 What You're Looking At</h2>
+<p>This documentation demonstrates MD-Book's full feature set:</p>
+<ul>
+<li><strong>📱 Responsive Design</strong> - Desktop, tablet, and mobile optimized</li>
+<li><strong>🔍 Instant Search</strong> - Full-text search with Pagefind integration</li>
+<li><strong>⚡ Performance</strong> - Lightning-fast builds and static generation</li>
+<li><strong>🎨 Beautiful UI</strong> - Modern, clean interface out of the box</li>
+<li><strong>⚙️ Flexible Configuration</strong> - Extensive customization options</li>
+</ul>
+<h2>🚀 Quick Demo</h2>
+<p>Try the search feature now - press <code>/</code> to focus search and type anything like &quot;configuration&quot; or &quot;deployment&quot;. The results appear instantly!</p>
+<h2>📚 Real-World Examples</h2>
+<p>This documentation showcases:</p>
+<ul>
+<li><strong>Multiple Content Types</strong> - Guides, API docs, configuration references</li>
+<li><strong>Code Examples</strong> - Syntax highlighting for Rust, JavaScript, YAML, and more</li>
+<li><strong>Interactive Elements</strong> - Table of contents, navigation, search</li>
+<li><strong>Production Deployment</strong> - This site is deployed on Cloudflare Pages</li>
+</ul>
+<h2>🔧 Architecture Overview</h2>
+<p>MD-Book's core components:</p>
+<pre class="code rust"><code><span class="source rust">src<span class="keyword operator rust">/</span>
+  main.rs              <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> CLI entry point and orchestration
+</span>  lib.rs               <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Public API exports
+</span>  config.rs            <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Layered configuration (twelf)
+</span>  core.rs              <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Build logic and markdown processing
+</span>  server.rs            <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Development server with WebSocket live reload
+</span>  pagefind_service.rs  <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Search indexing integration
+</span>  templates<span class="keyword operator rust">/</span>           <span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Tera templates, CSS, JS, Web Components</span></span></code></pre><p><strong>Build Pipeline:</strong></p>
+<ol>
+<li>Load configuration (env vars → config files → defaults)</li>
+<li>Initialize Tera templates (custom or embedded)</li>
+<li>Copy static assets (CSS, JS, images, components)</li>
+<li>Process markdown with syntax highlighting</li>
+<li>Generate HTML with navigation structure</li>
+<li>Run Pagefind search indexing</li>
+<li>Optional: Start development server with live reload</li>
+</ol>
+<h2>🌟 Key Features</h2>
+<h3>Modern Markdown Support</h3>
+<ul>
+<li><strong>Standard Markdown</strong> - Full CommonMark compliance</li>
+<li><strong>GitHub Flavored Markdown</strong> - Tables, task lists, strikethrough</li>
+<li><strong>MDX Support</strong> - React components in markdown</li>
+</ul>
+<h3>Developer Experience</h3>
+<ul>
+<li><strong>Live Development Server</strong> - WebSocket-based live reload</li>
+<li><strong>File Watching</strong> - Automatic rebuilds on changes</li>
+<li><strong>Syntax Highlighting</strong> - Server-side highlighting with syntect</li>
+<li><strong>Cross-platform</strong> - Linux, macOS, Windows support</li>
+</ul>
+<h3>Production Ready</h3>
+<ul>
+<li><strong>Static Site Generation</strong> - Deploy anywhere</li>
+<li><strong>Search Integration</strong> - Full-text search with Pagefind</li>
+<li><strong>Performance Optimized</strong> - Fast builds and small bundles</li>
+<li><strong>Feature Flags</strong> - Include only what you need</li>
+</ul>
+<hr />
+<p><strong>Ready to start using MD-Book?</strong> Jump to <a href="getting-started.html">Getting Started</a> for installation and setup instructions.</p>
+<blockquote>
+<p>💡 <strong>This very documentation is generated with MD-Book!</strong> Every feature you see - search, navigation, responsive design, code highlighting - works out of the box.</p>
+</blockquote>
+                    </article>
+                
+                </article>
+            
+        </main>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+</body>
+</html> 
