@@ -224,7 +224,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Install MSRV Rust toolchain
-        uses: dtolnay/rust-toolchain@1.70.0  # Adjust based on actual MSRV
+        uses: dtolnay/rust-toolchain@1.100.0  # Adjust based on actual MSRV
         
       - name: Cache Cargo dependencies
         uses: actions/cache@v4
