@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>paragraph | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/src/individual/paragraph.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/README.html" 
+                   >
+                    Demo Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/SUMMARY.html" 
+                   >
+                    Summary
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/last.html" 
+                   >
+                    Last numbered chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/prefix.html" 
+                   >
+                    Prefix Chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/suffix.html" 
+                   >
+                    Suffix Chapter
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/headings</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/README.html" 
+                   >
+                    Heading Navigation
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/collapsed.html" 
+                   >
+                    Collapsed headings
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/current-to-bottom.html" 
+                   >
+                    Current scrolls to bottom
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/empty.html" 
+                   >
+                    Empty page
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/large-intro.html" 
+                   >
+                    Large text before first heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/markup.html" 
+                   >
+                    Headings with markup
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/normal-intro.html" 
+                   >
+                    Normal text before first heading
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/individual</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/README.html" 
+                   >
+                    Individual Common mark tags
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/blockquote.html" 
+                   >
+                    Blockquote
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/code.html" 
+                   >
+                    Code
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/emphasis.html" 
+                   >
+                    Emphasis
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/heading.html" 
+                   >
+                    Chapter Heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/image.html" 
+                   >
+                    Images
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/linebreak.html" 
+                   >
+                    Line breaks
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/link_hr.html" 
+                   >
+                    Links and Horizontal Rule
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/list.html" 
+                   >
+                    Lists
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mathjax.html" 
+                   >
+                    MathJax
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mixed.html" 
+                   >
+                    Mixed
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/paragraph.html" 
+                   class="active">
+                    paragraph
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/strikethrough.html" 
+                   >
+                    Strikethrough
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/table.html" 
+                   >
+                    Tables
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/task.html" 
+                   >
+                    Tasks
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/languages</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/README.html" 
+                   >
+                    Syntax Highlighting
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/highlight.html" 
+                   >
+                    Syntax Highlights
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/rust</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/README.html" 
+                   >
+                    Rust specific code examples
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/rust_codeblock.html" 
+                   >
+                    fn main(){
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <p>Just a simple paragraph.</p>
+<p>Let's stress test this.</p>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer elit lorem, eleifend eu leo sit amet, suscipit feugiat libero. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin congue lectus sit amet lacus venenatis, ac sollicitudin purus condimentum. Suspendisse pretium volutpat sapien at gravida. In tincidunt, sem non accumsan consectetur, leo libero porttitor dolor, at imperdiet erat nibh quis leo. Cras dictum erat augue, quis pharetra justo porttitor posuere. Aenean sed lacinia justo, vel suscipit nisl. Etiam eleifend id mauris at gravida. Aliquam molestie cursus lorem pulvinar sollicitudin. Nam et ex dignissim, posuere sem non, pellentesque lacus. Morbi vulputate sed lorem et convallis. Duis non turpis eget elit posuere volutpat. Donec accumsan euismod enim, id consequat ex rhoncus ac. Pellentesque ac felis nisl. Duis imperdiet vel tellus ac iaculis.</p>
+<p>Vivamus nec tempus enim. Integer in ligula eget elit ornare vulputate id et est. Proin mi elit, sagittis nec urna et, iaculis imperdiet neque. Vestibulum placerat cursus dolor. Donec eu sodales nulla. Praesent ac tellus eros. Donec venenatis ligula id ex porttitor malesuada. Aliquam maximus, nisi in fringilla finibus, ante elit rhoncus dui, placerat semper nisl tellus quis odio. Cras luctus magna ultrices dolor pharetra volutpat. Maecenas non enim vitae ligula efficitur aliquet id quis quam. In sagittis mollis magna eu porta. Morbi at nulla et ante elementum pharetra in sed est. Nam commodo purus enim.</p>
+<p>Ut non elit sit amet urna luctus facilisis vel et sapien. Morbi nec metus at libero imperdiet sollicitudin eget quis lacus. Donec in ipsum at enim accumsan tempor vel sed magna. Aliquam non imperdiet neque. Etiam pharetra neque sed pretium interdum. Suspendisse potenti. Phasellus varius, lectus quis dapibus faucibus, purus mauris accumsan nibh, vel tempor quam metus nec sem. Nunc sagittis suscipit lorem eu finibus. Nullam augue leo, imperdiet vel diam et, vulputate scelerisque turpis. Nullam ut volutpat diam. Praesent cursus accumsan dui a commodo. Vivamus sed libero sed turpis facilisis rutrum id sed ligula. Ut id sollicitudin dui. Nulla pulvinar commodo lectus. Cras ut quam congue, consectetur dolor ac, consequat ante.</p>
+<p>Curabitur scelerisque sed leo eu facilisis. Nam faucibus neque eget dictum hendrerit. Duis efficitur ex sed vulputate volutpat. Praesent condimentum nisl ac sapien efficitur laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut ut nibh elit. Nunc a neque lobortis, tempus diam vitae, interdum magna. Aenean eget nisl sed justo volutpat interdum. Mauris malesuada ex nisl, a dignissim dui elementum eget. Suspendisse potenti.</p>
+<p>Praesent congue fringilla sem sed faucibus. Vivamus malesuada eget mauris at molestie. In sed faucibus nulla. Vivamus elementum accumsan metus quis suscipit. Maecenas interdum est nulla. Cras volutpat cursus nibh quis sollicitudin. Morbi vitae massa laoreet, aliquet tellus quis, consectetur ipsum. Mauris euismod congue purus non condimentum. Etiam laoreet mi vel sem consectetur gravida. Vestibulum volutpat magna nunc, vitae ultrices risus commodo eu.</p>
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer elit lorem, eleifend eu leo sit amet, suscipit feugiat libero. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Proin congue lectus sit amet lacus venenatis, ac sollicitudin purus condimentum. Suspendisse pretium volutpat sapien at gravida. In tincidunt, sem non accumsan consectetur, leo libero porttitor dolor, at imperdiet erat nibh quis leo. Cras dictum erat augue, quis pharetra justo porttitor posuere. Aenean sed lacinia justo, vel suscipit nisl. Etiam eleifend id mauris at gravida. Aliquam molestie cursus lorem pulvinar sollicitudin. Nam et ex dignissim, posuere sem non, pellentesque lacus. Morbi vulputate sed lorem et convallis. Duis non turpis eget elit posuere volutpat. Donec accumsan euismod enim, id consequat ex rhoncus ac. Pellentesque ac felis nisl. Duis imperdiet vel tellus ac iaculis.</p>
+<p>Vivamus nec tempus enim. Integer in ligula eget elit ornare vulputate id et est. Proin mi elit, sagittis nec urna et, iaculis imperdiet neque. Vestibulum placerat cursus dolor. Donec eu sodales nulla. Praesent ac tellus eros. Donec venenatis ligula id ex porttitor malesuada. Aliquam maximus, nisi in fringilla finibus, ante elit rhoncus dui, placerat semper nisl tellus quis odio. Cras luctus magna ultrices dolor pharetra volutpat. Maecenas non enim vitae ligula efficitur aliquet id quis quam. In sagittis mollis magna eu porta. Morbi at nulla et ante elementum pharetra in sed est. Nam commodo purus enim.</p>
+<p>Ut non elit sit amet urna luctus facilisis vel et sapien. Morbi nec metus at libero imperdiet sollicitudin eget quis lacus. Donec in ipsum at enim accumsan tempor vel sed magna. Aliquam non imperdiet neque. Etiam pharetra neque sed pretium interdum. Suspendisse potenti. Phasellus varius, lectus quis dapibus faucibus, purus mauris accumsan nibh, vel tempor quam metus nec sem. Nunc sagittis suscipit lorem eu finibus. Nullam augue leo, imperdiet vel diam et, vulputate scelerisque turpis. Nullam ut volutpat diam. Praesent cursus accumsan dui a commodo. Vivamus sed libero sed turpis facilisis rutrum id sed ligula. Ut id sollicitudin dui. Nulla pulvinar commodo lectus. Cras ut quam congue, consectetur dolor ac, consequat ante.</p>
+<p>Curabitur scelerisque sed leo eu facilisis. Nam faucibus neque eget dictum hendrerit. Duis efficitur ex sed vulputate volutpat. Praesent condimentum nisl ac sapien efficitur laoreet. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Ut ut nibh elit. Nunc a neque lobortis, tempus diam vitae, interdum magna. Aenean eget nisl sed justo volutpat interdum. Mauris malesuada ex nisl, a dignissim dui elementum eget. Suspendisse potenti.</p>
+<p>Praesent congue fringilla sem sed faucibus. Vivamus malesuada eget mauris at molestie. In sed faucibus nulla. Vivamus elementum accumsan metus quis suscipit. Maecenas interdum est nulla. Cras volutpat cursus nibh quis sollicitudin. Morbi vitae massa laoreet, aliquet tellus quis, consectetur ipsum. Mauris euismod congue purus non condimentum. Etiam laoreet mi vel sem consectetur gravida. Vestibulum volutpat magna nunc, vitae ultrices risus commodo eu.</p>
+<p>Hopefully everything above was rendered nicely, on both desktop and mobile.</p>
+
+                <div class="nav-footer">
+                    
+                    <sl-button href="/src/individual/mixed.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Mixed
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/src/individual/strikethrough.html" variant="default" class="nav-next">
+                        Strikethrough
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+    <script>
+        // Mobile Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (sidebar.classList.contains('active') && 
+                        !sidebar.contains(e.target) && 
+                        !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
+            // Mobile search toggle
+            const searchToggle = document.querySelector('.mobile-search-toggle');
+            const searchModal = document.querySelector('search-modal');
+            
+            if (searchToggle && searchModal) {
+                searchToggle.addEventListener('click', () => {
+                    if (searchModal.open) {
+                        searchModal.open();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

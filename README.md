@@ -1,6 +1,6 @@
 # 🦀 MD-Book
 
-[![Crates.io](https://img.shields.io/crates/v/md-book.svg)](https://crates.io/crates/md-book)
+[![Build Status](https://github.com/terraphim/md-book/workflows/CI/badge.svg)](https://github.com/terraphim/md-book/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Build Status](https://github.com/terraphim/md-book/workflows/CI/badge.svg)](https://github.com/terraphim/md-book/actions)
 [![codecov](https://codecov.io/gh/terraphim/md-book/branch/main/graph/badge.svg)](https://codecov.io/gh/terraphim/md-book)

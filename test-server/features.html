@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Features | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/features.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">Guide</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/configuration.html" 
+                   >
+                    Configuration Guide
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/features.html" 
+                   class="active">
+                    Features
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/getting-started.html" 
+                   >
+                    Getting Started with MD-Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/index.html" 
+                   >
+                    🦀 MD-Book: Modern Documentation Generator
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Features</h1>
+<p>MD-Book comes packed with modern features that make documentation creation a breeze. Every feature demonstrated here is built into MD-Book!</p>
+<h2>🎨 Beautiful Design</h2>
+<h3>Responsive Layout</h3>
+<ul>
+<li><strong>Desktop</strong>: Full sidebar navigation with content TOC (try resizing this window!)</li>
+<li><strong>Mobile</strong>: Collapsible hamburger menu, touch-friendly interface</li>
+<li><strong>Tablet</strong>: Adaptive layouts for medium screens</li>
+</ul>
+<h3>Modern Styling</h3>
+<ul>
+<li>Clean, professional appearance out of box</li>
+<li>Card-based navigation for home pages</li>
+<li>Smooth animations and transitions</li>
+<li>Typography optimized for readability</li>
+</ul>
+<h3>Theme System</h3>
+<pre class="code rust"><code><span class="source rust"><span class="comment line double-slash rust"><span class="punctuation definition comment rust">//</span> Example theme customization
+</span><span class="storage type rust">let</span> theme <span class="keyword operator rust">=</span> Theme <span class="meta block rust"><span class="punctuation section block begin rust">{</span>
+    primary_color<span class="punctuation separator rust">:</span> <span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span>#0066cc<span class="punctuation definition string end rust">&quot;</span></span><span class="punctuation separator rust">,</span>
+    secondary_color<span class="punctuation separator rust">:</span> <span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span>#f8f9fa<span class="punctuation definition string end rust">&quot;</span></span><span class="punctuation separator rust">,</span>
+    font_family<span class="punctuation separator rust">:</span> <span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span>Inter, system-ui, sans-serif<span class="punctuation definition string end rust">&quot;</span></span><span class="punctuation separator rust">,</span>
+    code_theme<span class="punctuation separator rust">:</span> <span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span>github-light<span class="punctuation definition string end rust">&quot;</span></span><span class="punctuation separator rust">,</span>
+</span><span class="meta block rust"><span class="punctuation section block end rust">}</span></span><span class="punctuation terminator rust">;</span></span></code></pre><h2>⚡ Developer Experience</h2>
+<h3>Live Development Server</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Start with all features enabled</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>serve</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>watch</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>port</span> 8080</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Development with custom port</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>serve</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>port</span> 3000</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Watch mode without server</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>watch</span></span></span></code></pre><p><strong>Features:</strong></p>
+<ul>
+<li>WebSocket-based live reload (no page refresh needed!)</li>
+<li>Automatic browser refresh when files change</li>
+<li>Intelligent rebuilds (only rebuild changed files)</li>
+<li>Custom port and hostname support</li>
+</ul>
+<h3>Fast Builds</h3>
+<ul>
+<li><strong>Rust-native performance</strong> - Built for speed</li>
+<li><strong>Incremental builds</strong> - Only rebuild what changed</li>
+<li><strong>Parallel processing</strong> - When possible, process files in parallel</li>
+<li><strong>Static generation</strong> - Deploy anywhere, no runtime dependencies</li>
+</ul>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Performance comparison</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">$</span></span><span class="meta function-call arguments shell"> time md-book<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output</span>
+<span class="meta function-call shell"><span class="variable function shell">real</span></span><span class="meta function-call arguments shell">    0m0.234s  <span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Typical for small docs</span><span class="comment line number-sign shell">
+</span></span><span class="meta function-call shell"><span class="variable function shell">user</span></span><span class="meta function-call arguments shell">    0m0.156s</span>
+<span class="meta function-call shell"><span class="variable function shell">sys</span></span><span class="meta function-call arguments shell">     0m0.078s</span></span></code></pre><h2>🔍 Powerful Search</h2>
+<h3>Pagefind Integration</h3>
+<ul>
+<li><strong>Full-text search</strong> across all documentation</li>
+<li><strong>Instant results</strong> as you type (try pressing <code>/</code> now!)</li>
+<li><strong>Highlighted matches</strong> in search context</li>
+<li><strong>No backend</strong> - client-side JavaScript only</li>
+</ul>
+<h3>Search Features</h3>
+<pre class="code"><code><span class="source js"><span class="comment line double-slash js"><span class="punctuation definition comment js">//</span> Search configuration (in book.toml)
+</span><span class="meta sequence js"><span class="punctuation section brackets js">[</span><span class="variable other readwrite js">search</span><span class="punctuation section brackets js">]</span></span>
+<span class="variable other readwrite js">enable</span> <span class="keyword operator assignment js">=</span> <span class="constant language boolean true js">true</span>
+<span class="variable other readwrite js">limit</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">results</span> <span class="keyword operator assignment js">=</span> <span class="constant numeric js">30</span>
+<span class="variable other readwrite js">teaser</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">word</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">count</span> <span class="keyword operator assignment js">=</span> <span class="constant numeric js">30</span>
+<span class="variable other readwrite js">use</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">boolean</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">and</span> <span class="keyword operator assignment js">=</span> <span class="constant language boolean true js">true</span>
+<span class="variable other readwrite js">boost</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">title</span> <span class="keyword operator assignment js">=</span> <span class="constant numeric js">2</span>        # <span class="variable other readwrite js">Boost</span> <span class="variable other readwrite js">titles</span> <span class="keyword operator js">in</span> <span class="variable other readwrite js">results</span>
+<span class="variable other readwrite js">boost</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">hierarchy</span> <span class="keyword operator assignment js">=</span> <span class="constant numeric js">1</span>     # <span class="variable other readwrite js">Boost</span> <span class="variable other readwrite js">headings</span>
+<span class="variable other readwrite js">expand</span> <span class="keyword operator assignment js">=</span> <span class="constant language boolean true js">true</span>           # <span class="variable other readwrite js">Show</span> <span class="variable other readwrite js">all</span> <span class="variable other readwrite js">results</span></span></code></pre><h2>📝 Rich Content Support</h2>
+<h3>Multiple Markdown Formats</h3>
+<pre class="code"><code><span class="text html markdown"><span class="meta block-level markdown"><span class="markup heading 1 markdown"><span class="punctuation definition heading begin markdown">#</span> </span><span class="markup heading 1 markdown"><span class="entity name section markdown">Standard Markdown</span><span class="meta whitespace newline markdown">
+</span></span></span><span class="meta block-level markdown"><span class="markup heading 2 markdown"><span class="punctuation definition heading begin markdown">##</span> </span><span class="markup heading 2 markdown"><span class="entity name section markdown">GitHub Flavored Markdown</span><span class="meta whitespace newline markdown">
+</span></span></span><span class="markup list unnumbered bullet markdown"><span class="punctuation definition list_item markdown">-</span></span><span class="markup list unnumbered markdown"> <span class="meta paragraph list markdown">[x] Task lists
+</span></span><span class="markup list unnumbered bullet markdown"><span class="punctuation definition list_item markdown">-</span></span><span class="markup list unnumbered markdown"><span class="meta paragraph list markdown"> ~~Strikethrough text~~
+</span></span><span class="markup list unnumbered bullet markdown"><span class="punctuation definition list_item markdown">-</span></span><span class="markup list unnumbered markdown"><span class="meta paragraph list markdown"> <span class="markup raw inline markdown"><span class="punctuation definition raw begin markdown">`</span>inline code<span class="punctuation definition raw end markdown">`</span></span>
+</span></span><span class="markup list unnumbered markdown">
+</span><span class="meta block-level markdown"><span class="markup heading markdown"><span class="punctuation definition heading begin markdown">###</span> </span><span class="markup heading markdown"><span class="entity name section markdown">Tables</span><span class="meta whitespace newline markdown">
+</span></span></span><span class="meta block-level markdown"><span class="meta table header markdown"><span class="punctuation separator table-cell markdown">|</span> Feature <span class="punctuation separator table-cell markdown">|</span> Status <span class="punctuation separator table-cell markdown">|</span> Notes <span class="punctuation separator table-cell markdown">|</span>
+</span><span class="meta table header-separator markdown"><span class="punctuation separator table-cell markdown">|</span><span class="punctuation section table-header markdown">---------</span><span class="punctuation separator table-cell markdown">|</span><span class="punctuation section table-header markdown">--------</span><span class="punctuation separator table-cell markdown">|</span><span class="punctuation section table-header markdown">-------</span><span class="punctuation separator table-cell markdown">|</span>
+</span><span class="meta table markdown"><span class="punctuation separator table-cell markdown">|</span> Search <span class="punctuation separator table-cell markdown">|</span> ✅ <span class="punctuation separator table-cell markdown">|</span> Pagefind integration <span class="punctuation separator table-cell markdown">|</span>
+<span class="punctuation separator table-cell markdown">|</span> Themes <span class="punctuation separator table-cell markdown">|</span> ✅ <span class="punctuation separator table-cell markdown">|</span> Customizable <span class="punctuation separator table-cell markdown">|</span>
+<span class="punctuation separator table-cell markdown">|</span> Plugins <span class="punctuation separator table-cell markdown">|</span> 🚧 <span class="punctuation separator table-cell markdown">|</span> Coming soon <span class="punctuation separator table-cell markdown">|</span>
+</span></span>
+<span class="meta block-level markdown"><span class="markup heading markdown"><span class="punctuation definition heading begin markdown">###</span> </span><span class="markup heading markdown"><span class="entity name section markdown">Code Blocks with Syntax Highlighting</span><span class="meta whitespace newline markdown">
+</span></span></span><span class="meta paragraph markdown"><span class="markup raw code-fence markdown"><span class="punctuation definition raw code-fence begin markdown">```</span><span class="constant other language-name markdown">rust</span>
+fn main() {
+    println!(&quot;Hello, MD-Book!&quot;);
+}</span></span></span></code></pre><pre class="code"><code><span class="text plain">
+### Advanced Content Features
+- **Mermaid Diagrams** - Charts, flowcharts, graphs
+- **Mathematical Expressions** - MathJax/LaTeX support  
+- **Embedded HTML** - With security controls
+- **Table of Contents** - Auto-generated from headings
+- **Code Copy** - One-click code snippet copying
+
+## 🏗️ Flexible Architecture
+
+### Template System
+MD-Book uses Tera templating engine:
+
+```html
+&lt;!-- src/templates/page.html.tera --&gt;
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;{{ title }}&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/css/styles.css&quot;&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    {% include &quot;header.html&quot; %}
+    &lt;main&gt;{{ content }}&lt;/main&gt;
+    {% include &quot;footer.html&quot; %}
+&lt;/body&gt;
+&lt;/html&gt;</span></code></pre><h3>Configuration Management</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;My Documentation&quot;
+description = &quot;Complete guide for my project&quot;
+authors = [&quot;Your Name&quot;]
+
+[output.html]
+default-theme = &quot;light&quot;
+preferred-dark-theme = &quot;navy&quot;
+git-repository-url = &quot;https://github.com/user/repo&quot;
+
+[output.html.search]
+enable = true
+limit-results = 30
+
+[preprocessor.custom]
+command = &quot;my-preprocessor&quot;</span></code></pre><h3>Plugin Architecture</h3>
+<ul>
+<li><strong>Preprocessors</strong> - Transform content before rendering</li>
+<li><strong>Custom Renderers</strong> - Different output formats</li>
+<li><strong>Hook System</strong> - Customize build process</li>
+<li><strong>Web Components</strong> - Custom interactive elements</li>
+</ul>
+<h2>🚀 Production Ready</h2>
+<h3>Static Site Generation</h3>
+<pre class="code"><code><span class="source shell bash"><span class="meta function-call shell"><span class="variable function shell">$</span></span><span class="meta function-call arguments shell"> md-book<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> public</span>
+<span class="meta function-call shell"><span class="variable function shell">$</span></span><span class="meta function-call arguments shell"> ls public/</span>
+<span class="meta function-call shell"><span class="variable function shell">index.html</span></span><span class="meta function-call arguments shell">      css/           js/           </span>
+<span class="meta function-call shell"><span class="variable function shell">getting-started.html</span></span><span class="meta function-call arguments shell">  img/           pagefind/</span></span></code></pre><p><strong>Features:</strong></p>
+<ul>
+<li><strong>Pure HTML/CSS/JS</strong> - No server requirements</li>
+<li><strong>CDN-friendly</strong> - Optimized for global distribution</li>
+<li><strong>Search-ready</strong> - Indexed and ready for instant search</li>
+<li><strong>Small footprint</strong> - Minimal bundle sizes</li>
+</ul>
+<h3>Multi-Platform Deployment</h3>
+<p>MD-Book is deployed to multiple platforms automatically:</p>
+<ul>
+<li><strong>Cloudflare Pages</strong> - Primary (unlimited bandwidth)</li>
+<li><strong>Netlify</strong> - Alternative with drag-and-drop</li>
+<li><strong>GitHub Pages</strong> - For open source projects</li>
+<li><strong>Vercel</strong> - Zero-config deployments</li>
+<li><strong>Any static hosting</strong> - The output is just static files</li>
+</ul>
+<h3>Performance Features</h3>
+<ul>
+<li><strong>Asset optimization</strong> - Minified CSS/JS</li>
+<li><strong>Lazy loading</strong> - Images and heavy content</li>
+<li><strong>Caching headers</strong> - Optimal browser caching</li>
+<li><strong>Compressed output</strong> - gzip/brotli ready</li>
+</ul>
+<h2>🔧 Technical Features</h2>
+<h3>Feature Flags</h3>
+<p>Build only what you need:</p>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Minimal build</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>no-default-features</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> core</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Development build  </span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>server,watcher,search<span class="punctuation definition string end shell">&quot;</span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Production build</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>search,syntax-highlighting<span class="punctuation definition string end shell">&quot;</span></span></span></span></code></pre><p>Available flags:</p>
+<ul>
+<li><code>server</code> - HTTP development server</li>
+<li><code>watcher</code> - File system watching</li>
+<li><code>search</code> - Pagefind search integration</li>
+<li><code>syntax-highlighting</code> - Code highlighting</li>
+<li><code>wasm</code> - WebAssembly support</li>
+</ul>
+<h3>Cross-Platform Support</h3>
+<ul>
+<li><strong>Linux</strong> (x86_64, ARM64, musl, glibc)</li>
+<li><strong>macOS</strong> (Intel, Apple Silicon)</li>
+<li><strong>Windows</strong> (MSVC, GNU)</li>
+<li><strong>WebAssembly</strong> - Browser-based generation</li>
+</ul>
+<h3>Security Features</h3>
+<ul>
+<li><strong>HTML Sanitization</strong> - Safe rendering of markdown</li>
+<li><strong>Content Security Policy</strong> - XSS protection</li>
+<li><strong>No Remote Code Execution</strong> - Static generation only</li>
+<li><strong>Dependency Auditing</strong> - Regular security updates</li>
+</ul>
+<h2>📊 Performance Benchmarks</h2>
+<p>Typical performance metrics:</p>
+<p>| Metric | MD-Book | mdBook | Docusaurus |
+|--------|----------|--------|------------|
+| <strong>Build Time</strong> | &lt; 1s | &lt; 2s | 10-30s |
+| <strong>Bundle Size</strong> | ~50KB | ~100KB | ~500KB |
+| <strong>Search Latency</strong> | &lt; 50ms | N/A | &lt; 200ms |
+| <strong>Page Load</strong> | &lt; 1.5s | &lt; 2s | &lt; 3s |</p>
+<h2>🌟 Real-World Examples</h2>
+<p>This documentation demonstrates:</p>
+<ul>
+<li><strong>Multiple sections</strong> with different content types</li>
+<li><strong>Code examples</strong> in various languages</li>
+<li><strong>Interactive elements</strong> like search and navigation</li>
+<li><strong>Responsive design</strong> that adapts to your screen</li>
+<li><strong>Performance optimization</strong> with fast loading</li>
+<li><strong>Production deployment</strong> on multiple platforms</li>
+</ul>
+<hr />
+<p><strong>Ready to customize?</strong> Check out the <a href="configuration.html">Configuration</a> section for detailed setup options, or see the <a href="../DEPLOYMENT.html">deployment guide</a> for production deployment options.</p>
+                <div class="nav-footer">
+                    
+                    <sl-button href="/configuration.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Configuration Guide
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/getting-started.html" variant="default" class="nav-next">
+                        Getting Started with MD-Book
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+    <script>
+        // Mobile Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (sidebar.classList.contains('active') && 
+                        !sidebar.contains(e.target) && 
+                        !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
+            // Mobile search toggle
+            const searchToggle = document.querySelector('.mobile-search-toggle');
+            const searchModal = document.querySelector('search-modal');
+            
+            if (searchToggle && searchModal) {
+                searchToggle.addEventListener('click', () => {
+                    if (searchModal.open) {
+                        searchModal.open();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

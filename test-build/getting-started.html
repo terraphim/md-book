@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Getting Started with MD-Book | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/getting-started.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">Guide</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/configuration.html" 
+                   >
+                    Configuration Guide
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/features.html" 
+                   >
+                    Features
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/getting-started.html" 
+                   class="active">
+                    Getting Started with MD-Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/index.html" 
+                   >
+                    🦀 MD-Book: Modern Documentation Generator
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Getting Started with MD-Book</h1>
+<p>MD-Book is a modern documentation generator that makes creating beautiful docs effortless. This very documentation is generated with MD-Book!</p>
+<h2>📦 Installation</h2>
+<h3>From Crates.io (Recommended)</h3>
+<pre class="code"><code><span class="source shell bash"><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> install md-book</span></span></code></pre><h3>From Source</h3>
+<pre class="code"><code><span class="source shell bash"><span class="meta function-call shell"><span class="variable function shell">git</span></span><span class="meta function-call arguments shell"> clone https://github.com/terraphim/md-book.git</span>
+<span class="meta function-call shell"><span class="support function cd shell">cd</span></span><span class="meta function-call arguments shell"> md-book</span>
+<span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> install<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>path</span> .</span></span></code></pre><h3>Pre-built Binaries</h3>
+<p>Download from <a href="https://github.com/terraphim/md-book/releases">GitHub Releases</a> for your platform:</p>
+<ul>
+<li>Linux (x86_64, ARM64)</li>
+<li>macOS (Intel, Apple Silicon)</li>
+<li>Windows (x86_64)</li>
+<li>Debian packages (.deb)</li>
+</ul>
+<h3>Docker</h3>
+<pre class="code"><code><span class="source shell bash"><span class="meta function-call shell"><span class="variable function shell">docker</span></span><span class="meta function-call arguments shell"> run<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>rm</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>v</span> <span class="meta group expansion command parens shell"><span class="punctuation definition variable shell">$</span><span class="punctuation section parens begin shell">(</span><span class="meta function-call shell"><span class="variable function shell">pwd</span></span><span class="punctuation section parens end shell">)</span></span>:/workspace ghcr.io/terraphim/md-book:latest</span></span></code></pre><h2>🚀 Your First Documentation</h2>
+<h3>1. Create Content</h3>
+<p>Create a directory with your markdown files:</p>
+<pre class="code"><code><span class="text plain">docs/
+├── index.md          # Home page
+├── getting-started.md # This file
+├── features.md
+└── api/
+    ├── overview.md
+    └── reference.md</span></code></pre><h3>2. Generate Documentation</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Basic build</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Development with live reload</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>serve</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>watch</span></span></span></code></pre><h3>3. Deploy</h3>
+<p>The <code>output</code> directory contains static HTML ready for deployment to any hosting service.</p>
+<h2>⚙️ Configuration System</h2>
+<p>MD-Book uses layered configuration (highest to lowest priority):</p>
+<ol>
+<li><strong>CLI Arguments</strong> - Direct command line flags</li>
+<li><strong>Environment Variables</strong> - <code>MDBOOK_</code> prefixed</li>
+<li><strong>Custom Config File</strong> - Specified with <code>--config</code></li>
+<li><strong>book.toml</strong> - Default in current directory</li>
+<li><strong>Default Values</strong> - Built-in fallbacks</li>
+</ol>
+<h3>Basic book.toml</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;My Project Documentation&quot;
+description = &quot;Comprehensive guide for my project&quot;
+authors = [&quot;Your Name &lt;your@email.com&gt;&quot;]
+language = &quot;en&quot;
+
+[output.html]
+default-theme = &quot;light&quot;
+preferred-dark-theme = &quot;navy&quot;
+git-repository-url = &quot;https://github.com/user/repo&quot;
+
+[search]
+enable = true
+limit-results = 30</span></code></pre><h3>Environment Variables</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Override book title</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_BOOK_TITLE</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>My API Documentation<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Set output directory  </span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_DEST</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>public<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Enable features</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_FEATURES</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>server,search,syntax-highlighting<span class="punctuation definition string end shell">&quot;</span></span></span></span></span></code></pre><h2>🎯 Development Workflow</h2>
+<h3>Local Development</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Start development server with all features</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>serve</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>watch</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>port</span> 8080</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Only build, no server</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Custom configuration</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>config</span> custom.toml</span></span></code></pre><h3>Quality Checks</h3>
+<p>MD-Book includes built-in development tools:</p>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Run all quality checks (format, lint, test)</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">make</span></span><span class="meta function-call arguments shell"> qa</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Complete development check</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">make</span></span><span class="meta function-call arguments shell"> dev-check</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Simulate CI locally</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">make</span></span><span class="meta function-call arguments shell"> ci-local</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Install pre-commit hooks</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">make</span></span><span class="meta function-call arguments shell"> install-pre-commit</span></span></code></pre><h2>📱 Responsive Design</h2>
+<p>MD-Book automatically generates responsive documentation:</p>
+<ul>
+<li>🖥️ <strong>Desktop</strong> - Full sidebar navigation with content TOC</li>
+<li>📱 <strong>Mobile</strong> - Collapsible hamburger menu, touch-friendly</li>
+<li>📋 <strong>Tablet</strong> - Adaptive layouts for medium screens</li>
+</ul>
+<p><strong>Try it now:</strong> Resize your browser window to see the responsive layout in action!</p>
+<h2>🔍 Search Functionality</h2>
+<p>MD-Book includes built-in search powered by Pagefind:</p>
+<ul>
+<li><strong>Instant Results</strong> - Search as you type (try pressing <code>/</code>)</li>
+<li><strong>Full-Text</strong> - Search through all content</li>
+<li><strong>Highlighting</strong> - Visual highlighting of matches</li>
+<li><strong>No Backend</strong> - Client-side JavaScript only</li>
+<li><strong>Fuzzy Matching</strong> - Finds results even with typos</li>
+</ul>
+<p><strong>Try it now:</strong> Press <code>/</code> to focus search and type &quot;configuration&quot; or &quot;deployment&quot;.</p>
+<h2>🎨 Theming &amp; Customization</h2>
+<h3>Custom CSS</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+additional-css = [&quot;theme/custom.css&quot;, &quot;theme/highlight.css&quot;]</span></code></pre><h3>Custom JavaScript</h3>
+<pre class="code"><code><span class="text plain">[output.html] 
+additional-js = [&quot;theme/custom.js&quot;, &quot;theme/analytics.js&quot;]</span></code></pre><h3>Template Customization</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+theme = &quot;src/theme&quot;</span></code></pre><p>MD-Book uses Tera templates. Customize:</p>
+<ul>
+<li><code>src/templates/page.html.tera</code> - Main page layout</li>
+<li><code>src/templates/index.html.tera</code> - Home page</li>
+<li><code>src/templates/sidebar.html.tera</code> - Navigation</li>
+<li><code>src/templates/css/styles.css</code> - Styling</li>
+</ul>
+<h2>🚀 Production Features</h2>
+<h3>Feature Flags</h3>
+<p>Build only what you need:</p>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Minimal build</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>no-default-features</span><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> core</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> With search only</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>core,search<span class="punctuation definition string end shell">&quot;</span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Full features (default)</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">cargo</span></span><span class="meta function-call arguments shell"> build<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>features</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>server,watcher,search,syntax-highlighting<span class="punctuation definition string end shell">&quot;</span></span></span></span></code></pre><p>Available features:</p>
+<ul>
+<li><code>server</code> - Development server with WebSocket live reload</li>
+<li><code>watcher</code> - File system watching for auto-rebuild</li>
+<li><code>search</code> - Pagefind search indexing</li>
+<li><code>syntax-highlighting</code> - Code highlighting with syntect</li>
+<li><code>wasm</code> - WebAssembly support</li>
+</ul>
+<h3>Performance Optimizations</h3>
+<ul>
+<li><strong>Static Generation</strong> - Pure HTML/CSS/JS output</li>
+<li><strong>Asset Optimization</strong> - Minified and compressed</li>
+<li><strong>Search Indexing</strong> - Fast client-side search</li>
+<li><strong>Lazy Loading</strong> - Optimized for large documentation</li>
+</ul>
+<hr />
+<p><strong>Ready to explore more?</strong> Check out the <a href="features.html">Features</a> section to see what MD-Book can do, or <a href="configuration.html">Configuration</a> for detailed setup options.</p>
+                <div class="nav-footer">
+                    
+                    <sl-button href="/features.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Features
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/index.html" variant="default" class="nav-next">
+                        🦀 MD-Book: Modern Documentation Generator
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+    <script>
+        // Mobile Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (sidebar.classList.contains('active') && 
+                        !sidebar.contains(e.target) && 
+                        !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
+            // Mobile search toggle
+            const searchToggle = document.querySelector('.mobile-search-toggle');
+            const searchModal = document.querySelector('search-modal');
+            
+            if (searchToggle && searchModal) {
+                searchToggle.addEventListener('click', () => {
+                    if (searchModal.open) {
+                        searchModal.open();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

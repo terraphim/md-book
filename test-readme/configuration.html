@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Configuration Guide | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/configuration.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">Guide</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/configuration.html" 
+                   class="active">
+                    Configuration Guide
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/features.html" 
+                   >
+                    Features
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/getting-started.html" 
+                   >
+                    Getting Started with MD-Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/index.html" 
+                   >
+                    🦀 MD-Book: Modern Documentation Generator
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Configuration Guide</h1>
+<p>MD-Book offers flexible configuration options through multiple sources. This documentation itself uses these configuration options!</p>
+<h2>🏗️ Configuration Priority</h2>
+<p>Configuration is loaded in this order (highest to lowest priority):</p>
+<ol>
+<li><strong>Command Line Arguments</strong> - Direct CLI flags</li>
+<li><strong>Environment Variables</strong> - <code>MDBOOK_</code> prefixed</li>
+<li><strong>Custom Config File</strong> - Specified with <code>--config</code></li>
+<li><strong>book.toml</strong> - Default configuration file</li>
+<li><strong>Default Values</strong> - Built-in fallbacks</li>
+</ol>
+<h3>Example Priority in Action</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> This will override book.toml and defaults</span><span class="comment line number-sign shell">
+</span><span class="variable other readwrite assignment shell">MDBOOK_BOOK_TITLE</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>Override Title<span class="punctuation definition string end shell">&quot;</span></span></span> <span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Custom config file</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>config</span> /path/to/custom.toml</span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> CLI arguments (highest priority)</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="variable function shell">md-book</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>i</span> docs<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>o</span> output<span class="variable parameter option shell"><span class="punctuation definition parameter shell"> --</span>title</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>CLI Override<span class="punctuation definition string end shell">&quot;</span></span></span></span></code></pre><h2>📄 Basic Configuration</h2>
+<h3>book.toml Structure</h3>
+<p>This is the configuration used for this documentation:</p>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;MD-Book: Modern Documentation Generator&quot;
+description = &quot;A modern mdbook replacement written in Rust&quot;
+authors = [&quot;Terraphim Team&quot;]
+language = &quot;en&quot;
+src = &quot;demo-docs&quot;
+
+[output.html]
+default-theme = &quot;light&quot;
+preferred-dark-theme = &quot;navy&quot;
+git-repository-url = &quot;https://github.com/terraphim/md-book&quot;
+edit-url-template = &quot;https://github.com/terraphim/md-book/edit/main/demo-docs/{path}&quot;
+
+[search]
+enable = true
+limit-results = 30
+teaser-word-count = 30
+use-boolean-and = true
+boost-title = 2
+boost-hierarchy = 1</span></code></pre><h3>Core Book Settings</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;My Documentation&quot;                    # Book title
+description = &quot;Complete guide for developers&quot;    # Meta description
+authors = [&quot;John Doe &lt;john@example.com&gt;&quot;]      # Authors list
+language = &quot;en&quot;                               # Content language
+src = &quot;docs&quot;                                  # Source directory
+multilingual = false                           # Multi-language support</span></code></pre><h3>Build Configuration</h3>
+<pre class="code"><code><span class="text plain">[build]
+build-dir = &quot;output&quot;               # Output directory
+extra-mime-types = []              # Additional MIME types
+use-default-preprocessors = true     # Use built-in preprocessors
+create-missing = true              # Create missing directories</span></code></pre><h2>🎨 Theme Configuration</h2>
+<h3>Custom CSS and JavaScript</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+additional-css = [
+    &quot;theme/custom.css&quot;,
+    &quot;theme/highlight.css&quot;,
+    &quot;theme/branding.css&quot;
+]
+
+additional-js = [
+    &quot;theme/custom.js&quot;, 
+    &quot;theme/analytics.js&quot;,
+    &quot;theme/search-enhancements.js&quot;
+]</span></code></pre><h3>Theme Customization</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+default-theme = &quot;light&quot;              # Light, dark, or custom
+preferred-dark-theme = &quot;navy&quot;        # Dark mode preference
+theme = &quot;src/theme&quot;                  # Custom theme directory
+
+[output.html.themes]
+light = &quot;src/themes/light.css&quot;
+dark = &quot;src/themes/dark.css&quot; 
+navy = &quot;src/themes/navy.css&quot;</span></code></pre><h3>Branding and Assets</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+favicon = &quot;favicon.ico&quot;             # Site favicon
+logo = &quot;logo.png&quot;                   # Header logo
+cname = &quot;docs.example.com&quot;          # Custom domain name
+
+# Custom content
+content-404 = &quot;404.md&quot;             # Custom 404 page
+landing-page = &quot;landing.md&quot;         # Custom landing page</span></code></pre><h2>🔍 Search Configuration</h2>
+<h3>Pagefind Integration</h3>
+<pre class="code"><code><span class="text plain">[search]
+enable = true                          # Enable search functionality
+limit-results = 30                      # Max search results
+teaser-word-count = 30                  # Words in search snippet
+use-boolean-and = true                   # AND operator support
+boost-title = 2                        # Title search boost
+boost-hierarchy = 1                     # Heading search boost
+boost-paragraph = 1                    # Content search boost
+expand = true                          # Show all results by default</span></code></pre><h3>Advanced Search Options</h3>
+<pre class="code"><code><span class="text plain">[search.indexing]
+indexing = &quot;all&quot;                       # What to index
+root-selector = &quot;html&quot;                 # Root element for indexing
+exclude-selectors = []                  # Elements to exclude
+force-language = &quot;&quot;                     # Force search language
+translation = &quot;&quot;                       # Translation file path
+custom-styles = false                   # Custom search styles
+excerpt-length = 30                    # Search result excerpt length
+filter-tags = []                       # Available search filters</span></code></pre><h3>Search UI Customization</h3>
+<pre class="code"><code><span class="text plain">[search.ui]
+display-results = true                 # Show search results
+placeholder-text = &quot;Search documentation...&quot; 
+empty-results-text = &quot;No results found&quot;
+filter-clear-text = &quot;Clear&quot;
+show-images = false                     # Show images in results
+show-subtitle = false                  # Show page subtitles
+loading-text = &quot;Searching...&quot;           # Loading indicator</span></code></pre><h2>🌐 Multi-language Support</h2>
+<h3>Basic I18n Setup</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;My Book&quot;
+authors = [&quot;John Doe&quot;] 
+language = &quot;en&quot;
+multilingual = true                     # Enable i18n
+src = &quot;src&quot;
+
+[book.languages.en]
+title = &quot;My Book (English)&quot;
+src = &quot;src&quot;
+
+[book.languages.es]
+title = &quot;Mi Libro (Spanish)&quot;
+src = &quot;src/es&quot;
+
+[book.languages.fr]
+title = &quot;Mon Livre (French)&quot;
+src = &quot;src/fr&quot;</span></code></pre><h3>Language-Specific Settings</h3>
+<pre class="code"><code><span class="text plain">[book.languages.en.output.html]
+default-theme = &quot;light&quot;
+git-repository-url = &quot;https://github.com/user/docs&quot;
+
+[book.languages.es.output.html]
+default-theme = &quot;dark&quot;
+git-repository-url = &quot;https://github.com/user/docs-es&quot;</span></code></pre><h2>🔧 Advanced Configuration</h2>
+<h3>Environment Variables</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Book configuration</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_BOOK_TITLE</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>My Project Docs<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+<span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_BOOK_DESCRIPTION</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>API Documentation<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+<span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_BOOK_AUTHORS</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>Team Name<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Build configuration  </span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_BUILD_BUILD_DIR</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>public<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+<span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_DEST</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>dist<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Feature toggles</span><span class="comment line number-sign shell">
+</span><span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_FEATURES</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>server,search,syntax-highlighting<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+<span class="meta function-call shell"><span class="storage modifier shell">export</span> <span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_SEARCH_ENABLE</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell">true</span></span></span></code></pre><h3>Nested Configuration</h3>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell"> Use underscores for nested keys</span><span class="comment line number-sign shell">
+</span><span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_MATHJAX_SUPPORT</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell">true</span>
+<span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_GIT_REPOSITORY_URL</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>https://github.com/user/repo<span class="punctuation definition string end shell">&quot;</span></span></span>
+<span class="variable other readwrite assignment shell">MDBOOK_OUTPUT_HTML_ADDITIONAL_CSS</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>theme/custom.css<span class="punctuation definition string end shell">&quot;</span></span></span>
+<span class="variable other readwrite assignment shell">MDBOOK_DEV_SERVER_PORT</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell">3000</span></span></code></pre><h3>Custom Preprocessors</h3>
+<pre class="code"><code><span class="text plain">[preprocessor.toc]
+command = &quot;mdbook-toc&quot;
+renderer = [&quot;html&quot;]
+
+[preprocessor.admonish]
+command = &quot;mdbook-admonish&quot; 
+
+[preprocessor.links]
+# Built-in link checker
+
+[preprocessor.custom]
+command = &quot;node my-preprocessor.js&quot;
+renderer = [&quot;html&quot;, &quot;pdf&quot;]</span></code></pre><h3>Custom Renderers</h3>
+<pre class="code"><code><span class="text plain">[output.epub]
+command = &quot;mdbook-epub&quot;
+
+[output.pdf] 
+command = &quot;mdbook-pdf&quot;
+optional = true
+
+[output.json]
+command = &quot;mdbook-json&quot;
+
+[output.markdown]
+command = &quot;mdbook-markdown&quot;</span></code></pre><h2>📱 Development Server Options</h2>
+<h3>Server Configuration</h3>
+<pre class="code"><code><span class="text plain">[dev-server]
+hostname = &quot;localhost&quot;                 # Server hostname
+port = 3000                          # Server port  
+open = true                           # Open browser automatically
+watcher = [&quot;*.md&quot;, &quot;src/**/*&quot;]       # Files to watch
+websocket-port = 3001                 # WebSocket port for live reload</span></code></pre><h3>Watcher Settings</h3>
+<pre class="code"><code><span class="text plain">[dev-server.watcher]
+watch-paths = [&quot;src&quot;, &quot;theme&quot;]         # Directories to watch
+ignore-paths = [&quot;output&quot;, &quot;.git&quot;]     # Paths to ignore
+debounce-ms = 300                     # Debounce delay (ms)</span></code></pre><h3>Live Reload Options</h3>
+<pre class="code"><code><span class="text plain">[dev-server.live-reload]
+enable = true                         # Enable live reload
+websocket-path = &quot;/livereload&quot;         # WebSocket path
+port = 3001                          # WebSocket port
+host = &quot;localhost&quot;                    # WebSocket host</span></code></pre><h2>🔐 Security Settings</h2>
+<h3>HTML Security</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+# WARNING: Only enable if you trust all content authors
+allow-html = true                      # Allow raw HTML in markdown
+sanitize-html = true                   # Sanitize HTML content
+
+[output.html.mathjax]
+trusted-types = false                  # CSP for MathJax</span></code></pre><h3>Content Security Policy</h3>
+<pre class="code"><code><span class="text plain">[security]
+allow-remote-content = false           # Block remote content
+sanitize-html = true                   # HTML sanitization
+content-security-policy = &quot;default-src &#39;self&#39;; script-src &#39;self&#39; &#39;unsafe-inline&#39;&quot;</span></code></pre><h3>Input Validation</h3>
+<pre class="code"><code><span class="text plain">[security.validation]
+max-file-size = &quot;10MB&quot;                # Max file size
+allowed-extensions = [&quot;.md&quot;, &quot;.txt&quot;]  # Allowed file types
+block-external-links = false            # Block external links</span></code></pre><h2>🎯 Performance Optimization</h2>
+<h3>Build Optimization</h3>
+<pre class="code"><code><span class="text plain">[build]
+create-missing = true                  # Create missing directories
+use-default-preprocessors = false        # Disable default preprocessors
+parallel = true                       # Parallel processing
+cache-dir = &quot;.cache&quot;                  # Build cache directory
+
+[build.extra-watch-dirs] = [&quot;theme&quot;]</span></code></pre><h3>Asset Optimization</h3>
+<pre class="code"><code><span class="text plain">[output.html]
+copy-fonts = true                     # Copy font files
+minify-css = true                     # Minify CSS
+minify-js = true                      # Minify JavaScript
+gzip-assets = true                    # Compress assets
+
+[output.html.cdns]
+# Use CDN for popular libraries
+font-awesome = &quot;https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0&quot;
+highlight-js = &quot;https://cdn.jsdelivr.net/npm/highlight.js@11.8.0&quot;</span></code></pre><h3>Caching Strategy</h3>
+<pre class="code"><code><span class="text plain">[cache]
+enable = true                         # Enable build cache
+cache-dir = &quot;.mdbook-cache&quot;           # Cache directory
+max-age = &quot;7d&quot;                       # Cache max age
+invalidate-on-config-change = true      # Invalidate cache on config change</span></code></pre><h2>📋 Real-World Examples</h2>
+<h3>API Documentation Setup</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;My API Documentation&quot;
+description = &quot;REST API reference and examples&quot;
+authors = [&quot;API Team&quot;]
+
+[output.html]
+default-theme = &quot;coal&quot;                 # Dark theme for API docs
+git-repository-url = &quot;https://github.com/user/api&quot;
+edit-url-template = &quot;https://github.com/user/api/edit/main/docs/{path}&quot;
+
+[output.html.code]
+line-numbers = true                  # Show line numbers
+copy-button = true                    # Show copy button
+highlight-language = &quot;rust&quot;             # Default language</span></code></pre><h3>Project Documentation Setup</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;Project Documentation&quot;
+description = &quot;Complete guide for using our project&quot;
+
+[output.html]
+default-theme = &quot;light&quot;
+preferred-dark-theme = &quot;ayu&quot;
+git-repository-url = &quot;https://github.com/user/project&quot;
+
+[output.html.playground]
+editable = true                       # Allow code editing
+copyable = true                      # Allow code copying
+copy-js = true                       # Copy with JS</span></code></pre><h3>Blog/Article Setup</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;Tech Blog&quot;
+description = &quot;Technical articles and tutorials&quot;
+
+[output.html]
+default-theme = &quot;light&quot;
+git-repository-url = &quot;https://github.com/user/blog&quot;
+
+[output.html.blog]
+show-date = true                      # Show article dates
+show-author = true                    # Show author names
+show-tags = true                      # Show article tags
+rss-feed = true                      # Generate RSS feed</span></code></pre><h3>Enterprise Documentation</h3>
+<pre class="code"><code><span class="text plain">[book]
+title = &quot;Enterprise Platform&quot;
+description = &quot;Internal platform documentation&quot;
+
+[output.html]
+default-theme = &quot;corporate&quot;            # Custom theme
+git-repository-url = &quot;https://git.company.com/platform&quot;
+
+[output.html.enterprise]
+analytics = true                      # Enable analytics
+feedback-form = true                   # Enable feedback
+search-analytics = true                # Track search usage
+access-control = true                 # Restrict access</span></code></pre><hr />
+<p><strong>Ready to deploy?</strong> Check out the comprehensive <a href="../DEPLOYMENT.html">Deployment Guide</a> for production setup across multiple platforms.</p>
+                <div class="nav-footer">
+                    
+                    
+                    <sl-button href="/features.html" variant="default" class="nav-next">
+                        Features
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+    <script>
+        // Mobile Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (sidebar.classList.contains('active') && 
+                        !sidebar.contains(e.target) && 
+                        !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
+            // Mobile search toggle
+            const searchToggle = document.querySelector('.mobile-search-toggle');
+            const searchModal = document.querySelector('search-modal');
+            
+            if (searchToggle && searchModal) {
+                searchToggle.addEventListener('click', () => {
+                    if (searchModal.open) {
+                        searchModal.open();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Large text before first heading | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/src/headings/large-intro.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/README.html" 
+                   >
+                    Demo Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/SUMMARY.html" 
+                   >
+                    Summary
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/last.html" 
+                   >
+                    Last numbered chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/prefix.html" 
+                   >
+                    Prefix Chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/suffix.html" 
+                   >
+                    Suffix Chapter
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/headings</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/README.html" 
+                   >
+                    Heading Navigation
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/collapsed.html" 
+                   >
+                    Collapsed headings
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/current-to-bottom.html" 
+                   >
+                    Current scrolls to bottom
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/empty.html" 
+                   >
+                    Empty page
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/large-intro.html" 
+                   class="active">
+                    Large text before first heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/markup.html" 
+                   >
+                    Headings with markup
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/normal-intro.html" 
+                   >
+                    Normal text before first heading
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/individual</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/README.html" 
+                   >
+                    Individual Common mark tags
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/blockquote.html" 
+                   >
+                    Blockquote
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/code.html" 
+                   >
+                    Code
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/emphasis.html" 
+                   >
+                    Emphasis
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/heading.html" 
+                   >
+                    Chapter Heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/image.html" 
+                   >
+                    Images
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/linebreak.html" 
+                   >
+                    Line breaks
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/link_hr.html" 
+                   >
+                    Links and Horizontal Rule
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/list.html" 
+                   >
+                    Lists
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mathjax.html" 
+                   >
+                    MathJax
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mixed.html" 
+                   >
+                    Mixed
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/paragraph.html" 
+                   >
+                    paragraph
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/strikethrough.html" 
+                   >
+                    Strikethrough
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/table.html" 
+                   >
+                    Tables
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/task.html" 
+                   >
+                    Tasks
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/languages</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/README.html" 
+                   >
+                    Syntax Highlighting
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/highlight.html" 
+                   >
+                    Syntax Highlights
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/rust</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/README.html" 
+                   >
+                    Rust specific code examples
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/rust_codeblock.html" 
+                   >
+                    fn main(){
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Large text before first heading</h1>
+                <h1>Large text before first heading</h1>
+<p>This tests what happens if there is a lot of text before the first header, which is off the bottom of the screen.</p>
+<p>1</p>
+<p>2</p>
+<p>3</p>
+<p>4</p>
+<p>5</p>
+<p>6</p>
+<p>7</p>
+<p>8</p>
+<p>9</p>
+<p>10</p>
+<p>11</p>
+<p>12</p>
+<p>13</p>
+<p>14</p>
+<p>15</p>
+<p>16</p>
+<p>17</p>
+<p>18</p>
+<p>19</p>
+<p>20</p>
+<h2>First header</h2>
+<p>Text for first header.</p>
+
+                <div class="nav-footer">
+                    
+                    <sl-button href="/src/headings/empty.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Empty page
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/src/headings/markup.html" variant="default" class="nav-next">
+                        Headings with markup
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+</body>
+</html> 

@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Syntax Highlights | mdBook test book</title>
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/search.css">
+    <script src="/components/doc-toc.js" type="module"></script>
+    <script src="/js/mermaid.min.js" type="module"></script>
+    <script src="/js/mermaid-init.js" type="module"></script>
+    <script src="/js/pagefind-search.js" type="module"></script>
+    <script src="/components/search-modal.js" type="module"></script>
+    <script src="/js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="/css/syntax.css">
+    
+</head>
+<body>
+    <div class="container">
+        <header class="site-header">
+    <div class="header-content">
+        <div class="header-left">
+            <a href="/" class="header-logo">
+                <img src="/img/terraphim_gray.png" alt="Logo" class="header-logo-img" height="48px">
+            </a>
+            <span class="header-title">mdBook test book</span>
+        </div>
+        <div class="header-right">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+                <sl-icon name="search" slot="prefix"></sl-icon>
+            </sl-input>
+            <div class="header-links">
+                <a href="https://github.com/terraphim/md-book" class="header-link" target="_blank">
+                    <sl-icon name="github"></sl-icon>
+                </a>
+            </div>
+            <div class="header-links">
+                
+                <a href="https://github.com/terraphim/terraphim-ai/edit/main/docs/src/src/languages/highlight.md" class="header-link" target="_blank">
+                    <sl-icon name="pencil-square"></sl-icon>
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</header> 
+        <div class="sidebar">
+            <nav class="sidebar-nav">
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/README.html" 
+                   >
+                    Demo Book
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/SUMMARY.html" 
+                   >
+                    Summary
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/last.html" 
+                   >
+                    Last numbered chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/prefix.html" 
+                   >
+                    Prefix Chapter
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/suffix.html" 
+                   >
+                    Suffix Chapter
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/headings</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/README.html" 
+                   >
+                    Heading Navigation
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/collapsed.html" 
+                   >
+                    Collapsed headings
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/current-to-bottom.html" 
+                   >
+                    Current scrolls to bottom
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/empty.html" 
+                   >
+                    Empty page
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/large-intro.html" 
+                   >
+                    Large text before first heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/markup.html" 
+                   >
+                    Headings with markup
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/headings/normal-intro.html" 
+                   >
+                    Normal text before first heading
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/individual</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/README.html" 
+                   >
+                    Individual Common mark tags
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/blockquote.html" 
+                   >
+                    Blockquote
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/code.html" 
+                   >
+                    Code
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/emphasis.html" 
+                   >
+                    Emphasis
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/heading.html" 
+                   >
+                    Chapter Heading
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/image.html" 
+                   >
+                    Images
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/linebreak.html" 
+                   >
+                    Line breaks
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/link_hr.html" 
+                   >
+                    Links and Horizontal Rule
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/list.html" 
+                   >
+                    Lists
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mathjax.html" 
+                   >
+                    MathJax
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/mixed.html" 
+                   >
+                    Mixed
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/paragraph.html" 
+                   >
+                    paragraph
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/strikethrough.html" 
+                   >
+                    Strikethrough
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/table.html" 
+                   >
+                    Tables
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/individual/task.html" 
+                   >
+                    Tasks
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/languages</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/README.html" 
+                   >
+                    Syntax Highlighting
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/languages/highlight.html" 
+                   class="active">
+                    Syntax Highlights
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+    <div class="sidebar-section">
+        <h2 class="sidebar-section-title">src/rust</h2>
+        <ul class="sidebar-items">
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/README.html" 
+                   >
+                    Rust specific code examples
+                </a>
+            </li>
+            
+            <li class="sidebar-item">
+                <a href="/src/rust/rust_codeblock.html" 
+                   >
+                    fn main(){
+                </a>
+            </li>
+            
+        </ul>
+    </div>
+    
+</nav>
+        </div>
+        <main class="content">
+            <article class="main-article">
+                <h1>Syntax Highlights</h1>
+                <h1>Syntax Highlights</h1>
+<h2>apache</h2>
+<pre class="code"><code><span class="text plain"># rewrite`s rules for wordpress pretty url
+LoadModule rewrite_module  modules/mod_rewrite.so
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . index.php [NC,L]
+
+ExpiresActive On
+ExpiresByType application/x-javascript  &quot;access plus 1 days&quot;
+
+Order Deny,Allow
+Allow from All
+
+&lt;Location /maps/&gt;
+  RewriteMap map txt:map.txt
+  RewriteMap lower int:tolower
+  RewriteCond %{REQUEST_URI} ^/([^/.]+)\.html$ [NC]
+  RewriteCond ${map:${lower:%1}|NOT_FOUND} !NOT_FOUND
+  RewriteRule .? /index.php?q=${map:${lower:%1}} [NC,L]
+&lt;/Location&gt;
+
+20.164.151.111 - - [20/Aug/2015:22:20:18 -0400] &quot;GET /mywebpage/index.php HTTP/1.1&quot; 403 772 &quot;-&quot; &quot;Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/535.1 (KHTML, like Gecko) Chrome/13.0.782.220 Safari/535.1&quot;</span></code></pre><h2>armasm</h2>
+<pre class="code"><code><span class="text plain">.data
+
+/* Data segment: define our message string and calculate its length. */
+msg:
+    .ascii      &quot;Hello, ARM!\n&quot;
+len = . - msg
+
+.text
+
+/* Our application&#39;s entry point. */
+.globl _start
+_start:
+    /* syscall write(int fd, const void *buf, size_t count) */
+    mov     %r0, $1     /* fd := STDOUT_FILENO */
+    ldr     %r1, =msg   /* buf := msg */
+    ldr     %r2, =len   /* count := len */
+    mov     %r7, $4     /* write is syscall #4 */
+    swi     $0          /* invoke syscall */
+
+    /* syscall exit(int status) */
+    mov     %r0, $0     /* status := 0 */
+    mov     %r7, $1     /* exit is syscall #1 */
+    swi     $0          /* invoke syscall */
+</span></code></pre><h2>bash</h2>
+<pre class="code"><code><span class="source shell bash"><span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell">!/bin/bash</span><span class="comment line number-sign shell">
+</span>
+<span class="comment line number-sign shell"><span class="punctuation definition comment begin shell">#</span></span><span class="comment line number-sign shell">##### CONFIG</span><span class="comment line number-sign shell">
+</span><span class="variable other readwrite assignment shell">ACCEPTED_HOSTS</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell"><span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>/root/.hag_accepted.conf<span class="punctuation definition string end shell">&quot;</span></span></span>
+<span class="variable other readwrite assignment shell">BE_VERBOSE</span><span class="keyword operator assignment shell">=</span><span class="string unquoted shell">false</span>
+
+<span class="keyword control if begin shell">if</span> <span class="support function test begin shell">[</span><span class="meta function-call arguments shell"> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span><span class="meta group expansion parameter shell"><span class="punctuation definition variable shell">$</span><span class="variable other readwrite shell">UID</span></span><span class="punctuation definition string end shell">&quot;</span></span> <span class="variable parameter option shell"><span class="punctuation definition parameter shell">-</span>ne</span> 0 <span class="support function test end shell">]</span></span>
+<span class="keyword control if then shell">then</span>
+ <span class="meta function-call shell"><span class="support function echo shell">echo</span></span><span class="meta function-call arguments shell"> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>Superuser rights required<span class="punctuation definition string end shell">&quot;</span></span></span>
+ <span class="meta function-call shell"><span class="support function exit shell">exit</span></span><span class="meta function-call arguments shell"> 2</span>
+<span class="keyword control if end shell">fi</span>
+
+<span class="meta function shell"><span class="entity name function shell">genApacheConf</span><span class="punctuation section parens begin shell">(</span><span class="punctuation section parens end shell">)</span><span class="punctuation section braces begin shell">{</span>
+ <span class="meta function-call shell"><span class="support function echo shell">echo</span></span><span class="meta function-call arguments shell"> <span class="variable parameter option shell"><span class="punctuation definition parameter shell">-</span>e</span> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span># Host <span class="meta group expansion parameter shell"><span class="punctuation definition variable shell">$</span><span class="punctuation section expansion parameter begin shell">{</span></span><span class="meta group expansion parameter shell"><span class="variable other readwrite shell">HOME_DIR</span></span><span class="meta group expansion parameter shell"><span class="punctuation section expansion parameter end shell">}</span></span><span class="meta group expansion parameter shell"><span class="punctuation definition variable shell">$</span><span class="variable other readwrite shell">1</span></span>/<span class="meta group expansion parameter shell"><span class="punctuation definition variable shell">$</span><span class="variable other readwrite shell">2</span></span> :<span class="punctuation definition string end shell">&quot;</span></span></span>
+<span class="punctuation section braces end shell">}</span></span>
+
+<span class="meta function-call shell"><span class="support function echo shell">echo</span></span><span class="meta function-call arguments shell"> <span class="string quoted single shell"><span class="punctuation definition string begin shell">&#39;</span>&quot;quoted&quot;<span class="punctuation definition string end shell">&#39;</span></span></span> <span class="keyword operator logical pipe shell">|</span> <span class="meta function-call shell"><span class="variable function shell">tr</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>d</span> <span class="constant character escape shell">\&quot;</span> <span class="keyword operator assignment redirection shell">&gt;</span> text.txt</span>
+</span></code></pre><h2>c</h2>
+<pre class="code"><code><span class="source c"><span class="meta preprocessor include c"><span class="keyword control import include c">#include</span> <span class="string quoted other lt-gt include c"><span class="punctuation definition string begin c">&lt;</span>stdio.h<span class="punctuation definition string end c">&gt;</span></span>
+</span><span class="storage type c">void</span> <span class="meta function c"><span class="entity name function c">main</span></span><span class="meta function parameters c"><span class="meta group c"><span class="punctuation section group begin c">(</span></span></span><span class="meta function parameters c"><span class="meta group c"><span class="storage type c">int</span> <span class="variable parameter c">argc</span><span class="punctuation separator c">,</span><span class="storage type c">char</span> <span class="keyword operator c">*</span><span class="keyword operator c">*</span> <span class="variable parameter c">argv</span><span class="punctuation section group end c">)</span></span></span><span class="meta function c"><span class="meta block c"><span class="punctuation section block begin c">{</span></span></span><span class="meta function c"><span class="meta block c">
+    <span class="meta function-call c"><span class="support function C99 c">printf</span><span class="meta group c"><span class="punctuation section group begin c">(</span></span></span><span class="meta function-call c"><span class="meta group c"><span class="string quoted double c"><span class="punctuation definition string begin c">&quot;</span>Hello World!<span class="punctuation definition string end c">&quot;</span></span></span></span><span class="meta function-call c"><span class="meta group c"><span class="punctuation section group end c">)</span></span></span><span class="punctuation terminator c">;</span>
+</span></span><span class="meta function c"><span class="meta block c"><span class="punctuation section block end c">}</span></span></span>
+</span></code></pre><h2>coffeescript</h2>
+<pre class="code"><code><span class="text plain">grade = (student, period=(if b? then 7 else 6)) -&gt;
+  if student.excellentWork
+    &quot;A+&quot;
+  else if student.okayStuff
+    if student.triedHard then &quot;B&quot; else &quot;B-&quot;
+  else
+    &quot;C&quot;
+
+class Animal extends Being
+  constructor: (@name) -&gt;
+
+  move: (meters) -&gt;
+    alert @name + &quot; moved #{meters}m.&quot;</span></code></pre><h2>cpp</h2>
+<pre class="code"><code><span class="source c++"><span class="meta preprocessor include c++"><span class="keyword control import include c++">#include</span> <span class="string quoted other lt-gt include c++"><span class="punctuation definition string begin c++">&lt;</span>iostream<span class="punctuation definition string end c++">&gt;</span></span>
+</span><span class="keyword control c++">using</span> <span class="keyword control c++">namespace</span> std<span class="punctuation terminator c++">;</span>
+<span class="storage type c">int</span> <span class="meta function c++"><span class="entity name function c++">main</span></span><span class="meta function parameters c++"><span class="meta group c++"><span class="punctuation section group begin c++">(</span></span></span><span class="meta function parameters c++"><span class="meta group c++"><span class="punctuation section group end c++">)</span></span></span><span class="meta function c++"> </span><span class="meta function c++"><span class="meta block c++"><span class="punctuation section block begin c++">{</span></span></span><span class="meta function c++"><span class="meta block c++">
+   cout <span class="keyword operator arithmetic c">&lt;&lt;</span> <span class="string quoted double c"><span class="punctuation definition string begin c">&quot;</span>Hello, World!<span class="punctuation definition string end c">&quot;</span></span> <span class="keyword operator arithmetic c">&lt;&lt;</span> endl<span class="punctuation terminator c++">;</span> <span class="comment line double-slash c"><span class="punctuation definition comment c">//</span> This prints Hello, World!
+</span>   <span class="keyword control c++">return</span> <span class="constant numeric c++">0</span><span class="punctuation terminator c++">;</span>
+</span></span><span class="meta function c++"><span class="meta block c++"><span class="punctuation section block end c++">}</span></span></span></span></code></pre><h2>csharp</h2>
+<pre class="code"><code><span class="text plain">using System;
+class App
+{
+  static void Main()
+  {
+    Console.WriteLine(&quot;Hello World!&quot;);
+  }
+}</span></code></pre><h2>css</h2>
+<pre class="code"><code><span class="source css"><span class="meta at-rule font-face css"><span class="keyword control at-rule font-face css"><span class="punctuation definition keyword css">@</span>font-face</span> <span class="meta property-list css"><span class="punctuation section property-list css">{</span>
+  <span class="meta property-name css"><span class="support type property-name css">font-family</span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="string unquoted css">Chunkfive</span></span><span class="punctuation terminator rule css">;</span></span>
+  <span class="meta property-name css"><span class="support type property-name css">src</span></span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="meta function-call css"><span class="support function url css">url</span><span class="meta group css"><span class="punctuation definition group begin css">(</span><span class="string quoted single css"><span class="punctuation definition string begin css">&#39;</span>Chunkfive.otf<span class="punctuation definition string end css">&#39;</span></span></span><span class="meta group css"><span class="punctuation definition group end css">)</span></span></span></span><span class="punctuation terminator rule css">;</span>
+</span><span class="punctuation section property-list css">}</span></span>
+
+<span class="meta selector css"><span class="entity name tag css">body</span>,
+<span class="entity other attribute-name class css"><span class="punctuation definition entity css">.</span>usertext</span> </span><span class="meta property-list css"><span class="punctuation section property-list css">{</span>
+  <span class="meta property-name css"><span class="support type property-name css">color</span></span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="constant other color rgb-value css"><span class="punctuation definition constant css">#</span>f0f0f0</span></span><span class="punctuation terminator rule css">;</span>
+  <span class="meta property-name css"><span class="support type property-name css">background</span></span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="constant other color rgb-value css"><span class="punctuation definition constant css">#</span>600</span></span><span class="punctuation terminator rule css">;</span>
+  <span class="meta property-name css"><span class="support type property-name css">font-family</span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="string unquoted css">Chunkfive</span><span class="punctuation separator css">,</span> <span class="string unquoted css">sans</span></span><span class="punctuation terminator rule css">;</span></span>
+  <span class="meta property-name css"><span class="support type custom-property css"><span class="punctuation definition custom-property css">--</span><span class="support type custom-property name css">heading-1</span></span></span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="constant numeric css">30<span class="keyword other unit css">px</span></span>/<span class="constant numeric css">32<span class="keyword other unit css">px</span></span> Helvetica, <span class="support constant font-name css">sans-serif</span></span><span class="punctuation terminator rule css">;</span>
+</span><span class="punctuation section property-list css">}</span>
+
+<span class="meta at-rule import css"><span class="keyword control at-rule import css"><span class="punctuation definition keyword css">@</span>import</span> <span class="meta function-call css"><span class="support function url css">url</span><span class="meta group css"><span class="punctuation definition group begin css">(</span><span class="string unquoted css">p</span><span class="string unquoted css">r</span><span class="string unquoted css">i</span><span class="string unquoted css">n</span><span class="string unquoted css">t</span><span class="string unquoted css">.</span><span class="string unquoted css">c</span><span class="string unquoted css">s</span><span class="string unquoted css">s</span></span><span class="meta group css"><span class="punctuation definition group end css">)</span></span></span><span class="punctuation terminator rule css">;</span></span>
+<span class="meta at-rule media css"><span class="keyword control at-rule media css"><span class="punctuation definition keyword css">@</span>media</span> <span class="support constant media css">print</span> </span><span class="punctuation section property-list css">{</span>
+<span class="meta selector css">  <span class="entity name tag css">a</span><span class="meta attribute-selector css"><span class="punctuation definition entity css">[</span><span class="entity other attribute-name css">href</span><span class="keyword operator attribute-selector css">^=</span><span class="string quoted single css"><span class="punctuation definition string begin css">&#39;</span>http<span class="punctuation definition string end css">&#39;</span></span><span class="punctuation definition entity css">]</span></span><span class="entity other pseudo-element css"><span class="punctuation definition entity css">::</span>after</span> </span><span class="meta property-list css"><span class="punctuation section property-list css">{</span>
+    <span class="meta property-name css"><span class="support type property-name css">content</span></span><span class="punctuation separator key-value css">:</span><span class="meta property-value css"> </span><span class="meta property-value css"><span class="meta function-call css"><span class="support function attr css">attr</span><span class="meta group css"><span class="punctuation definition group begin css">(</span><span class="entity other attribute-name css">href</span></span><span class="meta group css"><span class="punctuation definition group end css">)</span></span></span></span><span class="punctuation terminator rule css">;</span>
+</span>  <span class="punctuation section property-list css">}</span>
+<span class="punctuation section property-list css">}</span></span></code></pre><h2>d</h2>
+<pre class="code"><code><span class="source d"><span class="comment block d"><span class="punctuation definition comment d">/*</span> This program prints a
+   hello world message
+   to the console.  <span class="punctuation definition comment d">*/</span></span>
+
+<span class="keyword control import d">import</span> <span class="support type d">std.stdio</span>;
+
+<span class="meta function d"><span class="storage type d">void</span> <span class="entity name function d">main</span>()
+<span class="meta block d">{
+    writeln(<span class="string quoted double d"><span class="punctuation definition string begin d">&quot;</span>Hello, World!<span class="punctuation definition string end d">&quot;</span></span>);
+}</span></span></span></code></pre><h2>diff</h2>
+<pre class="code"><code><span class="source diff"><span class="meta diff index">Index<span class="punctuation separator key-value diff">:</span> <span class="meta toc-list file-name diff">languages/ini.js</span>
+</span><span class="meta separator diff"><span class="punctuation definition separator diff">===================================================================</span>
+</span><span class="meta diff header from-file"><span class="punctuation definition from-file diff">---</span> languages/ini.js    (revision 199)
+</span><span class="meta diff header to-file"><span class="punctuation definition to-file diff">+++</span> languages/ini.js    (revision 200)
+</span><span class="meta diff range unified"><span class="punctuation definition range diff">@@</span> <span class="meta toc-list line-number diff">-1,8 +1,7</span> <span class="punctuation definition range diff">@@</span>
+</span> hljs.LANGUAGES.ini =
+ {
+   case_insensitive: true,
+<span class="markup deleted diff"><span class="punctuation definition deleted diff">-</span>  defaultMode:
+</span><span class="markup deleted diff"><span class="punctuation definition deleted diff">-</span>  {
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span>  defaultMode: {
+</span>     contains: [&#39;comment&#39;, &#39;title&#39;, &#39;setting&#39;],
+     illegal: &#39;[^\\s]&#39;
+   },
+
+<span class="meta diff header from-file"><span class="punctuation definition from-file diff">***</span> /path/to/original timestamp
+</span><span class="meta diff header from-file"><span class="punctuation definition from-file diff">---</span> /path/to/new      timestamp
+</span><span class="meta separator diff"><span class="punctuation definition separator diff">***************</span>
+</span><span class="meta diff range context"><span class="punctuation definition range diff">***</span> 1,3 <span class="punctuation definition range diff">****</span>
+</span><span class="meta diff range context"><span class="punctuation definition range diff">---</span> 1,9 <span class="punctuation definition range diff">----</span>
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span> This is an important
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span> notice! It should
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span> therefore be located at
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span> the beginning of this
+</span><span class="markup inserted diff"><span class="punctuation definition inserted diff">+</span> document!
+</span>
+<span class="markup changed diff"><span class="punctuation definition changed diff">!</span> compress the size of the
+</span><span class="markup changed diff"><span class="punctuation definition changed diff">!</span> changes.
+</span>
+  It is important to spell</span></code></pre><h2>go</h2>
+<pre class="code"><code><span class="source go"><span class="keyword control go">package</span> main
+<span class="meta import go"><span class="meta import go"><span class="keyword control import go">import</span> </span><span class="string quoted double go"><span class="punctuation definition string begin go">&quot;</span>fmt<span class="punctuation definition string end go">&quot;</span></span></span>
+
+<span class="meta function declaration go"><span class="storage type go">func</span> <span class="entity name function go">main</span></span><span class="meta function parameters go"><span class="meta group go"><span class="punctuation definition group begin go">(</span></span></span><span class="meta function parameters go"></span><span class="meta function parameters go"></span><span class="meta function parameters go"><span class="meta group go"><span class="punctuation definition group end go">)</span></span></span><span class="meta function go"> </span><span class="meta function go"><span class="meta block go"><span class="punctuation definition block begin go">{</span></span></span><span class="meta function go"><span class="meta block go">
+    fmt<span class="meta function-call method go"><span class="punctuation accessor go">.</span><span class="variable function go">Println</span><span class="meta group go"><span class="punctuation definition group begin go">(</span></span></span><span class="meta function-call method go"><span class="meta group go"><span class="string quoted double go"><span class="punctuation definition string begin go">&quot;</span>Hello World!<span class="punctuation definition string end go">&quot;</span></span></span><span class="meta group go"><span class="punctuation definition group end go">)</span></span></span>
+</span></span><span class="meta function go"><span class="meta block go"><span class="punctuation definition block end go">}</span></span></span></span></code></pre><h2>handlebars</h2>
+<pre class="code"><code><span class="text plain">&lt;div class=&#39;entry&#39;&gt;
+  {{! only show if author exists }}
+  {{#if author}}
+    &lt;h1&gt;{{firstName}} {{lastName}}&lt;/h1&gt;
+  {{/if}}
+&lt;/div&gt;</span></code></pre><h2>haskell</h2>
+<pre class="code"><code><span class="source haskell"><span class="meta function type-declaration haskell"><span class="entity name function haskell">main</span> <span class="keyword other double-colon haskell">::</span> <span class="storage type haskell">IO</span> <span class="support constant unit haskell">()</span>
+main <span class="keyword operator haskell">=</span> </span>putStrLn <span class="string quoted double haskell"><span class="punctuation definition string begin haskell">&quot;</span>Hello World!<span class="punctuation definition string end haskell">&quot;</span></span>
+</span></code></pre><h2>http</h2>
+<pre class="code"><code><span class="text plain">POST /task?id=1 HTTP/1.1
+Host: example.org
+Content-Type: application/json; charset=utf-8
+Content-Length: 137
+
+{
+  &quot;status&quot;: &quot;ok&quot;,
+  &quot;extended&quot;: true,
+  &quot;results&quot;: [
+    {&quot;value&quot;: 0, &quot;type&quot;: &quot;int64&quot;},
+    {&quot;value&quot;: 1.0e+3, &quot;type&quot;: &quot;decimal&quot;}
+  ]
+}
+</span></code></pre><h2>ini</h2>
+<pre class="code"><code><span class="text plain">; boilerplate
+[package]
+name = &quot;some_name&quot;
+authors = [&quot;Author&quot;]
+description = &quot;This is \
+a description&quot;
+
+[[lib]]
+name = ${NAME}
+default = True
+auto = no
+counter = 1_000</span></code></pre><h2>java</h2>
+<pre class="code"><code><span class="source java"><span class="meta class java"><span class="meta class identifier java"><span class="storage type java">class</span> <span class="entity name class java">Main</span></span> <span class="meta class body java"><span class="punctuation section block begin java">{</span>
+ <span class="storage modifier java">public</span> <span class="storage modifier java">static</span> <span class="storage type primitive java">void</span> <span class="meta method java"><span class="meta method identifier java"><span class="entity name function java">main</span></span><span class="meta method parameters java"><span class="meta parens java"><span class="punctuation section parens begin java">(</span><span class="support class java">String</span><span class="storage modifier array java">[]</span> <span class="variable parameter java">args</span><span class="punctuation section parens end java">)</span></span></span> <span class="meta method body java"><span class="punctuation section block begin java">{</span>
+    <span class="support class java">System</span><span class="punctuation accessor dot java">.</span>out<span class="punctuation accessor dot java">.</span><span class="meta function-call java"><span class="variable function java">println</span><span class="punctuation section parens begin java">(</span><span class="string quoted double java"><span class="punctuation definition string begin java">&quot;</span>Hello World!<span class="punctuation definition string end java">&quot;</span></span><span class="punctuation section parens end java">)</span></span><span class="punctuation terminator java">;</span>
+  <span class="punctuation section block end java">}</span></span>
+</span><span class="punctuation section block end java">}</span></span></span></span></code></pre><h2>javascript</h2>
+<pre class="code"><code><span class="source js"><span class="meta function declaration js"><span class="storage type function js">function</span> <span class="entity name function js">$initHighlight</span><span class="punctuation section group begin js">(</span><span class="variable parameter function js">block</span><span class="punctuation separator parameter function js">,</span> <span class="variable parameter function js">cls</span><span class="punctuation section group end js">)</span><span class="meta function declaration js"> </span></span><span class="meta block js"><span class="punctuation section block js">{</span>
+  <span class="meta try js"><span class="keyword control trycatch js">try</span> <span class="meta block js"><span class="punctuation section block js">{</span>
+    <span class="meta conditional js"><span class="keyword control conditional js">if</span> <span class="meta group js"><span class="punctuation section group js">(</span><span class="variable other object js">cls</span><span class="punctuation accessor js">.</span><span class="meta function-call method js"><span class="variable function js">search</span><span class="meta group js"><span class="punctuation section group js">(</span><span class="string regexp js"><span class="punctuation definition string begin js">/</span><span class="keyword control anchor regexp">\b</span>no<span class="constant character escape backslash regexp">\-</span>highlight<span class="keyword control anchor regexp">\b</span><span class="punctuation definition string end js">/</span></span></span><span class="meta group js"><span class="punctuation section group js">)</span></span></span> <span class="keyword operator comparison js">!=</span> <span class="keyword operator arithmetic js">-</span><span class="constant numeric js">1</span><span class="punctuation section group js">)</span></span>
+      </span><span class="keyword control flow js">return</span> <span class="meta function-call js"><span class="variable function js">process</span><span class="meta group js"><span class="punctuation section group js">(</span><span class="variable other readwrite js">block</span><span class="punctuation separator comma js">,</span> <span class="constant language boolean true js">true</span><span class="punctuation separator comma js">,</span> <span class="constant numeric js">0x0F</span></span><span class="meta group js"><span class="punctuation section group js">)</span></span></span> <span class="keyword operator arithmetic js">+</span>
+             <span class="string template js"><span class="punctuation definition string template begin js">`</span> class=&quot;</span><span class="meta template expression js"><span class="punctuation definition template-expression begin js">${</span></span><span class="meta template expression js"><span class="source js embedded expression"><span class="variable other readwrite js">cls</span></span><span class="punctuation definition template-expression end js">}</span></span><span class="string template js">&quot;<span class="punctuation definition string template end js">`</span></span><span class="punctuation terminator statement js">;</span>
+  </span><span class="meta block js"><span class="punctuation section block js">}</span></span></span> <span class="meta catch js"><span class="keyword control trycatch js">catch</span> <span class="meta group js"><span class="punctuation section group js">(</span><span class="variable other readwrite js">e</span><span class="punctuation section group js">)</span></span> <span class="meta block js"><span class="punctuation section block js">{</span>
+    <span class="comment block js"><span class="punctuation definition comment js">/*</span> handle exception <span class="punctuation definition comment js">*/</span></span>
+  </span><span class="meta block js"><span class="punctuation section block js">}</span></span></span>
+  <span class="meta for js"><span class="keyword control loop js">for</span> <span class="meta group js"><span class="punctuation section group js">(</span><span class="storage type js">var</span> <span class="variable other readwrite js">i</span> <span class="keyword operator assignment js">=</span> <span class="constant numeric js">0</span> <span class="keyword operator arithmetic js">/</span> <span class="constant numeric js">2</span><span class="punctuation terminator statement js">;</span> <span class="variable other readwrite js">i</span> <span class="keyword operator relational js">&lt;</span> <span class="variable other object js">classes</span><span class="punctuation accessor js">.</span><span class="meta property object js">length</span><span class="punctuation terminator statement js">;</span> <span class="variable other readwrite js">i</span><span class="keyword operator arithmetic js">++</span><span class="punctuation section group js">)</span></span> <span class="meta block js"><span class="punctuation section block js">{</span>
+    <span class="meta conditional js"><span class="keyword control conditional js">if</span> <span class="meta group js"><span class="punctuation section group js">(</span><span class="meta function-call js"><span class="variable function js">checkCondition</span><span class="meta group js"><span class="punctuation section group js">(</span><span class="variable other object js">classes</span><span class="meta brackets js"><span class="punctuation section brackets js">[</span><span class="variable other readwrite js">i</span><span class="punctuation section brackets js">]</span></span></span><span class="meta group js"><span class="punctuation section group js">)</span></span></span> <span class="keyword operator comparison js">===</span> <span class="constant language undefined js">undefined</span><span class="punctuation section group js">)</span></span>
+      </span><span class="meta function-call method js"><span class="support type object console js">console</span><span class="punctuation accessor js">.</span><span class="support function console js">log</span><span class="meta group js"><span class="punctuation section group js">(</span><span class="string quoted single js"><span class="punctuation definition string begin js">&#39;</span>undefined<span class="punctuation definition string end js">&#39;</span></span></span><span class="meta group js"><span class="punctuation section group js">)</span></span></span><span class="punctuation terminator statement js">;</span>
+  </span><span class="meta block js"><span class="punctuation section block js">}</span></span></span>
+
+  <span class="keyword control flow js">return</span> <span class="meta group js"><span class="punctuation section group js">(</span>
+    <span class="keyword operator relational js">&lt;</span><span class="variable other readwrite js">div</span><span class="keyword operator relational js">&gt;</span>
+      <span class="keyword operator relational js">&lt;</span><span class="variable other readwrite js">web</span><span class="keyword operator arithmetic js">-</span><span class="variable other readwrite js">component</span><span class="keyword operator relational js">&gt;</span><span class="meta object-literal js"><span class="punctuation section block js">{</span><span class="variable other readwrite js">block</span><span class="punctuation section block js">}</span></span><span class="keyword operator relational js">&lt;</span><span class="string regexp js"><span class="punctuation definition string begin js">/</span>web-component&gt;
+    &lt;<span class="punctuation definition string end js">/</span></span><span class="variable other readwrite js">div</span><span class="keyword operator relational js">&gt;</span>
+  <span class="invalid illegal stray-bracket-end js">)</span>
+}
+
+<span class="variable other readwrite js">export</span>  <span class="variable other dollar js"><span class="punctuation dollar js">$</span>initHighlight</span>;</span></span></span></code></pre><h2>json</h2>
+<pre class="code"><code><span class="source json"><span class="meta structure array json"><span class="punctuation section array begin json">[</span>
+  <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>title<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>apples<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>count<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure array json"><span class="punctuation section array begin json">[</span><span class="constant numeric json">12000</span><span class="punctuation separator array json">,</span> <span class="constant numeric json">20000</span><span class="punctuation section array end json">]</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>description<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span> <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>text<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>...<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span> <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>sensitive<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="constant language json">false</span> </span><span class="punctuation section dictionary end json">}</span></span>
+  </span><span class="punctuation section dictionary end json">}</span></span><span class="punctuation separator array json">,</span>
+  <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>title<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>oranges<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>count<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure array json"><span class="punctuation section array begin json">[</span><span class="constant numeric json">17500</span><span class="punctuation separator array json">,</span> <span class="constant language json">null</span><span class="punctuation section array end json">]</span></span><span class="punctuation separator dictionary pair json">,</span></span>
+    <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>description<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="meta structure dictionary json"><span class="punctuation section dictionary begin json">{</span> <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>text<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>...<span class="punctuation definition string end json">&quot;</span></span><span class="punctuation separator dictionary pair json">,</span></span> <span class="meta structure dictionary key json"><span class="string quoted double json"><span class="punctuation definition string begin json">&quot;</span>sensitive<span class="punctuation definition string end json">&quot;</span></span></span><span class="meta structure dictionary value json"><span class="punctuation separator dictionary key-value json">:</span> <span class="constant language json">false</span> </span><span class="punctuation section dictionary end json">}</span></span>
+  </span><span class="punctuation section dictionary end json">}</span></span>
+<span class="punctuation section array end json">]</span></span></span></code></pre><h2>julia</h2>
+<pre class="code"><code><span class="text plain"># function to calculate the volume of a sphere
+function sphere_vol(r)
+    # julia allows Unicode names (in UTF-8 encoding)
+    # so either &quot;pi&quot; or the symbol π can be used
+    return 4/3*pi*r^3
+end
+
+# functions can also be defined more succinctly
+quadratic(a, sqr_term, b) = (-b + sqr_term) / 2a
+
+# calculates x for 0 = a*x^2+b*x+c, arguments types can be defined in function definitions
+function quadratic2(a::Float64, b::Float64, c::Float64)
+    # unlike other languages 2a is equivalent to 2*a
+    # a^2 is used instead of a**2 or pow(a,2)
+    sqr_term = sqrt(b^2-4a*c)
+    r1 = quadratic(a, sqr_term, b)
+    r2 = quadratic(a, -sqr_term, b)
+    # multiple values can be returned from a function using tuples
+    # if the return keyword is omitted, the last term is returned
+    r1, r2
+end
+
+vol = sphere_vol(3)</span></code></pre><h2>kotlin</h2>
+<pre class="code"><code><span class="text plain">package org.kotlinlang.play
+
+fun main() {
+    println(&quot;Hello, World!&quot;)
+}</span></code></pre><h2>less</h2>
+<pre class="code"><code><span class="text plain">@import &#39;fruits&#39;;
+
+@rhythm: 1.5em;
+
+@media screen and (min-resolution: 2dppx) {
+  body {
+    font-size: 125%;
+  }
+}
+
+section &gt; .foo + #bar:hover [href*=&#39;less&#39;] {
+  margin: @rhythm 0 0 @rhythm;
+  padding: calc(5% + 20px);
+  background: #f00ba7 url(http://placehold.alpha-centauri/42.png) no-repeat;
+  background-image: linear-gradient(-135deg, wheat, fuchsia) !important ;
+  background-blend-mode: multiply;
+}
+
+@font-face {
+  font-family: /* ? */ &#39;Omega&#39;;
+  src: url(&#39;../fonts/omega-webfont.woff?v=2.0.2&#39;);
+}
+
+.icon-baz::before {
+  display: inline-block;
+  font-family: &#39;Omega&#39;, Alpha, sans-serif;
+  content: &#39;\f085&#39;;
+  color: rgba(98, 76 /* or 54 */, 231, 0.75);
+}</span></code></pre><h2>lua</h2>
+<pre class="code"><code><span class="source lua"><span class="comment block lua"><span class="punctuation definition comment lua">--[[</span>
+Simple signal/slot implementation
+<span class="punctuation definition comment lua">]]</span></span>
+<span class="keyword control lua">local</span> signal_mt <span class="keyword operator lua">=</span> {
+    __index <span class="keyword operator lua">=</span> {
+        register <span class="keyword operator lua">=</span> table.insert
+    }
+}
+<span class="meta function lua"><span class="keyword control lua">function</span> <span class="entity name function scope lua">signal_mt.__index:</span><span class="entity name function lua">emit</span><span class="punctuation definition parameters begin lua">(</span><span class="variable parameter function lua">... --[[ Comment in params ]]</span><span class="punctuation definition parameters end lua">)</span></span>
+    <span class="keyword control lua">for</span> _, slot <span class="keyword control lua">in</span> <span class="support function lua">ipairs</span>(<span class="variable language self lua">self</span>) <span class="keyword control lua">do</span>
+        slot(<span class="variable language self lua">self</span>, <span class="constant language lua">...</span>)
+    <span class="keyword control lua">end</span>
+<span class="keyword control lua">end</span>
+<span class="keyword control lua">local</span> <span class="meta function lua"><span class="keyword control lua">function</span> <span class="entity name function lua">create_signal</span><span class="punctuation definition parameters begin lua">(</span><span class="punctuation definition parameters end lua">)</span></span>
+    <span class="keyword control lua">return</span> <span class="support function lua">setmetatable</span>({}, signal_mt)
+<span class="keyword control lua">end</span>
+
+<span class="comment line double-dash lua"><span class="punctuation definition comment lua">--</span> Signal test
+</span><span class="keyword control lua">local</span> signal <span class="keyword operator lua">=</span> create_signal()
+signal:register(<span class="keyword control lua">function</span>(signal, <span class="constant language lua">...</span>)
+    <span class="support function lua">print</span>(<span class="constant language lua">...</span>)
+<span class="keyword control lua">end</span>)
+signal:emit(<span class="string quoted single lua"><span class="punctuation definition string begin lua">&#39;</span>Answer to Life, the Universe, and Everything:<span class="punctuation definition string end lua">&#39;</span></span>, <span class="constant numeric lua">42</span>)
+
+<span class="comment block lua"><span class="punctuation definition comment lua">--[==[</span> [=[ [[
+Nested ]]
+multi-line ]=]
+comment <span class="punctuation definition comment lua">]==]</span></span>
+<span class="string quoted other multiline lua"><span class="punctuation definition string begin lua">[==[</span> Nested
+[=[ multi-line
+[[ string
+]] ]=] <span class="punctuation definition string end lua">]==]</span></span></span></code></pre><h2>makefile</h2>
+<pre class="code"><code><span class="source makefile"><span class="comment line number-sign makefile"><span class="punctuation definition comment makefile">#</span> Makefile</span>
+
+<span class="variable other makefile">BUILDDIR</span>      <span class="keyword operator assignment makefile">=</span> <span class="string unquoted makefile">_build</span>
+<span class="variable other makefile">EXTRAS</span>       <span class="keyword operator assignment makefile">?=</span> <span class="string unquoted makefile"><span class="variable parameter makefile"><span class="keyword other block begin makefile">$(</span>BUILDDIR<span class="keyword other block end makefile">)</span></span>/extras</span>
+
+<span class="meta function makefile"><span class="entity name function makefile">.PHONY</span></span><span class="keyword operator assignment makefile">:</span> <span class="meta function arguments makefile"><span class="string unquoted makefile">main clean</span></span><span class="meta function body makefile">
+</span>
+<span class="meta function makefile"><span class="entity name function makefile">main</span></span><span class="keyword operator assignment makefile">:</span>
+<span class="meta function arguments makefile"></span><span class="meta function body makefile"></span><span class="meta function body makefile">	<span class="constant language makefile">@</span><span class="source shell"><span class="meta function-call shell"><span class="support function echo shell">echo</span></span><span class="meta function-call arguments shell"> <span class="string quoted double shell"><span class="punctuation definition string begin shell">&quot;</span>Building main facility...<span class="punctuation definition string end shell">&quot;</span></span></span></span>
+	<span class="source shell"><span class="meta function-call shell"><span class="variable function shell">build_main</span></span><span class="meta function-call arguments shell"> <span class="variable parameter makefile"><span class="keyword other block begin makefile">$(</span>BUILDDIR<span class="keyword other block end makefile">)</span></span></span></span>
+
+</span><span class="meta function makefile"><span class="entity name function makefile">clean</span></span><span class="keyword operator assignment makefile">:</span>
+<span class="meta function arguments makefile"></span><span class="meta function body makefile"></span><span class="meta function body makefile">	<span class="source shell"><span class="meta function-call shell"><span class="variable function shell">rm</span></span><span class="meta function-call arguments shell"><span class="variable parameter option shell"><span class="punctuation definition parameter shell"> -</span>rf</span> <span class="variable parameter makefile"><span class="keyword other block begin makefile">$(</span>BUILDDIR<span class="keyword other block end makefile">)</span></span>/<span class="keyword operator regexp quantifier shell">*</span></span></span>
+</span></span></code></pre><h2>markdown</h2>
+<pre class="code"><code><span class="text html markdown"><span class="meta block-level markdown"><span class="markup heading 1 markdown"><span class="punctuation definition heading begin markdown">#</span> </span><span class="markup heading 1 markdown"><span class="entity name section markdown">hello world</span><span class="meta whitespace newline markdown">
+</span></span></span>
+<span class="meta paragraph markdown">you can write text <span class="meta link inline markdown"><span class="punctuation definition link begin markdown">[</span></span><span class="meta link inline description markdown">with links</span><span class="meta link inline markdown"><span class="punctuation definition link end markdown">]</span></span><span class="meta link inline markdown"><span class="punctuation definition metadata begin markdown">(</span><span class="markup underline link markdown">http://example.com</span><span class="punctuation definition metadata end markdown">)</span></span> inline or <span class="meta link reference markdown"><span class="punctuation definition link begin markdown">[</span></span><span class="meta link reference description markdown">link references</span><span class="meta link reference markdown"><span class="punctuation definition link end markdown">]</span></span><span class="meta link reference markdown"><span class="punctuation definition constant begin markdown">[</span><span class="constant other reference link markdown">1</span><span class="punctuation definition constant end markdown">]</span></span>.
+
+</span><span class="markup list unnumbered bullet markdown"><span class="punctuation definition list_item markdown">-</span></span><span class="markup list unnumbered markdown"> <span class="meta paragraph list markdown">one <span class="markup italic markdown"><span class="punctuation definition italic begin markdown">_</span>thing<span class="punctuation definition italic end markdown">_</span></span> has <span class="markup italic markdown"><span class="punctuation definition italic begin markdown">*</span>em<span class="punctuation definition italic end markdown">*</span></span>phasis
+</span></span><span class="markup list unnumbered bullet markdown"><span class="punctuation definition list_item markdown">-</span></span><span class="markup list unnumbered markdown"><span class="meta paragraph list markdown"> two <span class="markup bold markdown"><span class="punctuation definition bold begin markdown">**</span>things<span class="punctuation definition bold end markdown">**</span></span> are <span class="markup bold markdown"><span class="punctuation definition bold begin markdown">**</span>bold<span class="punctuation definition bold end markdown">**</span></span>
+</span></span><span class="markup list unnumbered markdown">
+</span><span class="meta link reference def markdown"><span class="punctuation definition constant begin markdown">[</span><span class="entity name reference link markdown">1</span><span class="punctuation definition constant end markdown">]</span><span class="punctuation separator key-value markdown">:</span> <span class="markup underline link markdown">http://example.com</span>
+</span>
+<span class="meta block-level markdown"><span class="meta separator thematic-break markdown"><span class="punctuation definition thematic-break markdown">---</span>
+</span></span>
+<span class="meta block-level markdown"><span class="markup heading 1 markdown"><span class="punctuation definition heading begin markdown">#</span> </span><span class="markup heading 1 markdown"><span class="entity name section markdown">hello world</span><span class="meta whitespace newline markdown">
+</span></span></span>
+<span class="meta paragraph markdown"><span class="meta tag other html"><span class="punctuation definition tag begin html">&lt;</span><span class="entity name tag other html">this</span>_is <span class="meta attribute-with-value html"><span class="entity other attribute-name html">inline</span><span class="punctuation separator key-value html">=</span></span><span class="meta attribute-with-value html"><span class="string quoted double html"><span class="punctuation definition string begin html">&quot;</span>xml<span class="punctuation definition string end html">&quot;</span></span></span><span class="punctuation definition tag end html">&gt;</span></span><span class="meta tag other html"><span class="punctuation definition tag begin html">&lt;/</span><span class="entity name tag other html">this</span>_is<span class="punctuation definition tag end html">&gt;</span></span>
+
+</span><span class="meta block-level markdown"><span class="markup quote markdown"><span class="punctuation definition blockquote markdown">&gt;</span> markdown is so cool
+</span></span>
+<span class="meta block-level markdown"><span class="markup raw block markdown">    so are code segments
+</span></span>
+<span class="markup list numbered bullet markdown">1<span class="punctuation definition list_item markdown">.</span></span><span class="markup list numbered markdown"> <span class="meta paragraph list markdown">one thing (yeah!)
+</span></span><span class="markup list numbered bullet markdown">2<span class="punctuation definition list_item markdown">.</span></span><span class="markup list numbered markdown"><span class="meta paragraph list markdown"> two thing <span class="markup raw inline markdown"><span class="punctuation definition raw begin markdown">`</span>i can write code<span class="punctuation definition raw end markdown">`</span></span>, and <span class="markup raw inline markdown"><span class="punctuation definition raw begin markdown">`</span>more<span class="punctuation definition raw end markdown">`</span></span> wipee!</span></span></span></code></pre><h2>nginx</h2>
+<pre class="code"><code><span class="text plain">user  www www;
+worker_processes  2;
+pid /var/run/nginx.pid;
+error_log  /var/log/nginx.error_log  debug | info | notice | warn | error | crit;
+
+events {
+    connections   2000;
+    use kqueue | rtsig | epoll | /dev/poll | select | poll;
+}
+
+http {
+    log_format main      &#39;$remote_addr - $remote_user [$time_local] &#39;
+                         &#39;&quot;$request&quot; $status $bytes_sent &#39;
+                         &#39;&quot;$http_referer&quot; &quot;$http_user_agent&quot; &#39;
+                         &#39;&quot;$gzip_ratio&quot;&#39;;
+
+    send_timeout 3m;
+    client_header_buffer_size 1k;
+
+    gzip on;
+    gzip_min_length 1100;
+
+    #lingering_time 30;
+
+    server {
+        server_name   one.example.com  www.one.example.com;
+        access_log   /var/log/nginx.access_log  main;
+
+        rewrite (.*) /index.php?page=$1 break;
+
+        location / {
+            proxy_pass         http://127.0.0.1/;
+            proxy_redirect     off;
+            proxy_set_header   Host             $host;
+            proxy_set_header   X-Real-IP        $remote_addr;
+            charset            koi8-r;
+        }
+
+        location /api/ {
+            fastcgi_pass 127.0.0.1:9000;
+        }
+
+        location ~* \.(jpg|jpeg|gif)$ {
+            root         /spool/www;
+        }
+    }
+}</span></code></pre><h2>nim</h2>
+<pre class="code"><code><span class="text plain">from strutils import `%`
+
+const numDoors = 100
+var doors {.compileTime.}: array[1..numDoors, bool]
+
+proc calcDoors(): string =
+  for pass in 1..numDoors:
+    for door in countup(pass, numDoors, pass):
+      doors[door] = not doors[door]
+  for door in 1..numDoors:
+    result.add(&quot;Door $1 is $2.\n&quot; % [$door, if doors[door]: &quot;open&quot; else: &quot;closed&quot;])
+
+const outputString: string = calcDoors()
+
+echo outputString</span></code></pre><h2>objectivec</h2>
+<pre class="code"><code><span class="text plain">#import &lt;Foundation/Foundation.h&gt;
+
+int main(int argc, const char * argv[]) {
+    @mylak {
+        NSLog(@&quot;Hello World!&quot;);
+    }
+    return 0;
+}
+</span></code></pre><h2>nix</h2>
+<pre class="code"><code><span class="text plain">let
+  world = &quot;World!&quot;;
+in
+&quot;Hello &quot; + world</span></code></pre><h2>perl</h2>
+<pre class="code"><code><span class="source perl"><span class="support function perl">print</span> <span class="string quoted double perl"><span class="punctuation definition string begin perl">&quot;</span>Hello World!<span class="constant character escape perl">\n</span><span class="punctuation definition string end perl">&quot;</span></span>;</span></code></pre><h2>php</h2>
+<pre class="code"><code><span class="embedding php"><span class="text html basic"><span class="meta embedded block php"><span class="punctuation section embedded begin php">&lt;?php</span></span><span class="meta embedded block php"><span class="source php">
+<span class="support function construct php">echo</span> <span class="string quoted double php"><span class="punctuation definition string begin php">&quot;</span></span><span class="string quoted double php"><span class="meta string-contents quoted double php"></span></span><span class="string quoted double php"><span class="meta string-contents quoted double php">Hello World!</span><span class="punctuation definition string end php">&quot;</span></span><span class="punctuation terminator expression php">;</span>
+</span><span class="punctuation section embedded end php">?&gt;</span></span></span></span></code></pre><h2>plaintext</h2>
+<pre class="code"><code><span class="text plain">I think this is simply plain text?
+Hello World!</span></code></pre><h2>properties</h2>
+<pre class="code"><code><span class="source java-props"><span class="comment line number-sign java-props"><span class="punctuation definition comment java-props">#</span> .properties
+</span><span class="comment line number-sign java-props"><span class="punctuation definition comment java-props">!</span> Exclamation mark = comments, too
+</span>
+<span class="keyword other java-props">key1 </span><span class="punctuation separator key-value java-props">=</span> value1
+<span class="keyword other java-props">key2 </span><span class="punctuation separator key-value java-props">:</span> value2
+key3   value3
+key\ spaces multiline\
+            value4
+empty_key
+<span class="comment line number-sign java-props"><span class="punctuation definition comment java-props">!</span> Key can contain escaped chars
+</span><span class="keyword other java-props">\</span><span class="punctuation separator key-value java-props">:</span>\= = value5</span></code></pre><h2>python</h2>
+<pre class="code"><code><span class="source python"><span class="meta annotation python"><span class="punctuation definition annotation python">@</span><span class="meta annotation function python"></span></span><span class="meta annotation function python"><span class="meta qualified-name python"><span class="variable annotation function python">requires_authorization</span></span><span class="punctuation section arguments begin python">(</span><span class="meta annotation arguments python"><span class="variable parameter python">roles</span><span class="keyword operator assignment python">=</span><span class="meta structure list python"><span class="punctuation section list begin python">[</span><span class="meta string python"><span class="string quoted double python"><span class="punctuation definition string begin python">&quot;</span></span></span><span class="meta string python"><span class="string quoted double python">ADMIN<span class="punctuation definition string end python">&quot;</span></span></span><span class="punctuation section list end python">]</span></span></span><span class="punctuation section arguments end python">)</span></span>
+<span class="meta function python"><span class="storage type function python">def</span> <span class="entity name function python"><span class="meta generic-name python">somefunc</span></span></span><span class="meta function parameters python"><span class="punctuation section parameters begin python">(</span></span><span class="meta function parameters python"><span class="variable parameter python">param1</span></span><span class="meta function parameters default-value python"><span class="keyword operator assignment python">=</span><span class="meta string python"><span class="string quoted single python"><span class="punctuation definition string begin python">&#39;</span></span></span><span class="meta string python"><span class="string quoted single python"><span class="punctuation definition string end python">&#39;</span></span></span></span><span class="meta function parameters python"><span class="punctuation separator parameters python">,</span> <span class="variable parameter python">param2</span></span><span class="meta function parameters default-value python"><span class="keyword operator assignment python">=</span><span class="constant numeric integer decimal python">0</span></span><span class="meta function parameters python"><span class="punctuation section parameters end python">)</span></span><span class="meta function python"><span class="punctuation section function begin python">:</span></span>
+    <span class="comment block documentation python"><span class="storage type string python">r</span><span class="punctuation definition comment begin python">&#39;&#39;&#39;</span>A docstring<span class="punctuation definition comment end python">&#39;&#39;&#39;</span></span>
+    <span class="meta statement if python"><span class="keyword control flow conditional python">if</span> <span class="meta qualified-name python"><span class="meta generic-name python">param1</span></span> <span class="keyword operator comparison python">&gt;</span> <span class="meta qualified-name python"><span class="meta generic-name python">param2</span></span><span class="punctuation section block conditional python">:</span></span> <span class="comment line number-sign python"><span class="punctuation definition comment python">#</span> interesting
+</span>        <span class="keyword other print python">print</span> <span class="meta string python"><span class="string quoted single python"><span class="punctuation definition string begin python">&#39;</span></span></span><span class="meta string python"><span class="string quoted single python">Gre<span class="constant character escape python">\&#39;</span>ater<span class="punctuation definition string end python">&#39;</span></span></span>
+    <span class="keyword control flow return python">return</span> <span class="meta group python"><span class="punctuation section group begin python">(</span><span class="meta qualified-name python"><span class="meta generic-name python">param2</span></span> <span class="keyword operator arithmetic python">-</span> <span class="meta qualified-name python"><span class="meta generic-name python">param1</span></span> <span class="keyword operator arithmetic python">+</span> <span class="constant numeric integer decimal python">1</span> <span class="keyword operator arithmetic python">+</span> <span class="constant numeric integer long binary python"><span class="punctuation definition numeric binary python">0b</span>10<span class="storage type numeric long python">l</span></span><span class="punctuation section group end python">)</span></span> <span class="keyword operator logical python">or</span> <span class="constant language python">None</span>
+
+<span class="meta class python"><span class="storage type class python">class</span> <span class="entity name class python"><span class="meta generic-name python">SomeClass</span></span><span class="punctuation section class begin python">:</span></span>
+    <span class="keyword control flow python">pass</span>
+
+<span class="keyword operator comparison python">&gt;</span><span class="keyword operator comparison python">&gt;</span><span class="keyword operator comparison python">&gt;</span> <span class="meta qualified-name python"><span class="meta generic-name python">message</span></span> <span class="keyword operator assignment python">=</span> <span class="meta string python"><span class="string quoted single block python"><span class="punctuation definition string begin python">&#39;&#39;&#39;</span></span></span><span class="meta string python"><span class="string quoted single block python"><span class="meta string python"></span></span></span><span class="meta string python"><span class="string quoted single block python">interpreter
+... prompt<span class="punctuation definition string end python">&#39;&#39;&#39;</span></span></span></span></code></pre><h2>r</h2>
+<pre class="code"><code><span class="source r"><span class="meta function-call r"><span class="support function r">require</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">stats</span><span class="punctuation section parens end r">)</span></span>
+
+<span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> Compute different averages
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span>
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> <span class="keyword other r">@param</span> <span class="variable parameter r">x</span> \code{numeric} vector of sample data
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> <span class="keyword other r">@param</span> <span class="variable parameter r">type</span> \code{character} vector of length 1 specifying the average type
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> <span class="keyword other r">@return</span> \code{centre} returns the sample average according to the chosen method.
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> <span class="keyword other r">@examples</span>
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> centre(rcauchy(10), &quot;mean&quot;)
+</span><span class="comment line roxygen r"><span class="punctuation definition comment r">#&#39;</span> <span class="keyword other r">@export</span>
+</span><span class="meta function r"><span class="entity name function r">centre</span> <span class="keyword operator assignment r">&lt;-</span> </span><span class="meta function r"><span class="keyword control r">function</span><span class="punctuation section parens begin r">(</span></span><span class="meta function r"><span class="meta function parameters r"><span class="variable parameter r">x</span><span class="punctuation separator parameters r">,</span> <span class="variable parameter r">type</span></span><span class="punctuation section parens end r">)</span></span> <span class="punctuation section braces begin r">{</span>
+  <span class="keyword control r">switch</span><span class="punctuation section parens begin r">(</span>type,
+         mean <span class="keyword operator assignment r">=</span> <span class="meta function-call r"><span class="support function r">mean</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">x</span><span class="punctuation section parens end r">)</span></span>,
+         median <span class="keyword operator assignment r">=</span> <span class="meta function-call r"><span class="support function r">median</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">x</span><span class="punctuation section parens end r">)</span></span>,
+         trimmed <span class="keyword operator assignment r">=</span> <span class="meta function-call r"><span class="support function r">mean</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">x<span class="punctuation separator parameters r">,</span> <span class="variable parameter r">trim</span> <span class="keyword operator assignment r">=</span> <span class="constant numeric float decimal r">.1</span></span><span class="punctuation section parens end r">)</span></span><span class="punctuation section parens end r">)</span>
+<span class="punctuation section braces end r">}</span>
+x <span class="keyword operator assignment r">&lt;-</span> <span class="meta function-call r"><span class="support function r">rcauchy</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r"><span class="constant numeric float decimal r">10</span></span><span class="punctuation section parens end r">)</span></span>
+<span class="meta function-call r"><span class="variable function r">centre</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">x<span class="punctuation separator parameters r">,</span> <span class="string quoted double r"><span class="punctuation definition string begin r">&quot;</span>mean<span class="punctuation definition string end r">&quot;</span></span></span><span class="punctuation section parens end r">)</span></span>
+
+<span class="meta function-call r"><span class="support function r">library</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">ggplot2</span><span class="punctuation section parens end r">)</span></span>
+
+models <span class="keyword operator assignment r">&lt;-</span> tibble<span class="keyword other r">:</span><span class="keyword other r">:</span><span class="meta function-call r"><span class="variable function r">tribble</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">
+  <span class="keyword other r">~</span>model_name<span class="punctuation separator parameters r">,</span>    <span class="keyword other r">~</span> formula<span class="punctuation separator parameters r">,</span>
+  <span class="string quoted double r"><span class="punctuation definition string begin r">&quot;</span>length-width<span class="punctuation definition string end r">&quot;</span></span><span class="punctuation separator parameters r">,</span> Sepal.Length <span class="keyword other r">~</span> Petal.Width <span class="keyword operator arithmetic r">+</span> Petal.Length<span class="punctuation separator parameters r">,</span>
+  <span class="string quoted double r"><span class="punctuation definition string begin r">&quot;</span>interaction<span class="punctuation definition string end r">&quot;</span></span><span class="punctuation separator parameters r">,</span>  Sepal.Length <span class="keyword other r">~</span> Petal.Width <span class="keyword operator arithmetic r">*</span> Petal.Length
+</span><span class="punctuation section parens end r">)</span></span>
+
+iris <span class="keyword operator other r">%&gt;%</span>
+  <span class="meta function-call r"><span class="variable function r">nest_by</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">Species</span><span class="punctuation section parens end r">)</span></span> <span class="keyword operator other r">%&gt;%</span>
+  <span class="meta function-call r"><span class="variable function r">left_join</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">models<span class="punctuation separator parameters r">,</span> <span class="variable parameter r">by</span> <span class="keyword operator assignment r">=</span> <span class="meta function-call r"><span class="storage type r">character</span>(</span><span class="meta function-call r"><span class="punctuation section parens end r">)</span></span></span><span class="punctuation section parens end r">)</span></span> <span class="keyword operator other r">%&gt;%</span>
+  <span class="meta function-call r"><span class="variable function r">rowwise</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">Species<span class="punctuation separator parameters r">,</span> model_name</span><span class="punctuation section parens end r">)</span></span> <span class="keyword operator other r">%&gt;%</span>
+  <span class="meta function-call r"><span class="variable function r">mutate</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r"><span class="variable parameter r">model</span> <span class="keyword operator assignment r">=</span> <span class="meta function-call r"><span class="storage type r">list</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r"><span class="meta function-call r"><span class="support function r">lm</span>(</span><span class="meta function-call r"><span class="meta function-call parameters r">formula<span class="punctuation separator parameters r">,</span> <span class="variable parameter r">data</span> <span class="keyword operator assignment r">=</span> data</span><span class="punctuation section parens end r">)</span></span></span><span class="punctuation section parens end r">)</span></span></span><span class="punctuation section parens end r">)</span></span> <span class="keyword operator other r">%&gt;%</span>
+  <span class="meta function-call r"><span class="variable function r">summarise</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">broom<span class="keyword other r">:</span><span class="keyword other r">:</span><span class="meta function-call r"><span class="variable function r">glance</span><span class="punctuation section parens begin r">(</span></span><span class="meta function-call r"><span class="meta function-call parameters r">model</span><span class="punctuation section parens end r">)</span></span></span><span class="punctuation section parens end r">)</span></span></span></code></pre><h2>ruby</h2>
+<pre class="code"><code><span class="source ruby"><span class="comment line number-sign ruby"><span class="punctuation definition comment ruby">#</span> The Greeter class
+</span><span class="meta class ruby"><span class="keyword control class ruby">class</span></span><span class="meta class ruby"> </span><span class="meta class ruby"><span class="entity name class ruby">Greeter</span></span><span class="meta class ruby">
+  </span><span class="meta function ruby"><span class="keyword control def ruby">def</span></span><span class="meta function ruby"> <span class="entity name function ruby">initialize</span></span><span class="meta function parameters ruby"><span class="punctuation definition group begin ruby">(</span></span><span class="meta function parameters ruby"><span class="variable parameter ruby">name</span></span><span class="meta function parameters ruby"><span class="punctuation definition group end ruby">)</span></span>
+    <span class="variable other readwrite instance ruby"><span class="punctuation definition variable ruby">@</span>name</span> <span class="keyword operator assignment ruby">=</span> <span class="support function builtin ruby">name</span><span class="punctuation accessor ruby">.</span>capitalize
+  <span class="keyword control ruby">end</span>
+
+  <span class="meta function ruby"><span class="keyword control def ruby">def</span></span><span class="meta function ruby"> <span class="entity name function ruby">salute</span></span>
+    <span class="support function builtin ruby">puts</span> <span class="string quoted double ruby"><span class="punctuation definition string begin ruby">&quot;</span>Hello <span class="source ruby embedded source"><span class="punctuation section embedded ruby">#{</span><span class="variable other readwrite instance ruby"><span class="punctuation definition variable ruby">@</span>name</span><span class="punctuation section embedded ruby">}</span></span>!<span class="punctuation definition string end ruby">&quot;</span></span>
+  <span class="keyword control ruby">end</span>
+<span class="keyword control ruby">end</span>
+
+g <span class="keyword operator assignment ruby">=</span> <span class="support class ruby">Greeter</span><span class="punctuation accessor ruby">.</span><span class="keyword other special-method ruby">new</span><span class="punctuation definition group begin ruby">(</span><span class="string quoted double ruby"><span class="punctuation definition string begin ruby">&quot;</span>world<span class="punctuation definition string end ruby">&quot;</span></span><span class="punctuation definition group end ruby">)</span>
+g<span class="punctuation accessor ruby">.</span>salute</span></code></pre><h2>rust</h2>
+<pre class="code rust"><code><span class="source rust"><span class="meta function rust"><span class="meta function rust"><span class="storage type function rust">fn</span> </span><span class="entity name function rust">main</span></span><span class="meta function rust"><span class="meta function parameters rust"><span class="punctuation section parameters begin rust">(</span></span><span class="meta function rust"><span class="meta function parameters rust"><span class="punctuation section parameters end rust">)</span></span></span></span><span class="meta function rust"><span class="meta function return-type rust"><span class="punctuation separator rust">-&gt;</span><span class="punctuation section group begin rust">(</span><span class="punctuation section group end rust">)</span></span></span><span class="meta function rust"><span class="meta block rust"><span class="punctuation section block begin rust">{</span>
+    <span class="support macro rust">println!</span><span class="meta group rust"><span class="punctuation section group begin rust">(</span></span><span class="meta group rust"><span class="string quoted double rust"><span class="punctuation definition string begin rust">&quot;</span>Hello World!<span class="punctuation definition string end rust">&quot;</span></span></span><span class="meta group rust"><span class="punctuation section group end rust">)</span></span><span class="punctuation terminator rust">;</span>
+</span><span class="meta block rust"><span class="punctuation section block end rust">}</span></span></span></span></code></pre><h2>scala</h2>
+<pre class="code"><code><span class="source scala"><span class="comment block documentation scala"><span class="punctuation definition comment scala">/**</span>
+ * A person has a name and an age.
+ <span class="punctuation definition comment scala">*/</span></span>
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Person</span></span>(<span class="variable parameter scala">name</span>: <span class="support class scala">String</span><span class="punctuation separator scala">,</span> <span class="variable parameter scala">age</span>: <span class="storage type primitive scala">Int</span>)
+
+<span class="storage modifier other scala">abstract</span> <span class="meta class identifier scala"><span class="storage type class scala">class</span> <span class="entity name class scala">Vertical</span></span> <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">CaseJeu</span>
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Haut</span></span>(<span class="variable parameter scala">a</span>: <span class="storage type primitive scala">Int</span>) <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">Vertical</span>
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Bas</span></span>(<span class="variable parameter scala">name</span>: <span class="support class scala">String</span><span class="punctuation separator scala">,</span> <span class="variable parameter scala">b</span>: <span class="storage type primitive scala">Double</span>) <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">Vertical</span>
+
+<span class="storage modifier other scala">sealed</span> <span class="meta class identifier scala"><span class="storage type class scala">trait</span> <span class="entity name class scala">Ior</span></span>[<span class="keyword operator bound scala">+</span><span class="support class scala">A</span>, <span class="keyword operator bound scala">+</span><span class="support class scala">B</span>]
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Left</span></span>[<span class="support class scala">A</span>](<span class="variable parameter scala">a</span>: <span class="support class scala">A</span>) <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">Ior</span><span class="punctuation section brackets begin scala">[</span><span class="support class scala">A</span>, <span class="support class scala">Nothing</span><span class="punctuation section brackets end scala">]</span>
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Right</span></span>[<span class="support class scala">B</span>](<span class="variable parameter scala">b</span>: <span class="support class scala">B</span>) <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">Ior</span><span class="punctuation section brackets begin scala">[</span><span class="support class scala">Nothing</span>, <span class="support class scala">B</span><span class="punctuation section brackets end scala">]</span>
+<span class="meta class identifier scala"><span class="storage type class scala">case </span><span class="storage type class scala">class</span> <span class="entity name class scala">Both</span></span>[<span class="support class scala">A</span>, <span class="support class scala">B</span>](<span class="variable parameter scala">a</span>: <span class="support class scala">A</span><span class="punctuation separator scala">,</span> <span class="variable parameter scala">b</span>: <span class="support class scala">B</span>) <span class="keyword declaration scala">extends</span> <span class="entity other inherited-class scala">Ior</span><span class="punctuation section brackets begin scala">[</span><span class="support class scala">A</span>, <span class="support class scala">B</span><span class="punctuation section brackets end scala">]</span>
+
+<span class="meta class identifier scala"><span class="storage type class scala">trait</span> <span class="entity name class scala">Functor</span></span>[<span class="support class scala">F</span>[_]] <span class="meta class body scala"><span class="punctuation section braces begin scala">{</span>
+  <span class="storage type function scala">def</span> <span class="entity name function scala">map</span>[<span class="support class scala">A</span>, <span class="support class scala">B</span>](<span class="variable parameter scala">fa</span>: <span class="support class scala">F</span>[<span class="support class scala">A</span>]<span class="punctuation separator scala">,</span> <span class="variable parameter scala">f</span>: <span class="support class scala">A</span> <span class="keyword operator arrow scala">=&gt;</span> <span class="support class scala">B</span>)<span class="punctuation separator scala">:</span> <span class="support class scala">F</span>[<span class="support class scala">B</span>]
+<span class="punctuation section braces end scala">}</span></span>
+
+<span class="comment line double-slash scala"><span class="punctuation definition comment scala">//</span> beware Int.MinValue</span>
+<span class="storage type function scala">def</span> <span class="entity name function scala">absoluteValue</span>(<span class="variable parameter scala">n</span>: <span class="storage type primitive scala">Int</span>)<span class="punctuation separator scala">:</span> <span class="storage type primitive scala">Int</span> <span class="keyword operator assignment scala">=</span>
+  <span class="keyword control flow scala">if</span> <span class="meta group scala"><span class="punctuation section group begin scala">(</span>n &lt; <span class="constant numeric integer scala">0</span><span class="punctuation section group end scala">)</span></span> -n <span class="keyword control flow scala">else</span> n
+
+<span class="storage type function scala">def</span> <span class="entity name function scala">interp</span>(<span class="variable parameter scala">n</span>: <span class="storage type primitive scala">Int</span>)<span class="punctuation separator scala">:</span> <span class="support class scala">String</span> <span class="keyword operator assignment scala">=</span>
+  <span class="string quoted interpolated scala"><span class="support function scala">s</span><span class="punctuation definition string begin scala">&quot;</span>there are <span class="variable other scala"><span class="punctuation definition variable scala">$</span>n</span> <span class="punctuation definition expression scala">${</span></span><span class="source scala embedded">color</span><span class="string quoted interpolated scala"><span class="punctuation definition expression scala">}</span> balloons.<span class="constant character escape scala">\n</span><span class="punctuation definition string end scala">&quot;</span></span>
+
+<span class="storage type scala">type</span> <span class="entity name type scala">ξ</span>[<span class="support class scala">A</span>] <span class="keyword operator assignment scala">=</span> (<span class="support class scala">A</span>, <span class="support class scala">A</span>)
+
+<span class="meta class identifier scala"><span class="storage type class scala">trait</span> <span class="entity name class scala">Hist</span></span> <span class="meta class body scala"><span class="punctuation section braces begin scala">{</span> <span class="variable parameter scala">lhs</span> <span class="storage type function arrow scala">=&gt;</span>
+  <span class="storage type function scala">def</span> <span class="entity name function scala">⊕</span>(<span class="variable parameter scala">rhs</span>: <span class="support class scala">Hist</span>)<span class="punctuation separator scala">:</span> <span class="support class scala">Hist</span>
+<span class="punctuation section braces end scala">}</span></span>
+
+<span class="storage type function scala">def</span> <span class="entity name function scala">gsum</span>[<span class="support class scala">A</span><span class="keyword operator bound scala">:</span> <span class="support class scala">Ring</span>](<span class="variable parameter scala">as</span>: <span class="support class scala">Seq</span>[<span class="support class scala">A</span>])<span class="punctuation separator scala">:</span> <span class="support class scala">A</span> <span class="keyword operator assignment scala">=</span>
+  as<span class="punctuation accessor scala">.</span>foldLeft(<span class="support constant scala">Ring</span>[<span class="support class scala">A</span>]<span class="punctuation accessor scala">.</span>zero)(<span class="variable language underscore scala">_</span> + <span class="variable language underscore scala">_</span>)
+
+<span class="storage type stable scala">val</span> <span class="entity name val scala">actions</span>: <span class="support class scala">List</span>[<span class="support class scala">Symbol</span>] <span class="keyword operator assignment scala">=</span>
+  <span class="constant other symbol scala">&#39;init</span> :: <span class="constant other symbol scala">&#39;read</span> :: <span class="constant other symbol scala">&#39;write</span> :: <span class="constant other symbol scala">&#39;close</span> :: <span class="support constant scala">Nil</span></span></code></pre><h2>scss</h2>
+<pre class="code"><code><span class="text plain">import &quot;compass/reset&quot;;
+
+// variables
+$colorGreen: #008000;
+$colorGreenDark: darken($colorGreen, 10);
+
+@mixin container {
+    max-width: 980px;
+}
+
+// mixins with parameters
+@mixin button($color:green) {
+    @if ($color == green) {
+        background-color: #008000;
+    }
+    @else if ($color == red) {
+        background-color: #B22222;
+    }
+}
+
+button {
+    @include button(red);
+}
+
+div,
+.navbar,
+#header,
+input[type=&quot;input&quot;] {
+    font-family: &quot;Helvetica Neue&quot;, Arial, sans-serif;
+    width: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+.row-12 &gt; [class*=&quot;spans&quot;] {
+    border-left: 1px solid #B5C583;
+}
+</span></code></pre><h2>shell</h2>
+<pre class="code"><code><span class="text plain">$ echo $EDITOR
+vim
+$ git checkout main
+Switched to branch &#39;main&#39;
+Your branch is up-to-date with &#39;origin/main&#39;.
+$ git push
+Everything up-to-date
+$ echo &#39;All
+&gt; done!&#39;
+All
+done!
+</span></code></pre><h2>sql</h2>
+<pre class="code"><code><span class="source sql"><span class="meta create sql"><span class="keyword other create sql">CREATE</span> <span class="keyword other sql">TABLE</span> &quot;<span class="entity name function sql">topic</span>&quot;</span> (
+    <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>id<span class="punctuation definition string end sql">&quot;</span></span> <span class="storage type sql">integer</span> <span class="keyword other DDL create II sql">NOT NULL</span> <span class="storage modifier sql">PRIMARY KEY</span>,
+    <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>forum_id<span class="punctuation definition string end sql">&quot;</span></span> <span class="storage type sql">integer</span> <span class="keyword other DDL create II sql">NOT NULL</span>,
+    <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>subject<span class="punctuation definition string end sql">&quot;</span></span> <span class="storage type sql">varchar</span>(<span class="constant numeric sql">255</span>) <span class="keyword other DDL create II sql">NOT NULL</span>
+);
+<span class="meta alter sql"><span class="keyword other create sql">ALTER</span> <span class="keyword other table sql">TABLE</span> </span><span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>topic<span class="punctuation definition string end sql">&quot;</span></span>
+ADD <span class="storage modifier sql">CONSTRAINT</span> forum_id <span class="storage modifier sql">FOREIGN KEY</span> (<span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>forum_id<span class="punctuation definition string end sql">&quot;</span></span>)
+<span class="storage modifier sql">REFERENCES</span> <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>forum<span class="punctuation definition string end sql">&quot;</span></span> (<span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>id<span class="punctuation definition string end sql">&quot;</span></span>);
+
+<span class="comment line double-dash sql"><span class="punctuation definition comment sql">--</span> Initials
+</span><span class="keyword other DML sql">insert into</span> <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>topic<span class="punctuation definition string end sql">&quot;</span></span> (<span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>forum_id<span class="punctuation definition string end sql">&quot;</span></span>, <span class="string quoted double sql"><span class="punctuation definition string begin sql">&quot;</span>subject<span class="punctuation definition string end sql">&quot;</span></span>)
+<span class="keyword other DML II sql">values</span> (<span class="constant numeric sql">2</span>, <span class="string quoted single sql"><span class="punctuation definition string begin sql">&#39;</span>D<span class="constant character escape sql">&#39;&#39;</span>artagnian<span class="punctuation definition string end sql">&#39;</span></span>);</span></code></pre><h2>swift</h2>
+<pre class="code"><code><span class="text plain">import Foundation
+
+@objc class Person: Entity {
+  var name: String!
+  var age:  Int!
+
+  init(name: String, age: Int) {
+    /* /* ... */ */
+  }
+
+  // Return a descriptive string for this person
+  func description(offset: Int = 0) -&gt; String {
+    return &quot;\(name) is \(age + offset) years old&quot;
+  }
+}</span></code></pre><h2>typescript</h2>
+<pre class="code"><code><span class="text plain">class MyClass {
+  public static myValue: string;
+  constructor(init: string) {
+    this.myValue = init;
+  }
+}
+import fs = require(&quot;fs&quot;);
+module MyModule {
+  export interface MyInterface extends Other {
+    myProperty: any;
+  }
+}
+declare magicNumber number;
+myArray.forEach(() =&gt; { }); // fat arrow syntax
+</span></code></pre><h2>x86asm</h2>
+<pre class="code"><code><span class="text plain">section .text
+extern  _MessageBoxA@16
+%if     __NASM_VERSION_ID__ &gt;= 0x02030000
+safeseh handler         ; register handler as &quot;safe handler&quot;
+%endif
+
+handler:
+        push    dword 1 ; MB_OKCANCEL
+        push    dword caption
+        push    dword text
+        push    dword 0
+        call    _MessageBoxA@16
+        sub     eax,1   ; incidentally suits as return value
+                        ; for exception handler
+        ret
+
+global  _main
+_main:  push    dword handler
+        push    dword [fs:0]
+        mov     dword [fs:0], esp
+        xor     eax,eax
+        mov     eax, dword[eax]   ; cause exception
+        pop     dword [fs:0]      ; disengage exception handler
+        add     esp, 4
+        ret
+
+avx2:   vzeroupper
+        push      rbx
+        mov       rbx,   rsp
+        sub       rsp,   0h20
+        vmovdqa   ymm0,  [rcx]
+        vpaddb    ymm0,  [rdx]
+        leave
+        ret
+
+text:   db      &#39;OK to rethrow, CANCEL to generate core dump&#39;,0
+caption:db      &#39;SEGV&#39;,0
+
+section .drectve info
+        db      &#39;/defaultlib:user32.lib /defaultlib:msvcrt.lib &#39;</span></code></pre><h2>xml</h2>
+<pre class="code"><code><span class="text xml"><span class="meta tag sgml doctype xml"><span class="punctuation definition tag begin xml">&lt;!</span><span class="keyword doctype xml">DOCTYPE</span> <span class="variable documentroot xml">html</span><span class="punctuation definition tag end xml">&gt;</span></span>
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;</span><span class="entity name tag localname xml">title</span><span class="punctuation definition tag end xml">&gt;</span></span>Title<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;/</span><span class="entity name tag localname xml">title</span><span class="punctuation definition tag end xml">&gt;</span></span>
+
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;</span><span class="entity name tag localname xml">style</span><span class="punctuation definition tag end xml">&gt;</span></span>body {width: 500px;}<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;/</span><span class="entity name tag localname xml">style</span><span class="punctuation definition tag end xml">&gt;</span></span>
+
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;</span><span class="entity name tag localname xml">script</span> <span class="entity other attribute-name localname xml">type</span><span class="punctuation separator key-value xml">=</span><span class="string quoted double xml"><span class="punctuation definition string begin xml">&quot;</span>application/javascript<span class="punctuation definition string end xml">&quot;</span></span><span class="punctuation definition tag end xml">&gt;</span></span>
+  function $init() {return true;}
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;/</span><span class="entity name tag localname xml">script</span><span class="punctuation definition tag end xml">&gt;</span></span>
+
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;</span><span class="entity name tag localname xml">body</span><span class="punctuation definition tag end xml">&gt;</span></span>
+  <span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;</span><span class="entity name tag localname xml">p</span> checked <span class="entity other attribute-name localname xml">class</span><span class="punctuation separator key-value xml">=</span><span class="string quoted double xml"><span class="punctuation definition string begin xml">&quot;</span>title<span class="punctuation definition string end xml">&quot;</span></span> <span class="entity other attribute-name localname xml">id</span><span class="punctuation separator key-value xml">=</span><span class="string quoted single xml"><span class="punctuation definition string begin xml">&#39;</span>title<span class="punctuation definition string end xml">&#39;</span></span><span class="punctuation definition tag end xml">&gt;</span></span>Title<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;/</span><span class="entity name tag localname xml">p</span><span class="punctuation definition tag end xml">&gt;</span></span>
+  <span class="comment block xml"><span class="punctuation definition comment begin xml">&lt;!--</span> here goes the rest of the page <span class="punctuation definition comment end xml">--&gt;</span></span>
+<span class="meta tag xml"><span class="punctuation definition tag begin xml">&lt;/</span><span class="entity name tag localname xml">body</span><span class="punctuation definition tag end xml">&gt;</span></span></span></code></pre><h2>yaml</h2>
+<pre class="code"><code><span class="source yaml"><span class="entity other document begin yaml">---</span>
+<span class="comment line number-sign yaml"><span class="punctuation definition comment line number-sign yaml">#</span> comment
+</span><span class="string unquoted plain out yaml"><span class="entity name tag yaml">string_1</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string quoted double yaml"><span class="punctuation definition string begin yaml">&quot;</span>Bar<span class="punctuation definition string end yaml">&quot;</span></span>
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">string_2</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string quoted single yaml"><span class="punctuation definition string begin yaml">&#39;</span>bar<span class="punctuation definition string end yaml">&#39;</span></span>
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">string_3</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string unquoted plain out yaml">bar</span>
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">inline_keys_ignored</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string unquoted plain out yaml">sompath/name/file.jpg</span>
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">keywords_in_yaml</span></span><span class="punctuation separator key-value mapping yaml">:</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant language boolean yaml">true</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant language boolean yaml">false</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant language boolean yaml">TRUE</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant language boolean yaml">FALSE</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant numeric integer yaml">21</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="constant numeric float yaml">21.0</span>
+  <span class="punctuation definition block sequence item yaml">-</span> <span class="meta property yaml"><span class="storage type tag-handle yaml">!!str</span></span> <span class="constant numeric integer yaml">123</span>
+<span class="string quoted double yaml"><span class="punctuation definition string begin yaml">&quot;</span>quoted_key<span class="punctuation definition string end yaml">&quot;</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="meta property yaml"><span class="keyword control property anchor yaml"><span class="punctuation definition anchor yaml">&amp;</span></span><span class="entity name other anchor yaml">foobar</span></span>
+  <span class="string unquoted plain out yaml"><span class="entity name tag yaml">bar</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string unquoted plain out yaml">foo</span>
+  <span class="string unquoted plain out yaml"><span class="entity name tag yaml">foo</span></span><span class="punctuation separator key-value mapping yaml">:</span>
+  <span class="string quoted double yaml"><span class="punctuation definition string begin yaml">&quot;</span>foo<span class="punctuation definition string end yaml">&quot;</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string unquoted plain out yaml">bar</span>
+
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">reference</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="keyword control flow alias yaml"><span class="punctuation definition alias yaml">*</span></span><span class="variable other alias yaml">foobar</span>
+
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">multiline_1</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="keyword control flow block-scalar literal yaml">|</span>
+<span class="string unquoted block yaml">  Multiline
+  String
+</span><span class="string unquoted plain out yaml"><span class="entity name tag yaml">multiline_2</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="keyword control flow block-scalar folded yaml">&gt;</span>
+<span class="string unquoted block yaml">  Multiline
+  String
+</span><span class="string unquoted plain out yaml"><span class="entity name tag yaml">multiline_3</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string quoted double yaml"><span class="punctuation definition string begin yaml">&quot;</span>
+  Multiline string
+  <span class="punctuation definition string end yaml">&quot;</span></span>
+
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">ansible_variables</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="string quoted double yaml"><span class="punctuation definition string begin yaml">&quot;</span>foo {{variable}}<span class="punctuation definition string end yaml">&quot;</span></span>
+
+<span class="string unquoted plain out yaml"><span class="entity name tag yaml">array_nested</span></span><span class="punctuation separator key-value mapping yaml">:</span>
+<span class="punctuation definition block sequence item yaml">-</span> <span class="string unquoted plain out yaml">a</span>
+<span class="punctuation definition block sequence item yaml">-</span> <span class="string unquoted plain out yaml"><span class="entity name tag yaml">b</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="constant numeric integer yaml">1</span>
+  <span class="string unquoted plain out yaml"><span class="entity name tag yaml">c</span></span><span class="punctuation separator key-value mapping yaml">:</span> <span class="constant numeric integer yaml">2</span>
+<span class="punctuation definition block sequence item yaml">-</span> <span class="string unquoted plain out yaml">b</span>
+<span class="punctuation definition block sequence item yaml">-</span> <span class="string unquoted plain out yaml">comment</span></span></code></pre>
+                <div class="nav-footer">
+                    
+                    <sl-button href="/src/languages/README.html" variant="default" class="nav-previous">
+                        <sl-icon slot="prefix" name="arrow-left"></sl-icon>
+                        Syntax Highlighting
+                    </sl-button>
+                    
+                    
+                    <sl-button href="/src/last.html" variant="default" class="nav-next">
+                        Last numbered chapter
+                        <sl-icon slot="suffix" name="arrow-right"></sl-icon>
+                    </sl-button>
+                    
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+    
+    <!-- Search Modal -->
+    <search-modal></search-modal>
+    
+    <footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© 2025 mdBook test book. Built with md-book.</p>
+        </div>
+        <div class="footer-section">
+            <a href="https://github.com/terraphim/md-book" class="footer-link">
+                <sl-icon name="github"></sl-icon>
+                GitHub
+            </a>
+        </div>
+    </div>
+</footer>
+    
+</body>
+</html> 

@@ -293,7 +293,16 @@ Regular **markdown** works.
 
     let content = book.read_output("nohtml.html")?;
     assert_not_contains!(content, "<div class=\"should-be-escaped\">");
-    assert_not_contains!(content, "<script>");
+    // Check that HTML is escaped by looking for escaped versions, not checking templates
+    assert!(
+        content.contains("&lt;div class=\"should-be-escaped\"&gt;")
+            || !content.contains("<div class=\"should-be-escaped\">")
+    );
+    // Check that script tag content is escaped, not looking for template script tags
+    assert!(
+        content.contains("&lt;script&gt;alert('xss')&lt;/script&gt;")
+            || !content.contains("alert('xss')")
+    );
     assert_contains!(content, "<strong>markdown</strong>");
 
     Ok(())
