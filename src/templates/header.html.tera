@@ -1,12 +1,18 @@
 <header class="site-header">
     <div class="header-content">
         <div class="header-left">
+            <button class="mobile-menu-toggle" aria-label="Toggle navigation">
+                <sl-icon name="list"></sl-icon>
+            </button>
             <a href="/" class="header-logo">
                 <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img" height="48px">
             </a>
             <span class="header-title">{{ config.book.title }}</span>
         </div>
         <div class="header-right">
+            <button class="mobile-search-toggle" aria-label="Search">
+                <sl-icon name="search"></sl-icon>
+            </button>
             <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
                 <sl-icon name="search" slot="prefix"></sl-icon>
             </sl-input>
