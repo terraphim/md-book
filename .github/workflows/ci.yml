@@ -51,7 +51,7 @@ jobs:
           components: rustfmt, clippy
           
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -65,7 +65,7 @@ jobs:
             ${{ runner.os }}-cargo-
             
       - name: Cache Bun dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.bun/install/cache
           key: ${{ runner.os }}-bun-${{ hashFiles('**/bun.lockb', '**/package.json') }}
@@ -141,7 +141,7 @@ jobs:
           targets: wasm32-unknown-unknown
           
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -194,7 +194,7 @@ jobs:
           fi
           
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -227,7 +227,7 @@ jobs:
         uses: dtolnay/rust-toolchain@1.70.0  # Adjust based on actual MSRV
         
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -259,7 +259,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         
       - name: Cache Cargo dependencies and tools
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -300,7 +300,7 @@ jobs:
           components: llvm-tools-preview
           
       - name: Cache Cargo dependencies and tools
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -347,7 +347,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
@@ -365,7 +365,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y bc jq
         
       - name: Cache benchmark results
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: benchmark-results/
           key: ${{ runner.os }}-benchmarks-${{ github.base_ref || github.ref_name }}
@@ -468,7 +468,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         
       - name: Cache Cargo dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
