@@ -36,7 +36,7 @@ MD-Book is the next-generation documentation generator for Rust projects. Built 
 
 ### Installation
 ```bash
-cargo install md-book
+cargo install --git https://github.com/terraphim/md-book.git
 ```
 
 ### Basic Usage
