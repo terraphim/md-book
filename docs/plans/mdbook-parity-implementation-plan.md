@@ -21,6 +21,7 @@ through md-book's own stack. Five increments, each independently shippable:
 | C | CLI subcommands + book-directory resolution | 1.5-2 d | `md-book build ./mybook`, `book.src`, `build.build-dir` |
 | D | Output-correctness defects (P1) | 2-2.5 d | Relocatable, offline, anchorable output |
 | E | Renderer polish (P3) | 2-3 d | Themes, print, redirects, fold, shortcuts, conditional mermaid |
+| G | Page metadata and skip link | 0.5-1 d | Description, canonical URL, skip link, search gating (recovers `stash@{0}`) |
 
 The `pulldown-cmark` backend (approved as a feature-flagged second parser) is designed here as
 **increment F** and specified at interface level only; it is sequenced after E and gets its own
@@ -55,6 +56,8 @@ targets exactly one stage.
   shortcuts, and loading mermaid only on pages that contain a diagram (E7).
 - Warnings for parsed-but-unsupported config keys (`config::unsupported_keys_in`), reported per
   file and only for keys the author actually set.
+- Per-page `<meta name="description">`, `<link rel="canonical">`, a skip link, and search UI
+  gated on a Pagefind index actually existing (increment G).
 - Structural conformance fixtures over `test_book_mdbook/`.
 - Interface-level design for the `pulldown-cmark` backend (increment F).
 
@@ -618,6 +621,66 @@ code-sample guard and both print-page directions.
 
 **Gate:** theme choice persists across pages; `print.html` contains every chapter in book order;
 a page with no diagram references no mermaid script.
+
+### Increment G -- page metadata and skip link (0.5-1 d)
+
+Recovers the work sitting in `stash@{0}` and finishes it. The stash was written against the
+pre-increment-A monolith, so it **cannot be popped**: `src/core.rs` no longer contains the
+functions its hunks patch, and all three templates it touches were rewritten by C-E. It is a
+source to salvage from, not a change to replay. Two of its items have already landed
+independently (the `lang` attribute and the header `aria-label`s), so only four remain.
+
+**What is missing today** (verified, not assumed):
+
+| Item | State on the branch |
+|------|--------------------|
+| `<meta name="description">` | absent; nothing derives a per-page description |
+| `<link rel="canonical">` | absent; `book.base_url` and `output.html.site-url` both parse and are unused |
+| Skip link + `id` on the article | absent; keyboard users cannot bypass the sidebar |
+| Search gating | absent; the search modal loads even when no Pagefind index exists |
+
+**G1. Per-page description** -- `src/render/meta.rs`. Salvage `extract_description` and
+`first_plaintext_paragraph` from the stash, but **not** their implementation: the stashed version
+does `.map(|c| if c.is_ascii() { c } else { ' ' })`, which turns "café" into "caf ". Derive the
+text from the parsed mdast instead -- take the first `Paragraph` node and concatenate its `Text`
+descendants -- so emphasis, links and inline code flatten correctly and Unicode survives.
+`book::flatten_title` already does the equivalent for titles and is the model to follow.
+Precedence: first paragraph, then `book.description`, then the book title. *Est:* 3 h.
+
+**G2. Canonical URLs, and reconcile the two config keys** -- md-book has a local `book.base_url`
+and mdBook's `output.html.site-url`; both parse, neither is used. Prefer `site-url` (the
+mdBook-compatible spelling), accept `base_url` as a deprecated alias, and warn when both are set
+and disagree. `canonical_url(base, page_path)` joins them with exactly one separator. Absent
+config means no `<link rel="canonical">` at all -- never emit a relative canonical, which is
+worse than none. *Est:* 2 h.
+
+**G3. Skip link** -- `<a class="skip-link" href="#main-content">` as the first focusable element,
+`id="main-content"` on `<article>`, and the `.skip-link` rule (visually hidden until focused)
+salvaged from the stash's `styles.css` hunk. Applies to page, index and 404; the print page has
+no sidebar to skip. *Est:* 1 h.
+
+**G4. Search gating** -- restore `search_index_available(output_dir)` (checks for
+`pagefind/pagefind.js`) and pass `search_enabled` into the templates, so the modal and its
+scripts are omitted when no index was produced. This matters more since increment D: Pagefind is
+optional and its absence currently ships a search box that silently does nothing. *Est:* 2 h.
+
+Tests:
+
+| Test | Purpose |
+|------|---------|
+| `test_description_from_first_paragraph` | Precedence, and that markup flattens |
+| `test_description_preserves_non_ascii` | Guards the defect in the stashed implementation |
+| `test_description_falls_back_to_book_then_title` | Both fallbacks |
+| `test_canonical_absent_without_site_url` | No config, no canonical tag |
+| `test_canonical_joins_site_url_once` | Trailing/leading slash handling |
+| `test_base_url_alias_warns_when_it_disagrees` | Deprecated alias behaviour |
+| `test_skip_link_is_first_focusable_and_targets_article` | Structural, on built output |
+| `test_search_modal_omitted_without_index` | Gating both ways |
+
+**Gate:** a built page carries a description and (with `site-url` set) a canonical URL; the skip
+link is the first focusable element and its target exists; with no Pagefind index, no search UI
+is emitted. After this lands, `stash@{0}` can be dropped -- record that explicitly rather than
+leaving it to rot.
 
 ### Increment F -- `pulldown-cmark` backend (designed only; separate cycle)
 

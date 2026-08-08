@@ -300,6 +300,12 @@ Consequence: increments C-E rewrote the same templates from the committed base, 
 stash will conflict, and its SEO work is still absent from the branch. Treat the stash as
 outstanding work, not as shipped behaviour.
 
+**Replanned**: that work is now scoped as **increment G** in the implementation plan (per-page
+description, canonical URL, skip link, search gating). The stash cannot be popped -- its
+`src/core.rs` hunks patch functions that no longer exist after increment A -- so G salvages the
+intent, fixes the non-ASCII defect in its description extractor, and reconciles the two competing
+absolute-URL config keys. Once G lands, `stash@{0}` should be dropped.
+
 ### Assumptions Explicitly Stated
 
 | Assumption | Basis | Risk if wrong | Verified? |
