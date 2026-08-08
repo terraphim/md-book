@@ -31,6 +31,9 @@ html-escape = "0.2.13"
 # Embeds the vendored Shoelace tree so generated books need no network and no
 # templates directory on disk.
 include_dir = "0.7.4"
+# Reads book.toml back as a document so unsupported keys can be reported by
+# name only when the author actually set them.
+toml = "0.8"
 twelf = { version = "0.15.0", features = ["env", "toml", "json", "shellexpand"] }
 
 # Optional dependencies for native builds only

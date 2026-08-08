@@ -134,6 +134,11 @@ pub fn render_page(
     context.insert("path_to_root", &root);
     // Gates the mermaid bundle: 2.9MB that most pages never need.
     context.insert("has_mermaid", &has_mermaid);
+    context.insert("default_theme", &config.output.html.default_theme_name());
+    context.insert(
+        "preferred_dark_theme",
+        &config.output.html.preferred_dark_theme_name(),
+    );
 
     let rendered = tera
         .render("page", &context)
@@ -161,6 +166,11 @@ pub fn render_index(
     context.insert("config", &config);
     context.insert("sections", &sections);
     context.insert("has_mermaid", &has_mermaid);
+    context.insert("default_theme", &config.output.html.default_theme_name());
+    context.insert(
+        "preferred_dark_theme",
+        &config.output.html.preferred_dark_theme_name(),
+    );
     context.insert("current_path", &"index.html");
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);

@@ -263,38 +263,10 @@ async fn main_impl() -> Result<()> {
     Ok(())
 }
 
+// Single loader in the library: it carries the defaults fill and the
+// unsupported-key warnings, which a duplicate here would silently skip.
 fn load_config_resolved(book_dir: Option<&Path>, config_path: Option<&str>) -> Result<BookConfig> {
-    use twelf::Layer;
-    let mut layers = vec![Layer::Env(Some("MDBOOK_".to_string()))];
-
-    if let Some(dir) = book_dir {
-        let candidate = dir.join("book.toml");
-        if candidate.exists() {
-            layers.push(Layer::Toml(candidate));
-        }
-    } else if Path::new("book.toml").exists() {
-        layers.push(Layer::Toml("book.toml".into()));
-    }
-
-    if let Some(path) = config_path {
-        if Path::new(path).exists() {
-            if Path::new(path)
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
-            {
-                layers.push(Layer::Toml(path.into()));
-            } else if Path::new(path)
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
-            {
-                layers.push(Layer::Json(path.into()));
-            } else {
-                anyhow::bail!("Unsupported config file type: {}", path);
-            }
-        }
-    }
-
-    BookConfig::with_layers(&layers).context("Failed to load configuration")
+    md_book::config::load_config_from(book_dir, config_path).context("Failed to load configuration")
 }
 
 fn resolve_paths(cli: &Cli, book_dir: Option<&Path>, config: &BookConfig) -> Result<BookPaths> {

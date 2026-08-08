@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="{{ config.book.language }}">
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +10,7 @@
     <link rel="stylesheet" href="{{ path_to_root }}vendor/shoelace/themes/light.css" />
     <script type="module" src="{{ path_to_root }}vendor/shoelace/shoelace-local.js"></script>
     <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
     <link rel="stylesheet" href="{{ path_to_root }}css/search.css">
     <script type="module" src="{{ path_to_root }}components/simple-block.js"></script>
     <script src="{{ path_to_root }}js/pagefind-search.js" type="module"></script>
@@ -54,5 +57,8 @@
     
     <!-- Search Modal -->
     <search-modal></search-modal>
+    <script src="{{ path_to_root }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root }}js/keyboard.js"></script>
+    <script src="{{ path_to_root }}js/code-copy.js"></script>
 </body>
 </html> 

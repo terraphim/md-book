@@ -3,11 +3,13 @@
         <div class="footer-section">
             <p class="copyright">© {{ year }} {{ config.book.title }}. Built with md-book.</p>
         </div>
+        {% if config.book.github_url %}
         <div class="footer-section">
-            <a href="{{ config.book.github_url }}" class="footer-link">
+            <a href="{{ config.book.github_url }}" class="footer-link" target="_blank" rel="noopener">
                 <sl-icon name="github"></sl-icon>
                 GitHub
             </a>
         </div>
+        {% endif %}
     </div>
 </footer>

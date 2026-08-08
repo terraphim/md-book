@@ -190,6 +190,12 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("config", &config);
         ctx.insert("path_to_root", &"");
         ctx.insert("year", &current_year);
+        ctx.insert("default_theme", &config.output.html.default_theme_name());
+        ctx.insert(
+            "preferred_dark_theme",
+            &config.output.html.preferred_dark_theme_name(),
+        );
+
         match tera.render("404", &ctx) {
             Ok(html) => {
                 if let Err(e) = fs::write(format!("{}/404.html", args.output), html) {
@@ -286,6 +292,12 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("print_chapters", &print_chapters);
         ctx.insert("page_break", &config.output.html.print.page_break);
         ctx.insert("has_mermaid", &print_has_mermaid);
+        ctx.insert("default_theme", &config.output.html.default_theme_name());
+        ctx.insert(
+            "preferred_dark_theme",
+            &config.output.html.preferred_dark_theme_name(),
+        );
+
         if let Ok(html) = tera.render("print", &ctx) {
             let _ = fs::write(format!("{}/print.html", args.output), html);
         }

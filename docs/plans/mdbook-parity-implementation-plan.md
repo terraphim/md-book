@@ -53,7 +53,8 @@ targets exactly one stage.
 - Themes (light/dark/ayu/coal/navy toggle), configurable syntect theme, print page,
   `additional-css` / `additional-js`, `[output.html.redirect]`, `[output.html.fold]`, keyboard
   shortcuts, and loading mermaid only on pages that contain a diagram (E7).
-- Warnings for parsed-but-unsupported config keys.
+- Warnings for parsed-but-unsupported config keys (`config::unsupported_keys_in`), reported per
+  file and only for keys the author actually set.
 - Structural conformance fixtures over `test_book_mdbook/`.
 - Interface-level design for the `pulldown-cmark` backend (increment F).
 
@@ -557,8 +558,12 @@ existing IDs instead of minting them. *Est:* 5 h.
 
 ### Increment E -- renderer polish (2-3 d) [P3]
 
-**E1. Themes** — `themes.css` custom properties for light/rust/coal/navy/ayu; toggle with
-`localStorage`; `default-theme` / `preferred-dark-theme`. *Est:* 8 h.
+**E1. Themes** — *shipped.* `themes.css` custom properties for light/rust/coal/navy/ayu, a
+`<details>`-based picker in the header (keyboard accessible without script; `theme-switch.js`
+only applies the choice and marks it with `aria-current`), `localStorage` persistence, and
+`default-theme` / `preferred-dark-theme` surfaced as `data-*` attributes on the root element.
+Browser-verified: selecting Coal sets `data-theme`, computed `background` becomes `#141617`,
+the choice survives navigation, and the picker closes on select. *Est:* 8 h.
 **E2. Configurable syntax theme** — `output.html.syntax-theme`, replacing the hard-coded
 `"Solarized (light)"` (`core.rs:242`); a light and a dark stylesheet emitted. *Deps:* E1.
 *Est:* 3 h.

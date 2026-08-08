@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ config.book.language }}">
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
 <head>
   <meta charset="utf-8">
   <title>{{ config.book.title }} — Print</title>
   <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
   <link rel="stylesheet" href="{{ path_to_root }}css/syntax.css">
   <style>
     @media print {

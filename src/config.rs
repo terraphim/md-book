@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use serde::{Deserialize, Serialize};
 use twelf::{config, Layer};
 
@@ -181,6 +183,20 @@ impl Default for PrintConfig {
     }
 }
 
+impl HtmlOutput {
+    /// Theme applied when the reader has expressed no preference.
+    #[must_use]
+    pub fn default_theme_name(&self) -> &str {
+        self.default_theme.as_deref().unwrap_or("light")
+    }
+
+    /// Theme applied when the OS reports a dark colour-scheme preference.
+    #[must_use]
+    pub fn preferred_dark_theme_name(&self) -> &str {
+        self.preferred_dark_theme.as_deref().unwrap_or("navy")
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct PlaygroundConfig {
@@ -285,35 +301,177 @@ fn default_templates_dir() -> String {
     "templates".to_string()
 }
 
+/// A configuration key md-book accepts but does not act on.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnsupportedKey {
+    /// Dotted path as it appears in `book.toml`.
+    pub path: String,
+    /// Why it has no effect.
+    pub reason: &'static str,
+}
+
+/// Keys that parse but change nothing, with the reason to report.
+///
+/// A prefix entry covers its whole table: `output.html.playground` also reports
+/// `output.html.playground.editable`.
+const UNSUPPORTED: &[(&str, &str)] = &[
+    (
+        "output.html.mathjax-support",
+        "MathJax rendering is not implemented",
+    ),
+    (
+        "output.html.playground",
+        "the Rust Playground runtime is out of scope for md-book",
+    ),
+    (
+        "output.html.syntax-theme",
+        "not implemented yet; the syntect theme is currently fixed",
+    ),
+    (
+        "output.html.additional-css",
+        "not implemented yet; extra stylesheets are not copied or injected",
+    ),
+    (
+        "output.html.additional-js",
+        "not implemented yet; extra scripts are not copied or injected",
+    ),
+    (
+        "output.html.fold",
+        "not implemented yet; the sidebar does not fold",
+    ),
+    (
+        "output.html.search.use-boolean-and",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+    (
+        "output.html.search.boost-title",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+    (
+        "output.html.search.boost-hierarchy",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+    (
+        "output.html.search.boost-paragraph",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+    (
+        "output.html.search.expand",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+    (
+        "output.html.search.teaser-word-count",
+        "md-book searches with Pagefind, which has no equivalent setting",
+    ),
+];
+
+/// Find unsupported keys the author actually set in a config document.
+///
+/// Works on the parsed document rather than the loaded `BookConfig` because a
+/// deserialised default is indistinguishable from a value the author typed --
+/// warning on defaults would fire for every book.
+#[must_use]
+pub fn unsupported_keys_in(doc: &serde_json::Value) -> Vec<UnsupportedKey> {
+    let mut found = Vec::new();
+
+    for (path, reason) in UNSUPPORTED {
+        let mut cursor = doc;
+        let mut present = true;
+        for segment in path.split('.') {
+            match cursor.get(segment) {
+                Some(next) => cursor = next,
+                None => {
+                    present = false;
+                    break;
+                }
+            }
+        }
+        if present && !cursor.is_null() {
+            found.push(UnsupportedKey {
+                path: (*path).to_string(),
+                reason,
+            });
+        }
+    }
+
+    found
+}
+
+/// Read a config file and report any keys that have no effect.
+///
+/// Failure to read or parse is silent: the layering itself will surface a
+/// genuine problem, and this is only advisory.
+fn warn_unsupported_keys(path: &Path) {
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return;
+    };
+
+    let doc: Option<serde_json::Value> = match path.extension().and_then(|e| e.to_str()) {
+        Some(ext) if ext.eq_ignore_ascii_case("toml") => toml::from_str(&text).ok(),
+        Some(ext) if ext.eq_ignore_ascii_case("json") => serde_json::from_str(&text).ok(),
+        _ => None,
+    };
+    let Some(doc) = doc else { return };
+
+    for key in unsupported_keys_in(&doc) {
+        eprintln!(
+            "warning: {}: '{}' is ignored -- {}",
+            path.display(),
+            key.path,
+            key.reason
+        );
+    }
+}
+
 /// Load configuration from file or use defaults
 ///
 /// # Errors
 ///
 /// Returns an error if the configuration file cannot be read or parsed
 pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
+    load_config_from(None, config_path)
+}
+
+/// Load configuration for a book directory.
+///
+/// Layers, lowest precedence first: `MDBOOK_` environment variables, the
+/// book directory's `book.toml` (or the current directory's when `book_dir` is
+/// `None`), then an explicit config file. Unset scalars are then filled from the
+/// documented defaults, and keys that have no effect are reported.
+///
+/// # Errors
+///
+/// Returns an error if a layer cannot be read or parsed, or if `config_path` has
+/// an extension other than `.toml` or `.json`.
+pub fn load_config_from(
+    book_dir: Option<&Path>,
+    config_path: Option<&str>,
+) -> anyhow::Result<BookConfig> {
     let mut layers = vec![Layer::Env(Some("MDBOOK_".to_string()))];
 
-    // Add default book.toml if it exists
-    if std::path::Path::new("book.toml").exists() {
-        layers.push(Layer::Toml("book.toml".into()));
+    let book_toml = book_dir
+        .map(|dir| dir.join("book.toml"))
+        .unwrap_or_else(|| PathBuf::from("book.toml"));
+    if book_toml.exists() {
+        warn_unsupported_keys(&book_toml);
+        layers.push(Layer::Toml(book_toml));
     }
 
-    // Add custom config file if provided
     if let Some(path) = config_path {
-        if std::path::Path::new(path).exists() {
-            // and is TOML
-            if std::path::Path::new(path)
+        let path = Path::new(path);
+        if path.exists() {
+            let ext = path
                 .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("toml"))
-            {
-                layers.push(Layer::Toml(path.into()));
-            } else if std::path::Path::new(path)
-                .extension()
-                .is_some_and(|ext| ext.eq_ignore_ascii_case("json"))
-            {
-                layers.push(Layer::Json(path.into()));
+                .and_then(|e| e.to_str())
+                .unwrap_or_default();
+            if ext.eq_ignore_ascii_case("toml") {
+                warn_unsupported_keys(path);
+                layers.push(Layer::Toml(path.to_path_buf()));
+            } else if ext.eq_ignore_ascii_case("json") {
+                warn_unsupported_keys(path);
+                layers.push(Layer::Json(path.to_path_buf()));
             } else {
-                anyhow::bail!("Unsupported config file type: {}", path);
+                anyhow::bail!("Unsupported config file type: {}", path.display());
             }
         }
     }
@@ -620,5 +778,89 @@ frontmatter = true
         let output = HtmlOutput::default();
         assert!(!output.mathjax_support);
         assert!(!output.allow_html);
+    }
+}
+
+#[cfg(test)]
+mod unsupported_key_tests {
+    use super::*;
+
+    fn doc(toml_text: &str) -> serde_json::Value {
+        toml::from_str(toml_text).expect("valid toml")
+    }
+
+    #[test]
+    fn test_reports_keys_the_author_set() {
+        let found = unsupported_keys_in(&doc(r#"
+[output.html]
+mathjax-support = true
+syntax-theme = "InspiredGitHub"
+
+[output.html.search]
+boost-title = 5
+"#));
+
+        let paths: Vec<&str> = found.iter().map(|k| k.path.as_str()).collect();
+        assert!(paths.contains(&"output.html.mathjax-support"), "{paths:?}");
+        assert!(paths.contains(&"output.html.syntax-theme"), "{paths:?}");
+        assert!(
+            paths.contains(&"output.html.search.boost-title"),
+            "{paths:?}"
+        );
+    }
+
+    #[test]
+    fn test_silent_for_a_config_that_sets_nothing_unsupported() {
+        let found = unsupported_keys_in(&doc(r#"
+[book]
+title = "Fine"
+language = "en"
+
+[output.html]
+default-theme = "navy"
+no-section-label = true
+"#));
+        assert!(found.is_empty(), "unexpected warnings: {found:?}");
+    }
+
+    #[test]
+    fn test_reports_a_whole_unsupported_table() {
+        let found = unsupported_keys_in(&doc(r#"
+[output.html.playground]
+editable = true
+"#));
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].path, "output.html.playground");
+    }
+
+    #[test]
+    fn test_supported_keys_never_warn() {
+        // Every key md-book acts on must stay silent, or the warning becomes
+        // noise that authors learn to ignore.
+        let found = unsupported_keys_in(&doc(r#"
+[book]
+title = "T"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+site-url = "/docs/"
+input-404 = "404.md"
+preferred-dark-theme = "coal"
+
+[output.html.print]
+enable = true
+
+[output.html.redirect]
+"old.html" = "new.html"
+
+[output.html.search]
+limit-results = 10
+heading-split-level = 2
+"#));
+        assert!(found.is_empty(), "unexpected warnings: {found:?}");
     }
 }

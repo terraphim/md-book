@@ -798,7 +798,8 @@ async fn test_config_defaults_reach_the_page() -> Result<()> {
     book.build().await?;
 
     let html = book.read_output("intro.html")?;
-    assert_contains!(html, "<html lang=\"en\">");
+    // Attribute only: the <html> tag spans lines once theme attributes are added.
+    assert_contains!(html, "lang=\"en\"");
     assert!(
         !html.contains("| </title>"),
         "book title must not be empty in <title>"
@@ -817,6 +818,79 @@ async fn test_config_defaults_reach_the_page() -> Result<()> {
         book.output_path().join(&logo).exists(),
         "logo src {logo} does not exist in the output"
     );
+
+    Ok(())
+}
+
+// ---------------------------------------------------------------------------
+// E1 completion: the theme picker is a real control, not just a stylesheet.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_theme_picker_and_attributes_present() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Intro](intro.md)\n")?;
+    book.create_file("intro.md", "# Intro\n\nBody.\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.default_theme = Some("light".into());
+    config.output.html.preferred_dark_theme = Some("coal".into());
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("intro.html")?;
+
+    // theme-switch.js reads both from the root element.
+    assert_contains!(html, "data-default-theme=\"light\"");
+    assert_contains!(html, "data-preferred-dark-theme=\"coal\"");
+
+    // All five themes are selectable, and the script that applies them is loaded.
+    for theme in ["light", "rust", "coal", "navy", "ayu"] {
+        assert_contains!(html, &format!("data-theme-set=\"{theme}\""));
+    }
+    assert_contains!(html, "js/theme-switch.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_every_page_kind_loads_theme_stylesheet() -> Result<()> {
+    // A page that applies data-theme without themes.css shows the wrong colours,
+    // which is what happened to index.html and print.html.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Home](README.md)\n")?;
+    book.create_file("README.md", "# Home\n\nBody.\n")?;
+    book.build().await?;
+
+    for page in ["index.html", "404.html", "print.html"] {
+        let html = book.read_output(page)?;
+        assert_contains!(html, "css/themes.css");
+        assert_contains!(html, "data-default-theme=");
+    }
+
+    // The index must also carry the behaviour scripts chapter pages get.
+    let index = book.read_output("index.html")?;
+    assert_contains!(index, "js/theme-switch.js");
+    assert_contains!(index, "js/keyboard.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_header_omits_empty_links() -> Result<()> {
+    // With no github_url / github_edit_url_base, the header used to emit
+    // href="" links that resolve to the page itself.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Intro](intro.md)\n")?;
+    book.create_file("intro.md", "# Intro\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("intro.html")?;
+    assert_not_contains!(html, "href=\"\"");
+    assert_not_contains!(html, "src=\"\"");
 
     Ok(())
 }

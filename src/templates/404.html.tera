@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="{{ config.book.language }}">
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
