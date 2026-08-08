@@ -54,21 +54,10 @@ class DocToc extends HTMLElement {
       .replace(/(^-|-$)/g, '');
   }
 
-  // Shadow DOM cannot see the page's stylesheet, and this file is copied
-  // verbatim so it has no access to Tera's path_to_root. Reuse the URL the
-  // document already resolved, so the component works under a sub-path and
-  // over file:// too.
-  stylesHref() {
-    const link = document.querySelector(
-      'link[rel="stylesheet"][href$="css/styles.css"]'
-    );
-    return link ? link.href : 'css/styles.css';
-  }
-
   render() {
     this.shadowRoot.innerHTML = `
       <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
-      <link rel="stylesheet" href="${this.stylesHref()}">
+      <link rel="stylesheet" href="/css/styles.css">
       <style>
         :host {
           display: block;

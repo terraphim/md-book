@@ -383,3 +383,222 @@ async fn test_build_with_search() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Output-contract regression guards (increments B5, D1-D3).
+//
+// These assert the properties that made the P1 defects P1: output must be
+// relocatable (no absolute asset paths), self-contained (no external URLs),
+// deep-linkable (server-side heading IDs) and navigable by screen reader.
+// ---------------------------------------------------------------------------
+
+/// Everything inside `<article>`, i.e. rendered chapter content without the
+/// surrounding chrome (whose headings are template-owned and carry no IDs).
+fn article_of(html: &str) -> &str {
+    let start = html
+        .find("<article")
+        .expect("page template should emit an <article>");
+    let end = html[start..]
+        .find("</article>")
+        .expect("unterminated <article>")
+        + start;
+    &html[start..end]
+}
+
+/// A book exercising nesting, a part title and a draft chapter.
+#[cfg(feature = "tokio")]
+async fn nested_book() -> Result<TestBook> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n\
+         [Preface](preface.md)\n\n\
+         # Part One\n\n\
+         - [Intro](intro.md)\n  \
+           - [Deep](nested/deep.md)\n\
+         - [Draft]()\n",
+    )?;
+    book.create_file("preface.md", "# Preface\n\nBefore we begin.\n")?;
+    book.create_file("intro.md", "# Intro\n\n## A Sub Heading\n\nBody.\n")?;
+    book.create_file("nested/deep.md", "# Deep\n\n## Another Heading\n\nBody.\n")?;
+    book.build().await?;
+    Ok(book)
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_output_has_no_absolute_asset_paths() -> Result<()> {
+    let book = nested_book().await?;
+
+    // Scan everything emitted, not just the pages: copied JS components carry
+    // their own asset references and are just as deployment-sensitive.
+    for entry in walkdir::WalkDir::new(book.output_path())
+        .into_iter()
+        .filter_map(Result::ok)
+    {
+        let path = entry.path();
+        if !matches!(
+            path.extension().and_then(|e| e.to_str()),
+            Some("html") | Some("js")
+        ) {
+            continue;
+        }
+        let text = std::fs::read_to_string(path)?;
+        assert!(
+            !text.contains("href=\"/") && !text.contains("src=\"/"),
+            "{} contains a root-absolute asset path, which breaks sub-path \
+             deployment and file:// viewing",
+            path.display()
+        );
+    }
+
+    // A page one directory down must reach the root by climbing, not by "/".
+    let deep = book.read_output("nested/deep.html")?;
+    assert_contains!(deep, "../css/styles.css");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_output_has_no_external_urls() -> Result<()> {
+    let book = nested_book().await?;
+    let html = book.read_output("intro.html")?;
+
+    // Known, tracked exception: Shoelace is still CDN-loaded (increment D2).
+    // When D2 lands, delete this allowlist and the assertion tightens to
+    // "no external URLs at all" with no further edits.
+    const ALLOWED_EXTERNAL_HOSTS: &[&str] = &["cdn.jsdelivr.net"];
+
+    for (idx, _) in html.match_indices("https://") {
+        let tail = &html[idx..];
+        let end = tail.find(['"', '\'', ' ', '<']).unwrap_or(tail.len());
+        let url = &tail[..end];
+        assert!(
+            ALLOWED_EXTERNAL_HOSTS.iter().any(|h| url.contains(h)),
+            "generated page loads an unexpected external resource: {url}\n\
+             output must work offline"
+        );
+    }
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_headings_have_stable_ids() -> Result<()> {
+    let book = nested_book().await?;
+    let html = book.read_output("intro.html")?;
+    let article = article_of(&html);
+
+    // Every content heading is addressable.
+    for (idx, _) in article.match_indices("<h") {
+        let tag = &article[idx..];
+        if !tag
+            .as_bytes()
+            .get(2)
+            .is_some_and(|b| b.is_ascii_whitespace() || *b == b'>')
+        {
+            continue; // not <h1>..<h6>
+        }
+        let end = tag.find('>').expect("unterminated heading tag");
+        assert!(
+            tag[..end].contains("id="),
+            "content heading without an id breaks cross-page fragment links: {}",
+            &tag[..end]
+        );
+    }
+
+    assert_contains!(article, "id=\"a-sub-heading\"");
+
+    // Stable across rebuilds: the same source must yield the same anchors,
+    // or every external deep link rots on each build.
+    book.build().await?;
+    let rebuilt = book.read_output("intro.html")?;
+    assert_eq!(
+        article_of(&rebuilt),
+        article,
+        "heading IDs must be deterministic across builds"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_sidebar_nesting_and_aria() -> Result<()> {
+    let book = nested_book().await?;
+    let html = book.read_output("intro.html")?;
+
+    assert_contains!(html, "aria-label=\"Book navigation\"");
+    assert_contains!(html, "sidebar-part-title");
+    assert_contains!(html, "aria-current=\"page\"");
+
+    // Drafts are not links, so keyboard users cannot tab into a dead end.
+    assert_contains!(html, "aria-disabled=\"true\"");
+
+    // Genuinely nested lists, not a flat list with indent classes.
+    let nav_start = html.find("sidebar-nav").expect("sidebar missing");
+    let nav = &html[nav_start..];
+    let nav_end = nav.find("</nav>").expect("unterminated nav");
+    let nav = &nav[..nav_end];
+    assert!(
+        nav.matches("<ul").count() >= 2,
+        "sidebar should nest sub-chapters in their own <ul>, got:\n{nav}"
+    );
+    assert_eq!(
+        nav.matches("<ul").count(),
+        nav.matches("</ul>").count(),
+        "unbalanced <ul> in sidebar; open/close deltas are wrong:\n{nav}"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_non_markdown_assets_copied_through() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Intro](intro.md)\n")?;
+    book.create_file("intro.md", "# Intro\n\n![d](img/diagram.svg)\n")?;
+    book.create_file("img/diagram.svg", "<svg></svg>")?;
+    book.create_file("data/sample.csv", "a,b\n1,2\n")?;
+    // Present in src/, absent from SUMMARY.md: must not be published.
+    book.create_file("notes/wip.md", "# Work in progress\n")?;
+
+    book.build().await?;
+
+    assert!(
+        book.output_exists("img/diagram.svg"),
+        "assets must be copied through at the same relative path"
+    );
+    assert!(book.output_exists("data/sample.csv"));
+    assert!(
+        !book.output_exists("notes/wip.html"),
+        "files absent from SUMMARY.md must not be published"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_create_missing_is_idempotent_across_rebuilds() -> Result<()> {
+    // Stands in for the specified watch-suppression test: the suppression
+    // mechanism is not wired up yet (pipeline discards the created paths), so
+    // this asserts the property that makes it self-limiting -- a stub is
+    // written once and never rewritten, so rebuilds converge.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Later](later.md)\n")?;
+
+    book.build().await?;
+    let stub = book.input_dir.join("later.md");
+    assert!(stub.exists(), "create-missing should write the stub");
+
+    std::fs::write(&stub, "# Later\n\nHand-written body.\n")?;
+    book.build().await?;
+
+    assert_contains!(std::fs::read_to_string(&stub)?, "Hand-written body");
+
+    Ok(())
+}

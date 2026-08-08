@@ -85,13 +85,15 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         let html_content =
             crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
 
+        // Prev/next links are relative to this page, like every other URL.
+        let page_root = crate::render::html::path_to_root(output_rel);
         let previous = if idx > 0 {
-            Some(chapter_to_pageinfo(chapters[idx - 1]))
+            Some(chapter_to_pageinfo(chapters[idx - 1], &page_root))
         } else {
             None
         };
         let next = if idx + 1 < chapters.len() {
-            Some(chapter_to_pageinfo(chapters[idx + 1]))
+            Some(chapter_to_pageinfo(chapters[idx + 1], &page_root))
         } else {
             None
         };
@@ -135,7 +137,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         #[cfg(not(feature = "syntax-highlighting"))]
         let html =
             crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
-        (Some(chapter_to_pageinfo(ch)), Some(html))
+        // index.html sits at the build root, so links from it need no prefix.
+        (Some(chapter_to_pageinfo(ch, "")), Some(html))
     } else {
         // Fallback: look for index.md even if not in book (directory edge case)
         let index_path = src_dir.join("index.md");
@@ -287,11 +290,11 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     Ok(())
 }
 
-fn chapter_to_pageinfo(ch: &crate::book::Chapter) -> PageInfo {
+fn chapter_to_pageinfo(ch: &crate::book::Chapter, root: &str) -> PageInfo {
     PageInfo {
         title: flatten_title(&ch.name),
         path: format!(
-            "/{}",
+            "{root}{}",
             ch.output_path
                 .as_ref()
                 .map(|p| p.display().to_string())
@@ -311,7 +314,10 @@ fn legacy_directory_sections(book: &Book) -> Vec<Section> {
             Some(p) => p,
             None => continue,
         };
-        let info = chapter_to_pageinfo(ch);
+        // Deprecated flat `sections` are built once per book, not per page, so
+        // their paths are stored relative to the build root and templates
+        // prefix them with `path_to_root`. Removed in 0.3.0.
+        let info = chapter_to_pageinfo(ch, "");
         let parent = ch
             .source_path
             .as_ref()

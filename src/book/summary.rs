@@ -39,8 +39,11 @@ pub enum SummaryError {
     #[error("SUMMARY.md line {line}: cannot mix '-' and '*' list delimiters")]
     MixedDelimiters { line: usize },
 
-    #[error("SUMMARY.md line {line}: prefix chapter '{title}' appears after numbered chapters")]
-    PrefixAfterNumbered { line: usize, title: String },
+    #[error(
+        "SUMMARY.md line {line}: numbered chapter '{title}' appears after a suffix chapter; \
+         suffix chapters must come last"
+    )]
+    NumberedAfterSuffix { line: usize, title: String },
 
     #[error("SUMMARY.md line {line}: expected a markdown link, found: {text}")]
     Malformed { line: usize, text: String },
@@ -180,7 +183,13 @@ pub fn parse_summary(content: &str) -> Result<Summary, SummaryErrors> {
                         phase = Phase::Numbered;
                     }
                     if matches!(phase, Phase::Suffix) {
-                        summary.suffix.push(SummaryItem::Link(link));
+                        // A list item after a suffix chapter cannot be numbered without
+                        // reordering the book. Report rather than silently absorbing it
+                        // into the suffix, which would drop its section number.
+                        errors.push(SummaryError::NumberedAfterSuffix {
+                            line: line_no,
+                            title: link.name.clone(),
+                        });
                         continue;
                     }
                     while stack.last().map(|e| e.indent >= indent).unwrap_or(false) {
@@ -775,6 +784,32 @@ mod tests {
         let content = "- [A](a.md)\n* [B](b.md)\nnot a link\n";
         let err = parse_summary(content).unwrap_err();
         assert!(err.0.len() >= 2);
+    }
+
+    #[test]
+    fn test_parse_rejects_numbered_after_suffix() {
+        // A bare link after numbered chapters is a suffix chapter; a list item
+        // after that cannot be numbered without reordering the book.
+        let content = "- [One](one.md)\n[Suffix](suffix.md)\n- [Two](two.md)\n";
+        let err = parse_summary(content).unwrap_err();
+
+        let found = err.0.iter().find_map(|e| match e {
+            SummaryError::NumberedAfterSuffix { line, title } => Some((*line, title.clone())),
+            _ => None,
+        });
+        let (line, title) = found.expect("expected NumberedAfterSuffix");
+        assert_eq!(line, 3);
+        assert_eq!(title, "Two");
+    }
+
+    #[test]
+    fn test_parse_accepts_suffix_chapters_in_sequence() {
+        // Regression guard for the fix above: consecutive bare links after the
+        // numbered section are all suffix chapters and must stay valid.
+        let content = "- [One](one.md)\n[First](a.md)\n[Second](b.md)\n";
+        let summary = parse_summary(content).expect("suffix chapters should parse");
+        assert_eq!(summary.suffix.len(), 2);
+        assert_eq!(summary.numbered.len(), 1);
     }
 
     #[test]

@@ -54,6 +54,35 @@ pub fn resolve(
     Ok(BookPaths { root, src, build })
 }
 
+impl BookPaths {
+    /// Verify the resolved source directory actually exists.
+    ///
+    /// Resolution itself is pure; this is the I/O boundary check, called before a
+    /// build so that running `md-book` outside a book directory fails loudly
+    /// instead of emitting an empty book.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error naming the path that was expected, and how to fix it.
+    pub fn validate_for_build(&self, had_input_override: bool) -> Result<()> {
+        if self.src.is_dir() {
+            return Ok(());
+        }
+
+        if had_input_override {
+            anyhow::bail!("input directory does not exist: {}", self.src.display());
+        }
+
+        anyhow::bail!(
+            "no book found in {}\n  \
+             expected a source directory at {}\n  \
+             run `md-book init` to scaffold one, or pass --input <dir>",
+            self.root.display(),
+            self.src.display()
+        )
+    }
+}
+
 /// Scaffold a new book (mdBook-compatible init).
 pub fn init_book(dir: &Path) -> Result<()> {
     use std::fs;
@@ -122,5 +151,43 @@ mod tests {
         let paths = resolve(Some(Path::new("/book")), None, None, &config).unwrap();
         assert_eq!(paths.src, PathBuf::from("/book/src"));
         assert_eq!(paths.build, PathBuf::from("/book/book"));
+    }
+
+    #[test]
+    fn test_validate_errors_when_src_missing() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let config = BookConfig::default();
+        let paths = resolve(Some(dir.path()), None, None, &config).unwrap();
+
+        let err = paths
+            .validate_for_build(false)
+            .expect_err("a directory with no src/ is not a book");
+        let msg = err.to_string();
+        assert!(msg.contains("no book found"), "got: {msg}");
+        assert!(msg.contains("md-book init"), "got: {msg}");
+    }
+
+    #[test]
+    fn test_validate_errors_name_the_input_override() {
+        let config = BookConfig::default();
+        let paths = resolve(None, Some("definitely-not-here"), None, &config).unwrap();
+
+        let err = paths
+            .validate_for_build(true)
+            .expect_err("an explicit --input that does not exist is an error");
+        assert!(
+            err.to_string().contains("definitely-not-here"),
+            "error should name the path the user passed, got: {err}"
+        );
+    }
+
+    #[test]
+    fn test_validate_accepts_existing_src() {
+        let dir = tempfile::TempDir::new().unwrap();
+        std::fs::create_dir_all(dir.path().join("src")).unwrap();
+        let config = BookConfig::default();
+        let paths = resolve(Some(dir.path()), None, None, &config).unwrap();
+
+        assert!(paths.validate_for_build(false).is_ok());
     }
 }

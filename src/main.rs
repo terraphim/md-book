@@ -133,6 +133,7 @@ async fn main_impl() -> Result<()> {
 
     let config = load_config_resolved(book_dir.as_deref(), cli.config.as_deref())?;
     let resolved = resolve_paths(&cli, book_dir.as_deref(), &config)?;
+    resolved.validate_for_build(cli.input.is_some())?;
 
     let args = Args {
         input: resolved.src.to_string_lossy().into_owned(),

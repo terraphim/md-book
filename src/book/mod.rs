@@ -91,7 +91,7 @@ pub struct NavEntry {
     pub title_html: String,
     /// Same label flattened to plain text, for `<title>` and `aria-label`.
     pub title_text: String,
-    /// Href relative to site root (`/path` style matching today's templates), or external URL.
+    /// Href relative to the page being rendered, or an absolute external URL.
     pub href: Option<String>,
     pub is_external: bool,
     /// Rendered section number, e.g. "1.2."; empty when suppressed.
@@ -132,12 +132,16 @@ impl Book {
         let mut out = Vec::new();
         let mut list_depth: isize = -1;
 
-        fn chapter_href(ch: &Chapter) -> Option<String> {
+        // Links are relative to the page being rendered, so output stays valid
+        // under a sub-path and over file://. External links are left untouched.
+        let root = crate::render::html::path_to_root(active_path);
+
+        fn chapter_href(ch: &Chapter, root: &str) -> Option<String> {
             if ch.is_external {
                 return ch.external_url.clone();
             }
             ch.output_path.as_ref().map(|out_path| {
-                let mut h = format!("/{}", out_path.display());
+                let mut h = format!("{root}{}", out_path.display());
                 if let Some(ref frag) = ch.fragment {
                     h.push('#');
                     h.push_str(frag);
@@ -155,11 +159,13 @@ impl Book {
             n
         }
 
+        #[allow(clippy::too_many_arguments)]
         fn walk(
             items: &[BookItem],
             depth: usize,
             active_path: &Path,
             no_section_label: bool,
+            root: &str,
             list_depth: &mut isize,
             out: &mut Vec<NavEntry>,
         ) {
@@ -222,7 +228,7 @@ impl Book {
                             kind: NavKind::Chapter,
                             title_html: ch.name.clone(),
                             title_text: flatten_title(&ch.name),
-                            href: chapter_href(ch),
+                            href: chapter_href(ch, root),
                             is_external: ch.is_external,
                             number,
                             depth,
@@ -238,6 +244,7 @@ impl Book {
                                 depth + 1,
                                 active_path,
                                 no_section_label,
+                                root,
                                 list_depth,
                                 out,
                             );
@@ -252,6 +259,7 @@ impl Book {
             0,
             active_path,
             no_section_label,
+            &root,
             &mut list_depth,
             &mut out,
         );
@@ -288,7 +296,7 @@ impl Book {
                 if let Some(ref out) = ch.output_path {
                     pages.push(PageInfo {
                         title: flatten_title(&ch.name),
-                        path: format!("/{}", out.display()),
+                        path: format!("{}", out.display()),
                     });
                 }
                 fn collect_desc(items: &[BookItem], pages: &mut Vec<PageInfo>) {
@@ -297,7 +305,7 @@ impl Book {
                             if let Some(ref out) = c.output_path {
                                 pages.push(PageInfo {
                                     title: flatten_title(&c.name),
-                                    path: format!("/{}", out.display()),
+                                    path: format!("{}", out.display()),
                                 });
                             }
                             collect_desc(&c.sub_items, pages);

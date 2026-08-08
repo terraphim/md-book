@@ -4,8 +4,8 @@
             <button class="mobile-menu-toggle" aria-label="Toggle navigation">
                 <sl-icon name="list"></sl-icon>
             </button>
-            <a href="/" class="header-logo">
-                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img" height="48px">
+            <a href="{{ path_to_root }}index.html" class="header-logo">
+                <img src="{% if config.book.logo is starting_with('http') %}{{ config.book.logo }}{% else %}{{ path_to_root }}{{ config.book.logo | trim_start_matches(pat='/') }}{% endif %}" alt="Logo" class="header-logo-img" height="48px">
             </a>
             <span class="header-title">{{ config.book.title }}</span>
         </div>

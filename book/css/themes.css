@@ -1,0 +1,34 @@
+:root, [data-theme="light"] {
+  --bg: #fafafa;
+  --fg: #1a1a1a;
+  --sidebar-bg: #f0f0f0;
+  --accent: #6640c0;
+}
+[data-theme="rust"] {
+  --bg: #e1e1db;
+  --fg: #262625;
+  --sidebar-bg: #d1c7a5;
+  --accent: #a72145;
+}
+[data-theme="coal"] {
+  --bg: #141617;
+  --fg: #98a3ad;
+  --sidebar-bg: #292c2f;
+  --accent: #3473ad;
+}
+[data-theme="navy"] {
+  --bg: #161923;
+  --fg: #bcbdd0;
+  --sidebar-bg: #212942;
+  --accent: #2b79a2;
+}
+[data-theme="ayu"] {
+  --bg: #0f1419;
+  --fg: #c5c5c5;
+  --sidebar-bg: #14191f;
+  --accent: #ffb454;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+}

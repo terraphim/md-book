@@ -31,7 +31,7 @@
         <ul class="sidebar-items">
             {% for page in section.pages %}
             <li class="sidebar-item">
-                <a href="{{ page.path | safe }}"{% if page.path | trim_start_matches(pat="/") == current_path %} class="active" aria-current="page"{% endif %}>{{ page.title }}</a>
+                <a href="{{ path_to_root }}{{ page.path | safe }}"{% if page.path | trim_start_matches(pat="/") == current_path %} class="active" aria-current="page"{% endif %}>{{ page.title }}</a>
             </li>
             {% endfor %}
         </ul>

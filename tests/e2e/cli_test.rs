@@ -39,13 +39,52 @@ fn test_cli_version() {
 
 #[test]
 fn test_cli_missing_required_args() {
+    // `-i`/`-o` became optional when subcommands landed, so a bare invocation no
+    // longer fails argument parsing. It must still fail when the working
+    // directory is not a book, rather than emitting an empty book.
+    let temp_dir = TempDir::new().unwrap();
+
     let output = Command::new(get_binary_path())
+        .current_dir(temp_dir.path())
         .output()
         .expect("Failed to execute command");
 
-    assert!(!output.status.success());
+    assert!(
+        !output.status.success(),
+        "building outside a book directory must fail"
+    );
     let stderr = String::from_utf8(output.stderr).unwrap();
-    assert!(stderr.contains("required") || stderr.contains("Usage:"));
+    assert!(
+        stderr.contains("no book found"),
+        "error should explain what was expected, got: {stderr}"
+    );
+    assert!(
+        stderr.contains("md-book init"),
+        "error should say how to recover, got: {stderr}"
+    );
+}
+
+#[test]
+fn test_cli_builds_book_directory_without_flags() {
+    // The counterpart: inside a book directory, no flags are needed.
+    let temp_dir = TempDir::new().unwrap();
+    let src = temp_dir.path().join("src");
+    fs::create_dir_all(&src).unwrap();
+    fs::write(src.join("SUMMARY.md"), "# Summary\n\n- [One](one.md)\n").unwrap();
+    fs::write(src.join("one.md"), "# One\n\nBody.\n").unwrap();
+    fs::write(temp_dir.path().join("book.toml"), "[book]\ntitle = \"T\"\n").unwrap();
+
+    let output = Command::new(get_binary_path())
+        .current_dir(temp_dir.path())
+        .output()
+        .expect("Failed to execute command");
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(temp_dir.path().join("book/one.html").exists());
 }
 
 #[test]
