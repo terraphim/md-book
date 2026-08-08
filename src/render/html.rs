@@ -200,119 +200,86 @@ pub fn write_syntax_css(_output_dir: &str) -> Result<()> {
     Ok(())
 }
 
-/// Copy static assets (CSS, JS, images, web components) into the output directory.
+/// Default templates, embedded at compile time.
+///
+/// Everything a book needs to render is baked into the binary, so an installed
+/// md-book produces a styled, offline-capable book with no templates directory
+/// on disk. A templates directory, when present, is copied over the top and
+/// wins per file.
+static DEFAULT_CSS: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/templates/css");
+static DEFAULT_JS: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/templates/js");
+static DEFAULT_IMG: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/templates/img");
+static DEFAULT_COMPONENTS: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/templates/components");
+/// Vendored third-party assets (local Shoelace build).
+static VENDOR_DIR: include_dir::Dir<'_> =
+    include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/templates/vendor");
+
+/// Write an embedded directory into `output_dir/prefix`, preserving structure.
+fn write_embedded(dir: &include_dir::Dir<'_>, output_dir: &Path, prefix: &str) -> Result<()> {
+    for file in dir.files() {
+        let dest = output_dir.join(prefix).join(file.path());
+        if let Some(parent) = dest.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&dest, file.contents())
+            .with_context(|| format!("Failed to write {}", dest.display()))?;
+    }
+    for sub in dir.dirs() {
+        write_embedded(sub, output_dir, prefix)?;
+    }
+    Ok(())
+}
+
+/// Copy a template subdirectory over the embedded defaults, per file.
+///
+/// A missing source is not an error: most books ship no templates at all.
+fn copy_tree(templates_dir: &str, output_dir: &str, name: &str) -> Result<()> {
+    let source = format!("{templates_dir}/{name}");
+    let dest = Path::new(output_dir).join(name);
+    fs::create_dir_all(&dest)?;
+    if !Path::new(&source).exists() {
+        return Ok(());
+    }
+
+    for entry in WalkDir::new(&source) {
+        let entry = entry?;
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let rel = entry.path().strip_prefix(&source)?;
+        let dest_path = dest.join(rel);
+        if let Some(parent) = dest_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::copy(entry.path(), &dest_path)
+            .with_context(|| format!("Failed to copy {}", entry.path().display()))?;
+    }
+    Ok(())
+}
+
+/// Write static assets (CSS, JS, images, web components, vendor) into the output.
 pub fn copy_static_assets(
     output_dir: &str,
     templates_dir: &str,
     _config: &BookConfig,
 ) -> Result<()> {
-    fs::create_dir_all(format!("{}/css", output_dir))?;
-    fs::create_dir_all(format!("{}/js", output_dir))?;
-    fs::create_dir_all(format!("{}/img", output_dir))?;
-    fs::create_dir_all(format!("{}/components", output_dir))?;
+    let out = Path::new(output_dir);
 
-    // Copy CSS directory
-    let css_source = format!("{}/css", templates_dir);
-    let css_dest = format!("{}/css/", output_dir);
-    if Path::new(&css_source).exists() {
-        for entry in WalkDir::new(&css_source) {
-            let entry = entry?;
-            let dest_path = css_dest.clone()
-                + entry
-                    .path()
-                    .strip_prefix(&css_source)?
-                    .to_str()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("Invalid UTF-8 in CSS path: {:?}", entry.path())
-                    })?;
-            if entry.file_type().is_file() {
-                fs::copy(entry.path(), dest_path)?;
-            }
-        }
+    // Embedded defaults first...
+    write_embedded(&DEFAULT_CSS, out, "css")?;
+    write_embedded(&DEFAULT_JS, out, "js")?;
+    write_embedded(&DEFAULT_IMG, out, "img")?;
+    write_embedded(&DEFAULT_COMPONENTS, out, "components")?;
+    write_embedded(&VENDOR_DIR, out, "vendor")?;
+
+    // ...then a user templates directory overrides them file by file.
+    for tree in ["css", "js", "img", "components"] {
+        copy_tree(templates_dir, output_dir, tree)?;
     }
-
-    // Copy JS directory
-    let js_source = format!("{}/js", templates_dir);
-    let js_dest = format!("{}/js/", output_dir);
-    fs::create_dir_all(&js_dest)?;
-    if Path::new(&js_source).exists() {
-        for entry in WalkDir::new(&js_source) {
-            let entry = entry?;
-            let dest_path = js_dest.clone()
-                + entry
-                    .path()
-                    .strip_prefix(&js_source)?
-                    .to_str()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("Invalid UTF-8 in JS path: {:?}", entry.path())
-                    })?;
-            if entry.file_type().is_file() {
-                fs::copy(entry.path(), dest_path)?;
-            }
-        }
-    }
-
-    // Copy img directory from templates
-    let img_source = format!("{}/img", templates_dir);
-    let img_dest = format!("{}/img/", output_dir);
-    fs::create_dir_all(&img_dest)?;
-    if Path::new(&img_source).exists() {
-        for entry in WalkDir::new(&img_source) {
-            let entry = entry?;
-            let dest_path = img_dest.clone()
-                + entry
-                    .path()
-                    .strip_prefix(&img_source)?
-                    .to_str()
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("Invalid UTF-8 in image path: {:?}", entry.path())
-                    })?;
-            if entry.file_type().is_file() {
-                fs::copy(entry.path(), dest_path)
-                    .context(format!("Failed to copy img file: {:?}", entry.path()))?;
-            }
-        }
-    }
-
-    fs::write(
-        format!("{}/components/doc-toc.js", output_dir),
-        include_str!("../templates/components/doc-toc.js"),
-    )
-    .context("Failed to write TOC component")?;
-
-    fs::write(
-        format!("{}/components/simple-block.js", output_dir),
-        include_str!("../templates/components/simple-block.js"),
-    )
-    .context("Failed to write Simple Block component")?;
-
-    fs::write(
-        format!("{}/components/search-modal.js", output_dir),
-        include_str!("../templates/components/search-modal.js"),
-    )
-    .context("Failed to write Search Modal component")?;
-
-    // Always emit theme + keyboard assets (embedded defaults)
-    fs::write(
-        format!("{}/css/themes.css", output_dir),
-        include_str!("../templates/css/themes.css"),
-    )
-    .context("Failed to write themes.css")?;
-    fs::write(
-        format!("{}/js/theme-switch.js", output_dir),
-        include_str!("../templates/js/theme-switch.js"),
-    )
-    .context("Failed to write theme-switch.js")?;
-    fs::write(
-        format!("{}/js/keyboard.js", output_dir),
-        include_str!("../templates/js/keyboard.js"),
-    )
-    .context("Failed to write keyboard.js")?;
-    fs::write(
-        format!("{}/js/code-copy.js", output_dir),
-        include_str!("../templates/js/code-copy.js"),
-    )
-    .context("Failed to write code-copy.js")?;
 
     Ok(())
 }

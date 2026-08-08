@@ -465,21 +465,25 @@ async fn test_output_has_no_external_urls() -> Result<()> {
     let book = nested_book().await?;
     let html = book.read_output("intro.html")?;
 
-    // Known, tracked exception: Shoelace is still CDN-loaded (increment D2).
-    // When D2 lands, delete this allowlist and the assertion tightens to
-    // "no external URLs at all" with no further edits.
-    const ALLOWED_EXTERNAL_HOSTS: &[&str] = &["cdn.jsdelivr.net"];
-
-    for (idx, _) in html.match_indices("https://") {
+    let external = html.find("https://").map(|idx| {
         let tail = &html[idx..];
         let end = tail.find(['"', '\'', ' ', '<']).unwrap_or(tail.len());
-        let url = &tail[..end];
-        assert!(
-            ALLOWED_EXTERNAL_HOSTS.iter().any(|h| url.contains(h)),
-            "generated page loads an unexpected external resource: {url}\n\
-             output must work offline"
-        );
-    }
+        tail[..end].to_string()
+    });
+    assert!(
+        external.is_none(),
+        "generated page loads an external resource: {}\noutput must work offline",
+        external.unwrap_or_default()
+    );
+
+    // Shoelace is vendored, so the local copy must actually be emitted.
+    assert!(book.output_exists("vendor/shoelace/shoelace-local.js"));
+    assert!(book.output_exists("vendor/shoelace/themes/light.css"));
+    assert!(book.output_exists("vendor/shoelace/components/icon/icon.js"));
+    assert!(
+        book.output_exists("vendor/shoelace/assets/icons/search.svg"),
+        "sl-icon fetches SVGs at runtime, so referenced icons must be vendored"
+    );
 
     Ok(())
 }
@@ -599,6 +603,60 @@ async fn test_create_missing_is_idempotent_across_rebuilds() -> Result<()> {
     book.build().await?;
 
     assert_contains!(std::fs::read_to_string(&stub)?, "Hand-written body");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_default_assets_emitted_without_templates_dir() -> Result<()> {
+    // TestBook has no templates directory, which is also the shape of an
+    // installed md-book run against someone else's book. Every asset the
+    // default templates reference must still be emitted, or the book renders
+    // unstyled with no search and no diagrams.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Intro](intro.md)\n")?;
+    book.create_file("intro.md", "# Intro\n\nBody.\n")?;
+    book.build().await?;
+
+    for asset in [
+        "css/styles.css",
+        "css/search.css",
+        "css/themes.css",
+        "js/search-init.js",
+        "js/pagefind-search.js",
+        "js/theme-switch.js",
+        "js/keyboard.js",
+        "js/code-copy.js",
+        "components/doc-toc.js",
+        "components/search-modal.js",
+        "vendor/shoelace/shoelace-local.js",
+    ] {
+        let path = book.output_path().join(asset);
+        assert!(path.exists(), "{asset} was not emitted");
+        assert!(
+            std::fs::metadata(&path)?.len() > 0,
+            "{asset} was emitted empty"
+        );
+    }
+
+    // Every local asset the page references must exist on disk.
+    let html = book.read_output("intro.html")?;
+    for cap in html
+        .split("href=\"")
+        .skip(1)
+        .chain(html.split("src=\"").skip(1))
+    {
+        let url = cap.split('"').next().unwrap_or_default();
+        if url.is_empty() || url.starts_with("http") || url.starts_with('#') {
+            continue;
+        }
+        let target = book.output_path().join(url.trim_start_matches("./"));
+        assert!(
+            target.exists(),
+            "page references {url}, which was not emitted"
+        );
+    }
 
     Ok(())
 }

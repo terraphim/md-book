@@ -2036,6 +2036,7 @@ dependencies = [
  "futures-util",
  "getrandom 0.2.16",
  "html-escape",
+ "include_dir",
  "jiff",
  "markdown",
  "notify",

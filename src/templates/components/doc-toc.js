@@ -1,3 +1,11 @@
+// Assets are resolved from this module's own URL, so the component works at a
+// domain root, under a sub-path, and over file:// alike. Shadow DOM cannot
+// inherit the page's stylesheets, and this file is copied verbatim so it has no
+// access to Tera's path_to_root.
+const BOOK_ROOT = new URL('../', import.meta.url);
+const SHOELACE_THEME = new URL('vendor/shoelace/themes/light.css', BOOK_ROOT).href;
+const BOOK_STYLES = new URL('css/styles.css', BOOK_ROOT).href;
+
 class DocToc extends HTMLElement {
   constructor() {
     super();
@@ -54,21 +62,10 @@ class DocToc extends HTMLElement {
       .replace(/(^-|-$)/g, '');
   }
 
-  // Shadow DOM cannot see the page's stylesheet, and this file is copied
-  // verbatim so it has no access to Tera's path_to_root. Reuse the URL the
-  // document already resolved, so the component works under a sub-path and
-  // over file:// too.
-  stylesHref() {
-    const link = document.querySelector(
-      'link[rel="stylesheet"][href$="css/styles.css"]'
-    );
-    return link ? link.href : 'css/styles.css';
-  }
-
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
-      <link rel="stylesheet" href="${this.stylesHref()}">
+      <link rel="stylesheet" href="${SHOELACE_THEME}" />
+      <link rel="stylesheet" href="${BOOK_STYLES}">
       <style>
         :host {
           display: block;
