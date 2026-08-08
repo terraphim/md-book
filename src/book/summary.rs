@@ -277,8 +277,13 @@ fn parse_link(text: &str, line: usize) -> Result<SummaryLink, SummaryError> {
         text: text.to_string(),
     })?;
     let target = &rest[1..end];
+    let is_external =
+        target.starts_with("http://") || target.starts_with("https://") || target.starts_with("//");
     let (location, fragment) = if target.is_empty() {
         (None, None)
+    } else if is_external {
+        // Preserve full external URL including any fragment
+        (Some(target.to_string()), None)
     } else if let Some((path, frag)) = target.split_once('#') {
         (Some(path.to_string()), Some(frag.to_string()))
     } else {
@@ -292,6 +297,54 @@ fn parse_link(text: &str, line: usize) -> Result<SummaryLink, SummaryError> {
         nested: Vec::new(),
         line,
     })
+}
+
+/// Normalise a relative path for duplicate detection (collapse `.` / `..`).
+/// Returns `None` if the path is absolute or would escape via parent components.
+fn normalize_rel_path(path: &Path) -> Option<PathBuf> {
+    let mut out = PathBuf::new();
+    for component in path.components() {
+        match component {
+            std::path::Component::CurDir => {}
+            std::path::Component::Normal(c) => out.push(c),
+            std::path::Component::ParentDir => {
+                if !out.pop() {
+                    return None;
+                }
+            }
+            std::path::Component::RootDir | std::path::Component::Prefix(_) => return None,
+        }
+    }
+    Some(out)
+}
+
+/// Ensure a not-yet-created path cannot write outside `src_dir` via symlinked ancestors.
+fn ensure_missing_target_contained(
+    src_dir: &Path,
+    rel: &Path,
+    line: usize,
+) -> Result<(), SummaryError> {
+    let canonical_src = src_dir.canonicalize().map_err(SummaryError::Io)?;
+    let full = src_dir.join(rel);
+
+    let mut ancestor = full.as_path();
+    while !ancestor.exists() {
+        ancestor = ancestor
+            .parent()
+            .ok_or_else(|| SummaryError::EscapesSourceDir {
+                line,
+                path: rel.to_path_buf(),
+            })?;
+    }
+
+    let canonical_ancestor = ancestor.canonicalize().map_err(SummaryError::Io)?;
+    if !canonical_ancestor.starts_with(&canonical_src) {
+        return Err(SummaryError::EscapesSourceDir {
+            line,
+            path: rel.to_path_buf(),
+        });
+    }
+    Ok(())
 }
 
 /// Build a `Book` from a summary, resolving paths against `src_dir` and assigning section numbers.
@@ -492,16 +545,27 @@ fn link_to_chapter(
         });
     }
 
-    let path = PathBuf::from(location);
-    if path.extension().and_then(|e| e.to_str()) != Some("md") {
+    let raw_path = PathBuf::from(location);
+    if raw_path.extension().and_then(|e| e.to_str()) != Some("md") {
         errors.push(SummaryError::NonMarkdownTarget {
             line: link.line,
-            path: path.clone(),
+            path: raw_path.clone(),
         });
         return None;
     }
 
-    if path.is_absolute() || path_escapes_src(src_dir, &path) {
+    let path = match normalize_rel_path(&raw_path) {
+        Some(p) => p,
+        None => {
+            errors.push(SummaryError::EscapesSourceDir {
+                line: link.line,
+                path: raw_path.clone(),
+            });
+            return None;
+        }
+    };
+
+    if path_escapes_src(src_dir, &path) {
         errors.push(SummaryError::EscapesSourceDir {
             line: link.line,
             path: path.clone(),
@@ -522,10 +586,26 @@ fn link_to_chapter(
     let full = src_dir.join(&path);
     if !full.exists() {
         if create_missing {
+            if let Err(e) = ensure_missing_target_contained(src_dir, &path, link.line) {
+                errors.push(e);
+                return None;
+            }
             if let Some(parent) = full.parent() {
                 if let Err(e) = fs::create_dir_all(parent) {
                     errors.push(SummaryError::Io(e));
                     return None;
+                }
+                // Re-check parent after create_dir_all (symlink races)
+                if let Ok(canon_src) = src_dir.canonicalize() {
+                    if let Ok(canon_parent) = parent.canonicalize() {
+                        if !canon_parent.starts_with(&canon_src) {
+                            errors.push(SummaryError::EscapesSourceDir {
+                                line: link.line,
+                                path: path.clone(),
+                            });
+                            return None;
+                        }
+                    }
                 }
             }
             let stub = format!("# {}\n", strip_md_for_heading(&link.name));
@@ -793,5 +873,54 @@ mod tests {
             source_to_output(Path::new("individual/heading.md")),
             PathBuf::from("individual/heading.html")
         );
+    }
+
+    #[test]
+    fn test_duplicate_detects_normalized_paths() {
+        let dir = tempfile::TempDir::new().unwrap();
+        fs::write(dir.path().join("a.md"), "# A\n").unwrap();
+        let content = "- [A](a.md)\n- [A2](./a.md)\n";
+        let s = parse_summary(content).unwrap();
+        let err = book_from_summary(&s, dir.path(), false).unwrap_err();
+        assert!(err
+            .0
+            .iter()
+            .any(|e| matches!(e, SummaryError::DuplicateEntry { .. })));
+    }
+
+    #[test]
+    fn test_external_url_preserves_fragment() {
+        let content = "- [Rust](https://doc.rust-lang.org/book/#ownership)\n";
+        let s = parse_summary(content).unwrap();
+        match &s.numbered[0] {
+            SummaryItem::Link(l) => {
+                assert_eq!(
+                    l.location.as_deref(),
+                    Some("https://doc.rust-lang.org/book/#ownership")
+                );
+            }
+            _ => panic!("expected link"),
+        }
+    }
+
+    #[test]
+    fn test_create_missing_rejects_symlink_escape() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let outside = tempfile::TempDir::new().unwrap();
+        let link = dir.path().join("escape");
+        #[cfg(unix)]
+        {
+            std::os::unix::fs::symlink(outside.path(), &link).unwrap();
+            let content = "- [Bad](escape/evil.md)\n";
+            let s = parse_summary(content).unwrap();
+            let err = book_from_summary(&s, dir.path(), true).unwrap_err();
+            assert!(
+                err.0
+                    .iter()
+                    .any(|e| matches!(e, SummaryError::EscapesSourceDir { .. })),
+                "expected EscapesSourceDir, got {err:?}"
+            );
+            assert!(!outside.path().join("evil.md").exists());
+        }
     }
 }
