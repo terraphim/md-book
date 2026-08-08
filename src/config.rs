@@ -383,6 +383,10 @@ mod tests {
 
     #[test]
     fn test_load_config_with_custom_toml() -> anyhow::Result<()> {
+        // load_config resolves a relative "book.toml" against the process CWD,
+        // which sibling tests change; serialise against them.
+        let _guard = CWD_MUTEX.lock().unwrap();
+
         let temp_dir = TempDir::new()?;
 
         let custom_toml_content = r#"
@@ -455,6 +459,9 @@ frontmatter = true
 
     #[test]
     fn test_load_config_unsupported_format() {
+        // See test_load_config_with_custom_toml: load_config touches the CWD.
+        let _guard = CWD_MUTEX.lock().unwrap();
+
         let temp_dir = TempDir::new().unwrap();
         let unsupported_path = temp_dir.path().join("config.yaml");
         fs::write(&unsupported_path, "title: test").unwrap();

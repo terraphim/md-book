@@ -20,7 +20,7 @@ through md-book's own stack. Five increments, each independently shippable:
 | B | `SUMMARY.md` book model (P0) | 4-5 d | Correct structure, ordering, navigation |
 | C | CLI subcommands + book-directory resolution | 1.5-2 d | `md-book build ./mybook`, `book.src`, `build.build-dir` |
 | D | Output-correctness defects (P1) | 2-2.5 d | Relocatable, offline, anchorable output |
-| E | Renderer polish (P3) | 2-3 d | Themes, print, redirects, fold, shortcuts |
+| E | Renderer polish (P3) | 2-3 d | Themes, print, redirects, fold, shortcuts, conditional mermaid |
 
 The `pulldown-cmark` backend (approved as a feature-flagged second parser) is designed here as
 **increment F** and specified at interface level only; it is sequenced after E and gets its own
@@ -52,7 +52,7 @@ targets exactly one stage.
   copy button wired up.
 - Themes (light/dark/ayu/coal/navy toggle), configurable syntect theme, print page,
   `additional-css` / `additional-js`, `[output.html.redirect]`, `[output.html.fold]`, keyboard
-  shortcuts.
+  shortcuts, and loading mermaid only on pages that contain a diagram (E7).
 - Warnings for parsed-but-unsupported config keys.
 - Structural conformance fixtures over `test_book_mdbook/`.
 - Interface-level design for the `pulldown-cmark` backend (increment F).
@@ -569,7 +569,47 @@ existing IDs instead of minting them. *Est:* 5 h.
 depth. *Est:* 4 h.
 **E6. Keyboard shortcuts** — `←`/`→`/`s`/`/`/`?`. *Est:* 2 h.
 
-**Gate:** theme choice persists across pages; `print.html` contains every chapter in book order.
+**E7. Load mermaid only on pages that contain a diagram** — `page.html.tera:14-15` loads
+`js/mermaid.min.js` (2.9MB) and `js/mermaid-init.js` on *every* page, whether or not it has a
+diagram. On the 30-page corpus that is 2.9MB of the 4.2MB output, and a parse-and-execute cost
+on every page load for the majority of books that contain no diagrams at all.
+
+Design:
+
+1. `render::markdown` already special-cases mermaid fences (`src/render/markdown.rs:156-161`),
+   emitting `<code class="language-mermaid">`. Have that path report back rather than only
+   emit: return `RenderedMarkdown { html: String, has_mermaid: bool }` from the markdown stage,
+   set when at least one mermaid fence was rendered. Detecting at fence level is exact --
+   substring-searching the finished HTML for `language-mermaid` would also match a page that
+   merely *documents* the class in a code sample.
+2. Thread `has_mermaid` into the page context alongside `path_to_root`, and gate both script
+   tags on it:
+   ```jinja
+   {% if has_mermaid %}
+   <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
+   <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+   {% endif %}
+   ```
+3. `print.html` aggregates every chapter, so it sets `has_mermaid` if *any* included chapter
+   does. The index page sets it from `index.md` only.
+4. Keep emitting `js/mermaid.min.js` unconditionally in `copy_static_assets`. It is one file in
+   the asset tree; making its presence conditional would mean a book whose only diagram is added
+   later silently fails until a full rebuild. Revisit only if output size, rather than per-page
+   cost, becomes the constraint.
+
+Tests:
+
+| Test | Purpose |
+|------|---------|
+| `test_mermaid_scripts_only_on_diagram_pages` | A book with one mermaid page and one plain page: the script tags appear in the first and not the second |
+| `test_mermaid_class_in_code_sample_does_not_trigger_load` | A page that shows ```` ```language-mermaid ```` inside a fenced sample must not load mermaid -- guards the fence-level detection against a substring shortcut |
+| `test_print_page_loads_mermaid_when_any_chapter_has_one` | Aggregate page behaviour |
+
+*Est:* 3 h. Expected effect on the corpus: 4.2MB → ~1.3MB of transferred bytes for a reader who
+visits only non-diagram pages, and no mermaid parse cost on 29 of its 30 pages.
+
+**Gate:** theme choice persists across pages; `print.html` contains every chapter in book order;
+a page with no diagram references no mermaid script.
 
 ### Increment F -- `pulldown-cmark` backend (designed only; separate cycle)
 
