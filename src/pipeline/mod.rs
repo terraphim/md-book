@@ -121,7 +121,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             next,
             &current_year,
             config,
-            &output_rel.display().to_string(),
+            &crate::render::to_url_path(output_rel),
             watch_enabled,
             Some(&nav),
             page_has_mermaid,
@@ -309,7 +309,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
                         anchor: ch
                             .output_path
                             .as_ref()
-                            .map(|p| p.display().to_string())
+                            .map(|p| crate::render::to_url_path(p))
                             .unwrap_or_default(),
                     });
                 }
@@ -369,7 +369,7 @@ fn chapter_to_pageinfo(ch: &crate::book::Chapter, root: &str) -> PageInfo {
             "{root}{}",
             ch.output_path
                 .as_ref()
-                .map(|p| p.display().to_string())
+                .map(|p| crate::render::to_url_path(p))
                 .unwrap_or_default()
         ),
     }

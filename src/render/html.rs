@@ -73,6 +73,19 @@ pub fn extract_title(markdown: &str) -> Option<String> {
 }
 
 /// `../`-style prefix from a page to the build-dir root; `""` at the root.
+/// Render a relative path as a URL path.
+///
+/// `Path::display()` uses the platform separator, so on Windows it yields
+/// `individual\heading.html` -- a broken href in generated HTML. URLs always
+/// use `/`, whatever built the book.
+#[must_use]
+pub fn to_url_path(path: &Path) -> String {
+    path.components()
+        .filter_map(|c| c.as_os_str().to_str())
+        .collect::<Vec<_>>()
+        .join("/")
+}
+
 pub fn path_to_root(page: &Path) -> String {
     let depth = page.components().count().saturating_sub(1);
     if depth == 0 {
@@ -404,5 +417,28 @@ mod tests {
         let result = copy_static_assets(output_dir.to_str().unwrap(), templates_dir, &config);
 
         assert!(result.is_ok());
+    }
+}
+
+#[cfg(test)]
+mod url_path_tests {
+    use super::to_url_path;
+    use std::path::{Path, PathBuf};
+
+    #[test]
+    fn test_to_url_path_uses_forward_slashes() {
+        // Path::display() would emit backslashes on Windows, producing hrefs
+        // like `individual\heading.html` in generated HTML.
+        let nested: PathBuf = ["individual", "heading.html"].iter().collect();
+        assert_eq!(to_url_path(&nested), "individual/heading.html");
+
+        let deep: PathBuf = ["a", "b", "c.html"].iter().collect();
+        assert_eq!(to_url_path(&deep), "a/b/c.html");
+    }
+
+    #[test]
+    fn test_to_url_path_flat_and_empty() {
+        assert_eq!(to_url_path(Path::new("index.html")), "index.html");
+        assert_eq!(to_url_path(Path::new("")), "");
     }
 }

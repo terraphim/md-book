@@ -144,7 +144,7 @@ impl Book {
                 return ch.external_url.clone();
             }
             ch.output_path.as_ref().map(|out_path| {
-                let mut h = format!("{root}{}", out_path.display());
+                let mut h = format!("{root}{}", crate::render::to_url_path(out_path));
                 if let Some(ref frag) = ch.fragment {
                     h.push('#');
                     h.push_str(frag);
@@ -299,7 +299,7 @@ impl Book {
                 if let Some(ref out) = ch.output_path {
                     pages.push(PageInfo {
                         title: flatten_title(&ch.name),
-                        path: format!("{}", out.display()),
+                        path: crate::render::to_url_path(out),
                     });
                 }
                 fn collect_desc(items: &[BookItem], pages: &mut Vec<PageInfo>) {
@@ -308,7 +308,7 @@ impl Book {
                             if let Some(ref out) = c.output_path {
                                 pages.push(PageInfo {
                                     title: flatten_title(&c.name),
-                                    path: format!("{}", out.display()),
+                                    path: crate::render::to_url_path(out),
                                 });
                             }
                             collect_desc(&c.sub_items, pages);
