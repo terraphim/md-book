@@ -197,7 +197,9 @@ logic from `core.rs`. Net conceptual weight goes down, not up.
 | `src/templates/js/keyboard.js` | `←`/`→`/`s`/`/`/`?` shortcuts | E |
 | `src/templates/print.html.tera` | Single-document print page | E |
 | `src/templates/404.html.tera` | 404 page | D |
-| `src/templates/vendor/shoelace/*` | Vendored Shoelace 2.12.0 (CSS + autoloader) | D |
+| `src/templates/vendor/shoelace/*` | Vendored Shoelace subset: 5 components' import closure, 10 icons, light/dark themes (356KB) | D |
+| `src/templates/vendor/shoelace/shoelace-local.js` | Local loader; `setBasePath` from `import.meta.url` | D |
+| `src/watch.rs` | `SelfWriteFilter`: drops watcher events caused by md-book's own writes | D |
 | `tests/integration/summary_test.rs` | Summary parser unit/integration coverage | B |
 | `tests/integration/structure_test.rs` | Structural conformance over `test_book_mdbook/` | B |
 | `tests/fixtures/test_book_mdbook.structure.json` | Expected chapter tree, numbers, prev/next chain | B |
@@ -538,8 +540,13 @@ invocation in CI, `Dockerfile` and `scripts/deploy.sh` still passes.
 
 **D1. `path_to_root`** — compute per page; convert every template URL and `NavEntry.href`.
 *Est:* 5 h.
-**D2. Vendor Shoelace** — copy 2.12.0 CSS + autoloader into `src/templates/vendor/`; drop the
-jsDelivr tags; assert no external URLs in output. *Est:* 3 h.
+**D2. Vendor Shoelace** — *shipped, revised in flight.* Copying the full distribution was
+rejected once measured: 14MB over 2,920 files, and `copy_static_assets` writes templates into
+every built book. Vendored instead: the transitive import closure of the five components used
+(button, icon, input, spinner, card), the ten referenced icons, and light/dark themes — 43 JS
+files, 356KB. `shoelace-local.js` replaces the CDN autoloader and derives `setBasePath` from
+`import.meta.url`. Shadow-DOM components resolve their own stylesheets the same way, since they
+cannot see Tera variables. *Actual:* 4 h.
 **D3. Server-side heading IDs** — `render/slug.rs` + mdast injection; `doc-toc.js` reuses
 existing IDs instead of minting them. *Est:* 5 h.
 **D4. 404 page** — `input-404`, `site-url`; render `404.html`. *Est:* 2 h.
@@ -611,9 +618,10 @@ Each increment is a separate PR against `main` and is revertable on its own.
 
 | Crate | Version | Justification | Increment |
 |-------|---------|---------------|-----------|
+| `include_dir` | 0.7.4 | Embeds the default css/js/img/components trees and the vendored Shoelace subset, so an installed binary emits a complete, offline book with no templates directory on disk | D (shipped) |
 | `pulldown-cmark` | 0.13.4 | Optional second parser backend; behind `parser-cmark` | F (not now) |
 
-No new dependency is required for A-E. Summary parsing uses the existing `markdown` crate's
+`include_dir` was not anticipated by this plan. Summary parsing uses the existing `markdown` crate's
 mdast (a `SUMMARY.md` is a markdown document); slugging and `path_to_root` are `std`. Shoelace is
 vendored as static assets, not as a dependency. WASM builds keep compiling because everything
 added is `std`-only or behind existing feature gates.
