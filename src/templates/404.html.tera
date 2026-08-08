@@ -11,9 +11,14 @@
 </head>
 <body>
   <main class="content">
+    {% if custom_404 %}
+    {{ custom_404 | safe }}
+    <p><a href="{{ path_to_root }}index.html">Back to home</a></p>
+    {% else %}
     <h1>404</h1>
     <p>Page not found.</p>
     <p><a href="{{ path_to_root }}index.html">Back to home</a></p>
+    {% endif %}
   </main>
   <script src="{{ path_to_root }}js/theme-switch.js"></script>
 </body>

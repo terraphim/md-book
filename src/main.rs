@@ -213,7 +213,10 @@ async fn main_impl() -> Result<()> {
                     if let Err(e) =
                         serve_book_with_host(output_dir, &hostname, port, reload_tx).await
                     {
-                        eprintln!("Server error: {}", e);
+                        // A dev server that cannot bind is fatal: leaving the
+                        // process alive would look like a working server.
+                        eprintln!("Server error: {e}");
+                        std::process::exit(1);
                     }
                 }));
             }

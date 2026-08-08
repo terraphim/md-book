@@ -36,11 +36,27 @@ pub async fn serve_book_on(
             ws.on_upgrade(move |socket| handle_live_reload(socket, reload_tx))
         });
 
-    let addr: std::net::IpAddr = hostname
-        .parse()
-        .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
+    // Resolve DNS names rather than silently falling back to loopback while
+    // printing the name the user asked for.
+    let addr: std::net::IpAddr = match hostname.parse() {
+        Ok(ip) => ip,
+        Err(_) => {
+            use std::net::ToSocketAddrs;
+            (hostname, port)
+                .to_socket_addrs()
+                .ok()
+                .and_then(|mut addrs| addrs.next())
+                .map(|resolved| resolved.ip())
+                .ok_or_else(|| {
+                    anyhow::anyhow!("cannot resolve hostname '{hostname}'; pass an IP address")
+                })?
+        }
+    };
 
-    println!("Serving book at http://{}:{}", hostname, port);
+    println!(
+        "Serving book at http://{}:{} (bound to {})",
+        hostname, port, addr
+    );
     warp::serve(static_files.or(reload)).run((addr, port)).await;
     Ok(())
 }

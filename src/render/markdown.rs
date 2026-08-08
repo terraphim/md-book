@@ -59,22 +59,24 @@ pub fn render_markdown(
     #[cfg(feature = "syntax-highlighting")] syntax_set: Option<&SyntaxSet>,
     #[cfg(not(feature = "syntax-highlighting"))] _syntax_set: Option<&()>,
 ) -> Result<RenderedMarkdown> {
-    let has_mermaid = has_mermaid_fence(content, config)?;
-
     #[cfg(feature = "syntax-highlighting")]
     {
         let ss = syntax_set.ok_or_else(|| {
             anyhow::anyhow!("syntax_set required when syntax-highlighting feature is enabled")
         })?;
+        // This path already walks every code node, so detection is free; a
+        // second parse per page was measurable on a 30-page book.
+        let mut has_mermaid = false;
+        let html = process_markdown_with_highlighting(content, ss, config, &mut has_mermaid)?;
         Ok(RenderedMarkdown {
-            html: convert_md_links_to_html(&process_markdown_with_highlighting(
-                content, ss, config,
-            )?),
+            html: convert_md_links_to_html(&html),
             has_mermaid,
         })
     }
     #[cfg(not(feature = "syntax-highlighting"))]
     {
+        // No splice walk here, so the predicate needs its own pass.
+        let has_mermaid = has_mermaid_fence(content, config)?;
         Ok(RenderedMarkdown {
             html: convert_md_links_to_html(&process_markdown_basic(content, config)?),
             has_mermaid,
@@ -262,6 +264,7 @@ fn process_markdown_with_highlighting(
     content: &str,
     ss: &SyntaxSet,
     config: &BookConfig,
+    saw_mermaid: &mut bool,
 ) -> Result<String> {
     let options = markdown_options(config);
 
@@ -271,6 +274,7 @@ fn process_markdown_with_highlighting(
     let mut parts = Vec::new();
     let mut last_pos = 0;
 
+    #[allow(clippy::too_many_arguments)]
     fn process_node(
         node: &Node,
         ss: &SyntaxSet,
@@ -278,6 +282,7 @@ fn process_markdown_with_highlighting(
         parts: &mut Vec<String>,
         last_pos: &mut usize,
         config: &BookConfig,
+        saw_mermaid: &mut bool,
     ) -> Result<()> {
         match node {
             Node::Code(code) => {
@@ -293,6 +298,9 @@ fn process_markdown_with_highlighting(
                         }
                     }
 
+                    if code.lang.as_deref() == Some("mermaid") {
+                        *saw_mermaid = true;
+                    }
                     let highlighted = process_code_block(&code.value, code.lang.as_deref(), ss)?;
                     parts.push(highlighted);
 
@@ -302,7 +310,7 @@ fn process_markdown_with_highlighting(
             _ => {
                 if let Some(children) = node.children() {
                     for child in children {
-                        process_node(child, ss, content, parts, last_pos, config)?;
+                        process_node(child, ss, content, parts, last_pos, config, saw_mermaid)?;
                     }
                 }
             }
@@ -310,7 +318,15 @@ fn process_markdown_with_highlighting(
         Ok(())
     }
 
-    process_node(&ast, ss, content, &mut parts, &mut last_pos, config)?;
+    process_node(
+        &ast,
+        ss,
+        content,
+        &mut parts,
+        &mut last_pos,
+        config,
+        saw_mermaid,
+    )?;
 
     if last_pos < content.len() {
         let remaining = &content[last_pos..];

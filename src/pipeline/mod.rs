@@ -41,7 +41,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
 
     // Warn about orphan .md files when using SUMMARY
     if book.from_summary {
-        warn_orphan_markdown(src_dir, &book)?;
+        warn_orphan_markdown(src_dir, &book, config)?;
         // Copy non-markdown assets through
         copy_non_markdown_assets(src_dir, Path::new(&args.output))?;
     }
@@ -186,9 +186,34 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
 
     // 404 page
     {
+        // A server returns 404.html for *any* unmatched path, and the browser
+        // resolves relative URLs against the request path -- so a relative
+        // asset href breaks for every nested URL, which is exactly when a 404
+        // is served. When site-url is known, emit absolute paths instead.
+        let root_prefix = site_url_prefix(config);
+
+        // Optional custom body from `output.html.input-404`.
+        let custom_404 = config
+            .output
+            .html
+            .input_404
+            .as_deref()
+            .map(|name| src_dir.join(name))
+            .filter(|path| path.exists())
+            .and_then(|path| fs::read_to_string(&path).ok())
+            .and_then(|md| preprocess(&md, &preprocess_ctx).ok())
+            .and_then(|pre| {
+                #[cfg(feature = "syntax-highlighting")]
+                let rendered = render_markdown(&pre, config, Some(&ss)).ok()?;
+                #[cfg(not(feature = "syntax-highlighting"))]
+                let rendered = render_markdown(&pre, config, None).ok()?;
+                Some(crate::render::inject_heading_ids(&rendered.html))
+            });
+
         let mut ctx = tera::Context::new();
         ctx.insert("config", &config);
-        ctx.insert("path_to_root", &"");
+        ctx.insert("path_to_root", &root_prefix);
+        ctx.insert("custom_404", &custom_404);
         ctx.insert("year", &current_year);
         ctx.insert("default_theme", &config.output.html.default_theme_name());
         ctx.insert(
@@ -264,6 +289,9 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         }
         let mut print_chapters = Vec::new();
         let mut print_has_mermaid = false;
+        // All chapters land in one document, so they share one id namespace.
+        let mut print_ids: std::collections::HashMap<String, usize> =
+            std::collections::HashMap::new();
         for ch in &chapters {
             let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
             if let Ok(md) = fs::read_to_string(&source_abs) {
@@ -272,7 +300,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
                     let rendered = render_markdown(&pre, config, Some(&ss)).unwrap_or_default();
                     #[cfg(not(feature = "syntax-highlighting"))]
                     let rendered = render_markdown(&pre, config, None).unwrap_or_default();
-                    let html = crate::render::inject_heading_ids(&rendered.html);
+                    let html =
+                        crate::render::inject_heading_ids_with(&mut print_ids, &rendered.html);
                     print_has_mermaid |= rendered.has_mermaid;
                     print_chapters.push(PrintChapter {
                         title: flatten_title(&ch.name),
@@ -309,6 +338,28 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     }
 
     Ok(BuildReport { created })
+}
+
+/// Absolute prefix for pages that may be served from an unknown path.
+///
+/// Returns `output.html.site-url` (or the deprecated `book.base_url`) with
+/// exactly one trailing slash, or an empty string when neither is configured --
+/// in which case relative paths are the best available answer.
+fn site_url_prefix(config: &BookConfig) -> String {
+    let configured = config
+        .output
+        .html
+        .site_url
+        .as_deref()
+        .or(config.book.base_url.as_deref());
+
+    match configured {
+        Some(url) if !url.is_empty() => {
+            let trimmed = url.trim_end_matches('/');
+            format!("{trimmed}/")
+        }
+        _ => String::new(),
+    }
 }
 
 fn chapter_to_pageinfo(ch: &crate::book::Chapter, root: &str) -> PageInfo {
@@ -369,12 +420,18 @@ fn legacy_directory_sections(book: &Book) -> Vec<Section> {
     sections
 }
 
-fn warn_orphan_markdown(src_dir: &Path, book: &Book) -> Result<()> {
+fn warn_orphan_markdown(src_dir: &Path, book: &Book, config: &BookConfig) -> Result<()> {
     use std::collections::HashSet;
-    let listed: HashSet<PathBuf> = book
+    let mut listed: HashSet<PathBuf> = book
         .iter_all_chapters()
         .filter_map(|c| c.source_path.clone())
         .collect();
+
+    // The 404 source is consumed by the 404 page, not by the summary, so it is
+    // not an orphan even though no chapter references it.
+    if let Some(input_404) = config.output.html.input_404.as_deref() {
+        listed.insert(PathBuf::from(input_404));
+    }
 
     for entry in WalkDir::new(src_dir).into_iter().filter_map(Result::ok) {
         let path = entry.path();

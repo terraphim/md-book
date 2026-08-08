@@ -894,3 +894,97 @@ async fn test_header_omits_empty_links() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Review round 4 fixes.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_non_latin_headings_keep_addressable_ids() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Uni](uni.md)\n")?;
+    book.create_file(
+        "uni.md",
+        "# Café\n\n## Обзор\n\n## 日本語の見出し\n\nBody.\n",
+    )?;
+    book.build().await?;
+
+    let html = book.read_output("uni.html")?;
+    assert_contains!(html, "id=\"café\"");
+    assert_contains!(html, "id=\"обзор\"");
+    assert_contains!(html, "id=\"日本語の見出し\"");
+    assert_not_contains!(html, "id=\"section\"");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_print_page_heading_ids_are_unique() -> Result<()> {
+    // Chapters share one id namespace in the print page, or two chapters with
+    // an "Overview" heading both claim id="overview" in one document.
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [One](one.md)\n- [Two](two.md)\n",
+    )?;
+    book.create_file("one.md", "# One\n\n## Overview\n\nA.\n")?;
+    book.create_file("two.md", "# Two\n\n## Overview\n\nB.\n")?;
+    book.build().await?;
+
+    let print = book.read_output("print.html")?;
+    let mut ids: Vec<&str> = print
+        .split("id=\"")
+        .skip(1)
+        .filter_map(|s| s.split('"').next())
+        .collect();
+    let total = ids.len();
+    ids.sort_unstable();
+    ids.dedup();
+    assert_eq!(total, ids.len(), "duplicate ids in print.html: {ids:?}");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_404_uses_site_url_when_configured() -> Result<()> {
+    // A 404 is served for arbitrary nested paths, so relative asset URLs break
+    // exactly when the page is needed.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nx\n")?;
+    book.create_file("not-found.md", "# Lost\n\nCustom body.\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.site_url = Some("/docs/".into());
+    config.output.html.input_404 = Some("not-found.md".into());
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("404.html")?;
+    assert_contains!(html, "href=\"/docs/css/styles.css\"");
+    assert_contains!(html, "href=\"/docs/index.html\"");
+    // input-404 supplies the body.
+    assert_contains!(html, "Custom body");
+    // …and its source is not reported as an orphan, nor published as a chapter.
+    assert!(!book.output_exists("not-found.html"));
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_404_falls_back_to_relative_without_site_url() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nx\n")?;
+    book.build().await?;
+
+    let html = book.read_output("404.html")?;
+    assert_contains!(html, "href=\"css/styles.css\"");
+    assert_not_contains!(html, "href=\"/css/styles.css\"");
+
+    Ok(())
+}

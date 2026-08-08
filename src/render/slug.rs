@@ -1,17 +1,25 @@
 //! GitHub-compatible heading slugs with per-page collision counters.
+//!
+//! "Compatible" means the same shape as GitHub's slugger: lowercased, runs of
+//! separators collapsed to one dash, punctuation dropped, Unicode letters kept.
+//! Dropping non-ASCII would give every heading in a Cyrillic or CJK book the
+//! same `section-N` anchor.
 
 use std::collections::HashMap;
 
-/// GitHub-compatible slug: lowercase, non-alphanumerics to `-`, collisions
-/// suffixed `-1`, `-2`, … via the caller-held counter.
+/// GitHub-compatible slug: lowercase, separators to `-`, punctuation dropped,
+/// collisions suffixed `-1`, `-2`, … via the caller-held counter.
+///
+/// Unicode letters and digits are kept, so non-Latin headings remain
+/// addressable; only punctuation and symbols are removed.
 pub fn slugify(text: &str, seen: &mut HashMap<String, usize>) -> String {
     let mut slug = String::with_capacity(text.len());
     let mut prev_dash = false;
     for c in text.chars() {
-        if c.is_ascii_alphanumeric() {
-            slug.push(c.to_ascii_lowercase());
+        if c.is_alphanumeric() {
+            slug.extend(c.to_lowercase());
             prev_dash = false;
-        } else if (c == ' ' || c == '-' || c == '_') && !prev_dash && !slug.is_empty() {
+        } else if (c.is_whitespace() || c == '-' || c == '_') && !prev_dash && !slug.is_empty() {
             slug.push('-');
             prev_dash = true;
         }
@@ -34,8 +42,18 @@ pub fn slugify(text: &str, seen: &mut HashMap<String, usize>) -> String {
 }
 
 /// Inject `id` attributes on HTML heading tags that lack them.
+///
+/// Each call starts a fresh collision namespace, which is right for one page.
+/// Use [`inject_heading_ids_with`] when several fragments end up in the same
+/// document -- the print page, for instance, where two chapters sharing a
+/// heading would otherwise both claim `id="overview"`.
 pub fn inject_heading_ids(html: &str) -> String {
     let mut seen = HashMap::new();
+    inject_heading_ids_with(&mut seen, html)
+}
+
+/// Inject heading `id`s using a caller-held collision namespace.
+pub fn inject_heading_ids_with(seen: &mut HashMap<String, usize>, html: &str) -> String {
     let mut result = String::with_capacity(html.len() + 64);
     let mut rest = html;
 
@@ -59,7 +77,7 @@ pub fn inject_heading_ids(html: &str) -> String {
         if let Some(close_at) = body_and_rest.find(&close) {
             let inner = &body_and_rest[..close_at];
             let plain = strip_tags(inner);
-            let id = slugify(&plain, &mut seen);
+            let id = slugify(&plain, seen);
             let insert_at = open_tag.len() - 1;
             result.push_str(&open_tag[..insert_at]);
             result.push_str(&format!(" id=\"{id}\""));
@@ -132,6 +150,28 @@ mod tests {
         assert_eq!(slugify("Hello, World!", &mut seen), "hello-world");
         let mut seen = HashMap::new();
         assert_eq!(slugify("Foo_bar", &mut seen), "foo-bar");
+    }
+
+    #[test]
+    fn test_slugify_keeps_unicode_letters() {
+        // Dropping non-ASCII collapsed every heading in a non-Latin book to
+        // "section", "section-1", … making fragment links unusable.
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("Café", &mut seen), "café");
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("Обзор", &mut seen), "обзор");
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("日本語の見出し", &mut seen), "日本語の見出し");
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("Ünïcödé Häading!", &mut seen), "ünïcödé-häading");
+    }
+
+    #[test]
+    fn test_slugify_still_drops_punctuation_and_symbols() {
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("What? Why! (really)", &mut seen), "what-why-really");
+        let mut seen = HashMap::new();
+        assert_eq!(slugify("100% — done", &mut seen), "100-done");
     }
 
     #[test]

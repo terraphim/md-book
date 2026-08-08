@@ -741,7 +741,7 @@ added is `std`-only or behind existing feature gates.
 
 | Metric | Target | Measurement |
 |--------|--------|-------------|
-| Full build, `test_book_mdbook` | Within 10% of the A3 baseline | `benches/pagefind_bench.rs` |
+| Full build, `test_book_mdbook` | Within 10% of the A3 baseline | **Measured 2026-08-08: 127 ms vs 100 ms on `main` (+27%).** Gate not met on the raw number; see attribution below. |
 | Summary parse | < 5 ms for 500 entries | New criterion bench |
 | Watch rebuild | No regression vs today | Manual, `--watch` |
 
@@ -753,9 +753,31 @@ fn bench_parse_summary_500_entries(c: &mut Criterion) { /* generated fixture */ 
 fn bench_book_to_nav_500_chapters(c: &mut Criterion) { /* to_nav on every page */ }
 ```
 
-`to_nav` runs once per page, so it is O(pages × chapters). At the corpus size (30 pages) this is
-irrelevant; if a book exceeds ~1,000 chapters, hoist the flatten out of the page loop and mutate
-only `is_active`. **Do not do this pre-emptively** -- measure first.
+`to_nav` runs once per page, so it is O(pages × chapters).
+
+**Measured (release build, 2026-08-08):**
+
+| Book size | Build time | Per page |
+|-----------|-----------|----------|
+| 1 page | 10 ms | -- (fixed cost: assets) |
+| 30 pages (corpus) | 127 ms | 4.0 ms |
+| 50 pages | 57 ms | 1.15 ms |
+| 200 pages | 258 ms | 1.29 ms |
+| 500 pages | 1153 ms | 2.31 ms |
+
+Per-page cost doubles between 50 and 500 pages, so the O(pages × chapters) term is real and bites
+well before the 1,000-chapter threshold this plan guessed at. It is, however, **inherent to the
+output format**: every page embeds the full sidebar, so the total sidebar markup is
+pages × chapters whatever the implementation does. mdBook has the same property. Hoisting the
+flatten would shave construction but not serialisation or rendering, so it is not obviously worth
+the complexity; 500 pages in 1.15 s is acceptable.
+
+Against `main`, the 30-page corpus went 100 ms → 127 ms (+27%), missing the plan's 10% gate. The
+gate is recorded as **not met, with attribution**: the branch writes 4.2 MB of assets per build
+that `main` never wrote (`main` emitted no `css/`, `js/` or `img/` at all -- the defect increment
+D fixed), and adds correctness work per page (heading-ID injection, nav tree, theme context). One
+avoidable cost was found and removed by this measurement: `has_mermaid` originally re-parsed each
+page's mdast, which the highlighting path already walks -- worth 12 ms of the 30-page build.
 
 ## Open items
 
