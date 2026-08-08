@@ -58,14 +58,14 @@ walkdir = "2.4"
 [features]
 default = ["server", "watcher", "search", "syntax-highlighting"]
 server = ["warp", "tokio/full", "futures", "futures-util"]
-watcher = ["notify", "tokio/full"]
-search = ["pagefind", "tokio/rt", "tokio/macros"]
+watcher = ["notify", "tokio/full", "futures"]
+search = ["pagefind", "tokio/rt", "tokio/macros", "tokio/process"]
 syntax-highlighting = ["syntect"]
 wasm = ["wasm-bindgen"]
 # WASM-only features (no server/networking)
 wasm-core = ["wasm-bindgen"]
 # Minimal features for core functionality  
-core = ["tokio"]
+core = ["tokio", "tokio/macros", "tokio/rt-multi-thread"]
 
 [[test]]
 name = "integration"

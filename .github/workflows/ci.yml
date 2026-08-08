@@ -183,6 +183,11 @@ jobs:
         features:
           - "default"
           - "server,watcher,search,syntax-highlighting"
+          # Single-feature builds: each optional feature must carry its own
+          # dependencies rather than relying on another feature to supply them
+          - "search,syntax-highlighting"
+          - "watcher"
+          - "core"
           - "wasm-core"
     
     steps:

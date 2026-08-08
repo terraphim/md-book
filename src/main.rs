@@ -162,9 +162,9 @@ async fn main_impl() -> Result<()> {
     #[cfg(not(any(feature = "watcher", feature = "server")))]
     let watch_enabled = false;
 
-    #[cfg(any(feature = "server", feature = "watcher"))]
+    #[cfg(feature = "tokio")]
     let initial_report = build(&args, &config, watch_enabled).await?;
-    #[cfg(not(any(feature = "server", feature = "watcher")))]
+    #[cfg(not(feature = "tokio"))]
     let initial_report = build(&args, &config, watch_enabled)?;
 
     #[cfg(any(feature = "watcher", feature = "server"))]
