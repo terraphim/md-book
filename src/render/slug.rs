@@ -46,7 +46,9 @@ pub fn inject_heading_ids(html: &str) -> String {
         let open_tag = &after_lt[..=tag_end];
         let level = open_tag.as_bytes().get(2).copied().unwrap_or(b'1') as char;
 
-        if open_tag.contains("id=") {
+        if let Some(existing) = extract_id_attr(open_tag) {
+            // Reserve existing IDs so later auto-slugs do not collide
+            seen.entry(existing).or_insert(1);
             result.push_str(open_tag);
             rest = &after_lt[tag_end + 1..];
             continue;
@@ -86,6 +88,20 @@ fn find_heading_open(s: &str) -> Option<usize> {
             return Some(i);
         }
         i += 1;
+    }
+    None
+}
+
+fn extract_id_attr(open_tag: &str) -> Option<String> {
+    // very small parser for id="..." or id='...'
+    for key in ["id=\"", "id='"] {
+        if let Some(pos) = open_tag.find(key) {
+            let start = pos + key.len();
+            let quote = key.chars().last().unwrap();
+            if let Some(end) = open_tag[start..].find(quote) {
+                return Some(open_tag[start..start + end].to_string());
+            }
+        }
     }
     None
 }

@@ -9,8 +9,6 @@ use std::path::{Path, PathBuf};
 use futures::future;
 
 #[cfg(feature = "server")]
-use md_book::serve_book;
-#[cfg(feature = "server")]
 use tokio::sync::broadcast;
 
 #[cfg(feature = "watcher")]
@@ -344,13 +342,7 @@ async fn serve_book_with_host(
     port: u16,
     reload_tx: broadcast::Sender<()>,
 ) -> Result<()> {
-    // Prefer configured hostname; fall back to existing serve_book for localhost
-    if hostname == "127.0.0.1" || hostname == "localhost" {
-        return serve_book(output_dir, port, reload_tx).await;
-    }
-    // Bind on 0.0.0.0 when hostname is not loopback (warp uses IpAddr)
-    let _ = hostname;
-    serve_book(output_dir, port, reload_tx).await
+    md_book::server::serve_book_on(output_dir, hostname, port, reload_tx).await
 }
 
 #[cfg(feature = "watcher")]

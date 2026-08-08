@@ -14,6 +14,17 @@ pub async fn serve_book(
     port: u16,
     reload_tx: broadcast::Sender<()>,
 ) -> Result<()> {
+    serve_book_on(output_dir, "127.0.0.1", port, reload_tx).await
+}
+
+/// Serve on a specific hostname (`127.0.0.1`, `0.0.0.0`, or an IP literal).
+#[cfg(feature = "server")]
+pub async fn serve_book_on(
+    output_dir: String,
+    hostname: &str,
+    port: u16,
+    reload_tx: broadcast::Sender<()>,
+) -> Result<()> {
     let static_files =
         warp::fs::dir(output_dir.clone()).or(warp::fs::file(format!("{}/index.html", output_dir)));
 
@@ -25,10 +36,12 @@ pub async fn serve_book(
             ws.on_upgrade(move |socket| handle_live_reload(socket, reload_tx))
         });
 
-    println!("Serving book at http://localhost:{}", port);
-    warp::serve(static_files.or(reload))
-        .run(([127, 0, 0, 1], port))
-        .await;
+    let addr: std::net::IpAddr = hostname
+        .parse()
+        .unwrap_or_else(|_| std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
+
+    println!("Serving book at http://{}:{}", hostname, port);
+    warp::serve(static_files.or(reload)).run((addr, port)).await;
     Ok(())
 }
 

@@ -16,7 +16,7 @@ pub use pagefind_service::{PagefindBuilder, PagefindError};
 
 // Re-export server functionality when available
 #[cfg(feature = "server")]
-pub use server::serve_book;
+pub use server::{serve_book, serve_book_on};
 
 // WASM-specific exports
 #[cfg(target_arch = "wasm32")]

@@ -178,22 +178,62 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("config", &config);
         ctx.insert("path_to_root", &"");
         ctx.insert("year", &current_year);
-        if let Ok(html) = tera.render("404", &ctx) {
-            let _ = fs::write(format!("{}/404.html", args.output), html);
+        match tera.render("404", &ctx) {
+            Ok(html) => {
+                if let Err(e) = fs::write(format!("{}/404.html", args.output), html) {
+                    eprintln!("warning: failed to write 404.html: {e}");
+                }
+            }
+            Err(e) => eprintln!("warning: failed to render 404 template: {e}"),
         }
     }
 
-    // Redirect stubs
+    // Redirect stubs (path-contained + HTML-escaped)
+    let out_root = Path::new(&args.output);
     for (from, to) in &config.output.html.redirect {
-        let dest = Path::new(&args.output).join(from.trim_start_matches('/'));
-        if let Some(parent) = dest.parent() {
-            let _ = fs::create_dir_all(parent);
+        let rel = from.trim_start_matches('/');
+        // Reject absolute / parent-escaping redirect sources
+        let rel_path = Path::new(rel);
+        if rel_path.is_absolute()
+            || rel_path
+                .components()
+                .any(|c| matches!(c, std::path::Component::ParentDir))
+        {
+            eprintln!("warning: ignoring unsafe redirect source path: {from}");
+            continue;
         }
+        let dest = out_root.join(rel_path);
+        // Containment check after join
+        let dest_canon_parent = dest.parent().and_then(|p| {
+            let _ = fs::create_dir_all(p);
+            p.canonicalize().ok()
+        });
+        let out_canon = out_root.canonicalize().ok();
+        if let (Some(parent), Some(root)) = (dest_canon_parent, out_canon) {
+            if !parent.starts_with(&root) {
+                eprintln!("warning: redirect escapes build dir, skipped: {from}");
+                continue;
+            }
+        }
+        // Only allow relative, root-relative, or http(s) targets
+        let to_safe = to.trim();
+        let to_ok = to_safe.starts_with('/')
+            || to_safe.starts_with("./")
+            || to_safe.starts_with("../")
+            || to_safe.starts_with("http://")
+            || to_safe.starts_with("https://")
+            || (!to_safe.contains(':') && !to_safe.is_empty());
+        if !to_ok || to_safe.contains('\n') || to_safe.contains('"') || to_safe.contains('<') {
+            eprintln!("warning: ignoring unsafe redirect target: {to}");
+            continue;
+        }
+        let escaped = html_escape::encode_double_quoted_attribute(to_safe);
         let body = format!(
-            r#"<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url={to}"><link rel="canonical" href="{to}"></head><body><a href="{to}">Redirect</a></body></html>"#,
-            to = to
+            r#"<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url={escaped}"><link rel="canonical" href="{escaped}"></head><body><a href="{escaped}">Redirect</a></body></html>"#
         );
-        let _ = fs::write(dest, body);
+        if let Err(e) = fs::write(&dest, body) {
+            eprintln!("warning: failed to write redirect {from}: {e}");
+        }
     }
 
     // Print page (all chapters concatenated)

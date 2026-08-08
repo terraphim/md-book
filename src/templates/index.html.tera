@@ -19,16 +19,8 @@
         {% include "header" %}
         <main class="content index-content">
             {% if has_index %}
-                
-                    {% if config.output.html.allow_html %}
-                        <!-- HTML is allowed -->
-                        {{ content | safe }}
-                    {% else %}
-                    <article class="main-article">
-                        HTML is not allowed
-                        {{ content }}
-                    </article>
-                {% endif %}
+                <article class="main-article">
+                    {{ content | safe }}
                 </article>
             {% else %}
                 <div class="index-header">

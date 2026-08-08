@@ -30,7 +30,13 @@ pub fn resolve(
         .unwrap_or_else(|| PathBuf::from("."));
 
     let src = if let Some(i) = input_override {
-        PathBuf::from(i)
+        let p = PathBuf::from(i);
+        if p.is_absolute() {
+            p
+        } else {
+            // Relative -i is resolved from CWD (explicit override), not book root
+            p
+        }
     } else if let Some(ref s) = config.book.src {
         root.join(s)
     } else {
