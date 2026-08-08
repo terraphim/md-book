@@ -1,6 +1,8 @@
 pub mod config;
 pub mod core;
 pub mod pagefind_service;
+pub mod pipeline;
+pub mod render;
 
 // Optional server module for native builds only
 #[cfg(feature = "server")]
