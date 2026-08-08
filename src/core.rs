@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::config::BookConfig;
 use crate::pipeline;
+use crate::pipeline::BuildReport;
 
 #[derive(Parser, Debug, Clone)]
 #[command(author, version, about, long_about = None)]
@@ -53,29 +54,29 @@ pub struct PageInfo {
 ///
 /// Returns an error if the build process fails, including template rendering,
 /// file I/O errors, or search indexing failures
-pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
+pub async fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<BuildReport> {
     build_impl(args, config, watch_enabled).await
 }
 
 #[cfg(not(feature = "tokio"))]
-pub fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
+pub fn build(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<BuildReport> {
     build_impl(args, config, watch_enabled)
 }
 
 #[cfg(feature = "tokio")]
-async fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
-    pipeline::run_sync(args, config, watch_enabled)?;
+async fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<BuildReport> {
+    let report = pipeline::run_sync(args, config, watch_enabled)?;
 
     #[cfg(all(feature = "search", feature = "tokio"))]
     {
         pipeline::index(&args.output).await?;
     }
 
-    Ok(())
+    Ok(report)
 }
 
 #[cfg(not(feature = "tokio"))]
-fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
+fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<BuildReport> {
     pipeline::run_sync(args, config, watch_enabled)
 }
 

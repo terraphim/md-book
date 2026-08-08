@@ -81,6 +81,9 @@ pub enum NavKind {
     Chapter,
     PartTitle,
     Separator,
+    /// Structural terminator carrying only the closes needed to balance the
+    /// remaining open lists. Emits no visible markup.
+    ListClose,
 }
 
 /// One entry of the pre-flattened sidebar list handed to Tera.
@@ -264,11 +267,11 @@ impl Book {
             &mut out,
         );
 
-        // Trailing closes after the last entry (marker separator, not rendered as <hr>)
+        // Balance any lists still open after the last entry.
         if list_depth >= 0 {
             out.push(NavEntry {
-                kind: NavKind::Separator,
-                title_html: "__trail__".into(),
+                kind: NavKind::ListClose,
+                title_html: String::new(),
                 title_text: String::new(),
                 href: None,
                 is_external: false,

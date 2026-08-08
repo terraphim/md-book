@@ -18,15 +18,23 @@ use crate::render::html::{
 };
 use crate::render::markdown::render_markdown;
 
+/// What a build did, beyond writing the output tree.
+#[derive(Debug, Default, Clone)]
+pub struct BuildReport {
+    /// Stub chapters written into the source tree by `build.create-missing`.
+    /// The watcher records these so it can ignore the events they cause.
+    pub created: Vec<std::path::PathBuf>,
+}
+
 /// Run the synchronous pipeline stages.
-pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<()> {
+pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result<BuildReport> {
     let tera = init_tera(config)?;
     fs::create_dir_all(&args.output)?;
     copy_static_assets(&args.output, &config.paths.templates, config)?;
 
     let src_dir = Path::new(&args.input);
     let create_missing = config.build.create_missing;
-    let (book, _created) = load_book(src_dir, create_missing)?;
+    let (book, created) = load_book(src_dir, create_missing)?;
 
     let chapters: Vec<&crate::book::Chapter> = book.iter_chapters().collect();
     println!("Total pages: {}", chapters.len());
@@ -287,7 +295,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         println!("Skipping search indexing (search or tokio feature not enabled)");
     }
 
-    Ok(())
+    Ok(BuildReport { created })
 }
 
 fn chapter_to_pageinfo(ch: &crate::book::Chapter, root: &str) -> PageInfo {

@@ -96,9 +96,19 @@ jobs:
         
       - name: Run integration tests
         run: cargo test --test integration --features "tokio,search,syntax-highlighting"
-        
+
+      - name: Run structural conformance tests
+        run: cargo test --test structure --features "tokio,search,syntax-highlighting"
+
+      - name: Run mdBook compatibility tests
+        run: |
+          cargo test --test mdbook_compatibility --features "tokio,search,syntax-highlighting"
+          cargo test --test mdbook_test_book --features "tokio,search,syntax-highlighting"
+
       - name: Run end-to-end tests
-        run: cargo test --test e2e
+        run: |
+          cargo test --test e2e
+          cargo test --test mdbook_e2e --features "tokio,search,syntax-highlighting"
         env:
           RUST_LOG: debug
         

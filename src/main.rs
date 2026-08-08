@@ -163,9 +163,9 @@ async fn main_impl() -> Result<()> {
     let watch_enabled = false;
 
     #[cfg(any(feature = "server", feature = "watcher"))]
-    build(&args, &config, watch_enabled).await?;
+    let initial_report = build(&args, &config, watch_enabled).await?;
     #[cfg(not(any(feature = "server", feature = "watcher")))]
-    build(&args, &config, watch_enabled)?;
+    let initial_report = build(&args, &config, watch_enabled)?;
 
     #[cfg(any(feature = "watcher", feature = "server"))]
     {
@@ -237,11 +237,13 @@ async fn main_impl() -> Result<()> {
                 #[cfg(feature = "server")]
                 let reload_tx = reload_tx.clone();
 
+                let initial = initial_report.clone();
                 handles.push(tokio::spawn(async move {
                     if let Err(e) = watch_and_rebuild(
                         watch_paths,
                         args_clone,
                         config_clone,
+                        initial,
                         #[cfg(feature = "server")]
                         reload_tx,
                     )
@@ -351,6 +353,7 @@ async fn watch_and_rebuild(
     watch_paths: Vec<String>,
     args: Args,
     config: BookConfig,
+    initial: md_book::BuildReport,
     #[cfg(feature = "server")] reload_tx: broadcast::Sender<()>,
 ) -> Result<()> {
     use std::sync::mpsc::channel;
@@ -365,21 +368,38 @@ async fn watch_and_rebuild(
         }
     }
 
+    // `build.create-missing` writes stubs into the source tree; without this
+    // the watcher would see md-book's own writes and rebuild for nothing.
+    let mut self_writes = md_book::SelfWriteFilter::new();
+    self_writes.record(&initial.created);
+
     loop {
         match rx.recv() {
-            Ok(_event) => {
-                // Debounce briefly
+            Ok(event) => {
+                // Debounce briefly, then take the whole batch so a stub write
+                // and a genuine edit arriving together are judged as one.
                 tokio::time::sleep(Duration::from_millis(200)).await;
-                // Drain pending
-                while rx.try_recv().is_ok() {}
-                println!("Change detected, rebuilding…");
-                if let Err(e) = build(&args, &config, true).await {
-                    eprintln!("Rebuild failed: {e}");
-                } else {
-                    #[cfg(feature = "server")]
-                    {
-                        let _ = reload_tx.send(());
+                let mut batch: Vec<PathBuf> = event.map(|e| e.paths).unwrap_or_default();
+                while let Ok(pending) = rx.try_recv() {
+                    if let Ok(e) = pending {
+                        batch.extend(e.paths);
                     }
+                }
+
+                if self_writes.should_ignore(&batch) {
+                    continue;
+                }
+
+                println!("Change detected, rebuilding…");
+                match build(&args, &config, true).await {
+                    Ok(report) => {
+                        self_writes.record(&report.created);
+                        #[cfg(feature = "server")]
+                        {
+                            let _ = reload_tx.send(());
+                        }
+                    }
+                    Err(e) => eprintln!("Rebuild failed: {e}"),
                 }
             }
             Err(e) => {

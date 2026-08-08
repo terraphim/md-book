@@ -5,9 +5,9 @@
         {% if entry.kind == "part_title" %}
             <h2 class="sidebar-part-title">{{ entry.title_html | safe }}</h2>
         {% elif entry.kind == "separator" %}
-            {% if entry.title_html != "__trail__" %}
             <hr class="sidebar-separator" aria-hidden="true">
-            {% endif %}
+        {% elif entry.kind == "list_close" %}
+            {# structural only: the closes above balanced the open lists #}
         {% elif entry.kind == "chapter" %}
             {% if entry.open_lists > 0 %}
             <ul class="sidebar-items{% if entry.depth > 0 %} nested{% endif %}">

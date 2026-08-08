@@ -5,6 +5,7 @@ pub mod pagefind_service;
 pub mod paths;
 pub mod pipeline;
 pub mod render;
+pub mod watch;
 
 // Optional server module for native builds only
 #[cfg(feature = "server")]
@@ -13,6 +14,8 @@ pub mod server;
 pub use config::BookConfig;
 pub use core::{build, Args, PageInfo};
 pub use pagefind_service::{PagefindBuilder, PagefindError};
+pub use pipeline::BuildReport;
+pub use watch::SelfWriteFilter;
 
 // Re-export server functionality when available
 #[cfg(feature = "server")]
