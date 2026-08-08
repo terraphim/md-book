@@ -1,17 +1,41 @@
-<nav class="sidebar-nav">
+<nav class="sidebar-nav" aria-label="Book navigation">
+    {% if chapters %}
+    {% for entry in chapters %}
+        {% if entry.close_lists > 0 %}{% for i in range(end=entry.close_lists) %}</li></ul>{% endfor %}{% endif %}
+        {% if entry.kind == "part_title" %}
+            <h2 class="sidebar-part-title">{{ entry.title_html | safe }}</h2>
+        {% elif entry.kind == "separator" %}
+            {% if entry.title_html != "__trail__" %}
+            <hr class="sidebar-separator" aria-hidden="true">
+            {% endif %}
+        {% elif entry.kind == "chapter" %}
+            {% if entry.open_lists > 0 %}
+            <ul class="sidebar-items{% if entry.depth > 0 %} nested{% endif %}">
+            {% else %}
+            </li>
+            {% endif %}
+            <li class="sidebar-item{% if entry.is_active %} active{% endif %}">
+                {% if entry.is_draft %}
+                    <span class="sidebar-draft" aria-disabled="true">{% if entry.number %}<span class="section-num">{{ entry.number }}</span> {% endif %}{{ entry.title_html | safe }}</span>
+                {% elif entry.href %}
+                    <a href="{{ entry.href | safe }}"{% if entry.is_active %} aria-current="page" class="active"{% endif %}{% if entry.is_external %} rel="external"{% endif %}>{% if entry.number %}<span class="section-num">{{ entry.number }}</span> {% endif %}{{ entry.title_html | safe }}</a>
+                {% else %}
+                    <span>{% if entry.number %}<span class="section-num">{{ entry.number }}</span> {% endif %}{{ entry.title_html | safe }}</span>
+                {% endif %}
+        {% endif %}
+    {% endfor %}
+    {% else %}
     {% for section in page.sections %}
     <div class="sidebar-section">
         <h2 class="sidebar-section-title">{{ section.title }}</h2>
         <ul class="sidebar-items">
             {% for page in section.pages %}
             <li class="sidebar-item">
-                <a href="{{ page.path | safe }}" 
-                   {% if page.path | trim_start_matches(pat="/") == current_path %}class="active"{% endif %}>
-                    {{ page.title }}
-                </a>
+                <a href="{{ page.path | safe }}"{% if page.path | trim_start_matches(pat="/") == current_path %} class="active" aria-current="page"{% endif %}>{{ page.title }}</a>
             </li>
             {% endfor %}
         </ul>
     </div>
     {% endfor %}
+    {% endif %}
 </nav>

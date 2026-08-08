@@ -77,6 +77,10 @@ name = "mdbook_compatibility"
 path = "tests/integration/mdbook_compatibility.rs"
 
 [[test]]
+name = "structure"
+path = "tests/integration/structure_test.rs"
+
+[[test]]
 name = "e2e"
 path = "tests/e2e/cli_test.rs"
 

@@ -82,6 +82,7 @@ pub fn render_page(
     config: &BookConfig,
     current_path: &str,
     watch_enabled: bool,
+    chapters: Option<&[crate::book::NavEntry]>,
 ) -> Result<()> {
     let page_data = PageData {
         title,
@@ -97,6 +98,9 @@ pub fn render_page(
     context.insert("config", &config);
     context.insert("current_path", &current_path);
     context.insert("watch_enabled", &watch_enabled);
+    if let Some(nav) = chapters {
+        context.insert("chapters", &nav);
+    }
 
     let rendered = tera
         .render("page", &context)
@@ -107,6 +111,7 @@ pub fn render_page(
 }
 
 /// Write `index.html` for the book.
+#[allow(clippy::too_many_arguments)]
 pub fn render_index(
     tera: &Tera,
     output_dir: &str,
@@ -115,12 +120,16 @@ pub fn render_index(
     sections: &[Section],
     year: &str,
     config: &BookConfig,
+    chapters: Option<&[crate::book::NavEntry]>,
 ) -> Result<()> {
     let mut context = TeraContext::new();
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);
     context.insert("current_path", &"index.html");
+    if let Some(nav) = chapters {
+        context.insert("chapters", &nav);
+    }
 
     if let (Some(index), Some(html_content)) = (index_page, index_content) {
         context.insert("has_index", &true);

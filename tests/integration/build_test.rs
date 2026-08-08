@@ -15,12 +15,12 @@ async fn test_build_simple_book() -> Result<()> {
     book.build().await?;
 
     // Verify basic structure was created
-    assert!(book.output_exists("README.html"));
+    assert!(book.output_exists("index.html"));
     assert!(book.output_exists("chapter1.html"));
     assert!(book.output_exists("chapter2.html"));
 
     // Check content
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "<h1>Test Book</h1>");
     assert_contains!(readme_content, "This is a test book");
 
@@ -38,12 +38,12 @@ fn test_build_simple_book() -> Result<()> {
     book.build()?;
 
     // Verify basic structure was created
-    assert!(book.output_exists("README.html"));
+    assert!(book.output_exists("index.html"));
     assert!(book.output_exists("chapter1.html"));
     assert!(book.output_exists("chapter2.html"));
 
     // Check content
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "<h1>Test Book</h1>");
     assert_contains!(readme_content, "This is a test book");
 
@@ -75,18 +75,18 @@ async fn test_build_complex_book() -> Result<()> {
     book.build().await?;
 
     // Verify nested structure
-    assert!(book.output_exists("README.html"));
-    assert!(book.output_exists("chapter1/README.html"));
+    assert!(book.output_exists("index.html"));
+    assert!(book.output_exists("chapter1/index.html"));
     assert!(book.output_exists("chapter1/section1.html"));
     assert!(book.output_exists("chapter2.html"));
     assert!(book.output_exists("chapter3.html"));
 
     // Check navigation structure
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "Complex Test Book");
 
     // Check nested content
-    let chapter1_content = book.read_output("chapter1/README.html")?;
+    let chapter1_content = book.read_output("chapter1/index.html")?;
     assert_contains!(chapter1_content, "<h1>Chapter 1: Basics</h1>");
     assert_contains!(chapter1_content, "<li>Item 1</li>");
 
@@ -113,7 +113,7 @@ async fn test_build_with_custom_config() -> Result<()> {
 
     book.build().await?;
 
-    let content = book.read_output("README.html")?;
+    let content = book.read_output("index.html")?;
     // The title from book.toml should be used in templates when available
     assert_contains!(content, "<h1>Test Book</h1>"); // From markdown
 

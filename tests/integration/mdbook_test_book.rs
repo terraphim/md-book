@@ -16,17 +16,13 @@ async fn test_mdbook_test_book_build() -> Result<()> {
     book.build().await?;
 
     // Verify key files were created
-    assert!(book.output_exists("README.html"));
-    assert!(book.output_exists("SUMMARY.html"));
+    assert!(book.output_exists("index.html"));
     assert!(book.output_exists("last.html"));
     assert!(book.output_exists("suffix.html"));
 
     // Verify content
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "Demo Book");
-
-    let summary_content = book.read_output("SUMMARY.html")?;
-    assert_contains!(summary_content, "SUMMARY");
 
     Ok(())
 }
@@ -47,7 +43,7 @@ async fn test_mdbook_test_book_with_config() -> Result<()> {
     book.build().await?;
 
     // Verify the config was applied
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "Demo Book");
 
     Ok(())
@@ -99,7 +95,7 @@ async fn test_mdbook_test_book_headings() -> Result<()> {
     book.build().await?;
 
     // Check headings are processed
-    let headings_content = book.read_output("headings/README.html")?;
+    let headings_content = book.read_output("headings/index.html")?;
     assert_contains!(headings_content, "headings");
 
     let collapsed_content = book.read_output("headings/collapsed.html")?;
@@ -119,11 +115,9 @@ async fn test_mdbook_test_book_navigation() -> Result<()> {
     book.build().await?;
 
     // Check that navigation structure is created
-    let summary_content = book.read_output("SUMMARY.html")?;
-    assert_contains!(summary_content, "SUMMARY");
 
     // Check that links work
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     // Should contain links to other pages
     assert_contains!(readme_content, "href");
 
@@ -145,7 +139,7 @@ async fn test_mdbook_test_book_mathjax_support() -> Result<()> {
     book.build().await?;
 
     // Check that MathJax is supported (if implemented)
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     // This test will pass even if MathJax isn't implemented yet
     assert!(!readme_content.is_empty());
 

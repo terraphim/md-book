@@ -75,7 +75,7 @@ fn test_cli_basic_build() -> Result<()> {
     assert!(output.status.success(), "Command failed");
     assert!(output_dir.exists(), "Output directory not created");
     assert!(
-        output_dir.join("README.html").exists(),
+        output_dir.join("index.html").exists(),
         "HTML file not created"
     );
 
@@ -194,7 +194,7 @@ fn test_cli_complex_directory_structure() -> Result<()> {
 
     assert!(output.status.success());
     assert!(output_dir.exists());
-    assert!(output_dir.join("README.html").exists());
+    assert!(output_dir.join("index.html").exists());
     assert!(output_dir.join("chapter1").join("intro.html").exists());
     assert!(output_dir.join("chapter1").join("section1.html").exists());
     assert!(output_dir.join("chapter2").join("advanced.html").exists());
