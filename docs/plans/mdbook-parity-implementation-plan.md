@@ -271,17 +271,31 @@ pub struct Chapter {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct SectionNumber(pub Vec<u32>);
 
-/// One entry of the pre-flattened sidebar list handed to Tera
-/// (Tera has no template recursion, so nesting is expressed as `depth`).
+/// One entry of the pre-flattened sidebar list handed to Tera.
+///
+/// Tera macros cannot recurse, so the tree is flattened and nesting is
+/// reconstructed by the template from the `open_lists` / `close_lists` deltas.
+/// This yields genuinely nested `<ul>` markup (required by the accessibility
+/// decision in the interview findings) from a single template loop.
 #[derive(Debug, Clone, Serialize)]
 pub struct NavEntry {
     pub kind: NavKind,          // Chapter | PartTitle | Separator
-    pub title: String,
-    /// Root-relative href; `None` for drafts, part titles and separators.
+    /// Sidebar label: the SUMMARY link text, inline markdown rendered.
+    pub title_html: String,
+    /// Same label flattened to plain text, for `<title>` and `aria-label`.
+    pub title_text: String,
+    /// Href relative to the current page; `None` for drafts, part titles and
+    /// separators. External SUMMARY links carry their absolute URL here.
     pub href: Option<String>,
+    /// True when `href` points off-site (rendered with `rel="external"`).
+    pub is_external: bool,
     /// Rendered section number, e.g. "1.2."; empty when `no-section-label` is set.
     pub number: String,
     pub depth: usize,
+    /// `<ul>` elements to open before emitting this entry (0 or 1).
+    pub open_lists: usize,
+    /// `</ul></li>` pairs to close before emitting this entry.
+    pub close_lists: usize,
     pub is_draft: bool,
     pub is_active: bool,
 }
@@ -294,23 +308,34 @@ pub struct NavEntry {
 
 /// Parse the contents of a `SUMMARY.md`.
 ///
+/// Parsing does not stop at the first problem: the whole file is scanned and
+/// every error collected, so one build round-trip reports everything wrong.
+///
 /// # Errors
-/// - `SummaryError::MixedDelimiters` -- `-` and `*` both used for list items.
-/// - `SummaryError::PrefixAfterNumbered` -- a prefix chapter follows numbered chapters.
-/// - `SummaryError::Malformed` -- a list item that is not a link.
-pub fn parse_summary(content: &str) -> Result<Summary, SummaryError>;
+/// Returns every problem found, each carrying a line number and the offending
+/// text: `MixedDelimiters`, `PrefixAfterNumbered`, `Malformed`,
+/// `DuplicateEntry`, `NonMarkdownTarget`.
+pub fn parse_summary(content: &str) -> Result<Summary, SummaryErrors>;
 
 /// Build a `Book` from a summary, resolving paths against `src_dir` and
 /// assigning section numbers.
 ///
+/// Path resolution is containment-checked: every chapter path is canonicalised
+/// (resolving symlinks) and must remain under `src_dir`.
+///
+/// When `create_missing` is true (the default), a referenced file that does not
+/// exist is created as a stub containing a single H1 taken from the SUMMARY link
+/// text; an existing file is never overwritten. Created paths are returned so the
+/// watcher can suppress the resulting filesystem events.
+///
 /// # Errors
-/// Returns `SummaryError::MissingFile` when a referenced file is absent and
-/// `build.create-missing` is false.
+/// `EscapesSourceDir` for any path resolving outside `src_dir`; `MissingFile`
+/// when the file is absent and `create_missing` is false.
 pub fn book_from_summary(
     summary: &Summary,
     src_dir: &Path,
     create_missing: bool,
-) -> Result<Book, SummaryError>;
+) -> Result<(Book, Vec<PathBuf>), SummaryErrors>;
 
 // src/book/directory.rs
 
@@ -369,12 +394,27 @@ pub enum SummaryError {
     #[error("SUMMARY.md line {line}: expected a markdown link, found: {text}")]
     Malformed { line: usize, text: String },
 
+    #[error("SUMMARY.md line {line}: '{path}' is already listed (line {first_line})")]
+    DuplicateEntry { line: usize, path: PathBuf, first_line: usize },
+
+    #[error("SUMMARY.md line {line}: chapter target must be a .md file, found: {path}")]
+    NonMarkdownTarget { line: usize, path: PathBuf },
+
+    #[error("SUMMARY.md line {line}: '{path}' resolves outside the source directory; \
+             refusing to read")]
+    EscapesSourceDir { line: usize, path: PathBuf },
+
     #[error("SUMMARY.md references missing file: {path}")]
     MissingFile { path: PathBuf },
 
     #[error(transparent)]
     Io(#[from] std::io::Error),
 }
+
+/// Every problem found in one pass, reported together before aborting.
+#[derive(Debug, thiserror::Error)]
+#[error("SUMMARY.md has {} problem(s)", .0.len())]
+pub struct SummaryErrors(pub Vec<SummaryError>);
 ```
 
 ## Test strategy
@@ -391,6 +431,15 @@ No mocks (project rule). Every test builds real books from real fixtures.
 | `test_parse_draft_chapter` | `book/summary.rs` | `- [Title]()` → `source_path: None` |
 | `test_parse_rejects_mixed_delimiters` | `book/summary.rs` | `MixedDelimiters` |
 | `test_parse_rejects_prefix_after_numbered` | `book/summary.rs` | `PrefixAfterNumbered` |
+| `test_parse_collects_all_errors_in_one_pass` | `book/summary.rs` | Three seeded problems → three errors, in line order |
+| `test_parse_rejects_duplicate_entry` | `book/summary.rs` | `DuplicateEntry` names both lines |
+| `test_parse_rejects_non_markdown_target` | `book/summary.rs` | `NonMarkdownTarget` |
+| `test_parse_accepts_anchor_link` | `book/summary.rs` | Fragment stripped for resolution, kept on href |
+| `test_parse_accepts_external_url` | `book/summary.rs` | `is_external`, no output path, no chain slot |
+| `test_summary_rejects_paths_escaping_src` | `book/summary.rs` | `../`, absolute, and a symlink out of `src/` |
+| `test_create_missing_writes_stub_once` | `book/summary.rs` | Stub H1 from link text; existing file never overwritten; created paths returned |
+| `test_to_nav_list_deltas_balance` | `book/mod.rs` | Σ`open_lists` == Σ`close_lists` for any tree |
+| `test_title_from_summary_not_h1` | `book/mod.rs` | Link text wins; markdown rendered for HTML, flattened for `<title>` |
 | `test_section_numbering_matches_nesting` | `book/mod.rs` | `1`, `1.1`, `1.1.1`, `2` |
 | `test_prefix_suffix_draft_are_unnumbered` | `book/mod.rs` | `number: None` |
 | `test_readme_maps_to_index_html` | `book/mod.rs` | `README.md` → `index.html` |
@@ -407,7 +456,10 @@ No mocks (project rule). Every test builds real books from real fixtures.
 | Test | Location | Purpose |
 |------|----------|---------|
 | `test_structure_matches_fixture` | `tests/integration/structure_test.rs` | Built tree vs `test_book_mdbook.structure.json` |
-| `test_files_absent_from_summary_not_published` | same | Summary-driven exclusion |
+| `test_files_absent_from_summary_not_published` | same | Summary-driven exclusion; orphan `.md` warns |
+| `test_non_markdown_assets_copied_through` | same | `src/img/*.png` reaches the build dir at the same relative path |
+| `test_watch_suppresses_created_stub_event` | same | `create-missing` under `--watch` does not trigger a second rebuild |
+| `test_sidebar_nesting_and_aria` | same | Nested `<ul>`, `aria-current="page"`, `aria-disabled` drafts, part-title `<h2>` |
 | `test_prev_next_chain_follows_summary` | same | Walk the whole chain |
 | `test_no_summary_falls_back_to_directory` | same | `tests/assets/test_book_1` unchanged |
 | `test_existing_templates_still_render` | same | Flat `sections` still populated |
@@ -606,7 +658,135 @@ only `is_active`. **Do not do this pre-emptively** -- measure first.
 - [x] Increment sequencing agreed (A → B → C → D → E, F later)
 - [x] Human approval received -- Alex Mikhalev, 2026-08-08
 
-**Next phase:** `disciplined-specification` (Phase 2.5) on increment B before any code is
-written -- the summary parser has the most edge cases (mixed delimiters, missing files,
-`create-missing`, non-UTF-8 paths, duplicate entries, links with anchors or query strings).
-Findings are appended to this document.
+**Next phase:** `disciplined-specification` (Phase 2.5) on increment B -- **complete**, findings
+appended below. Implementation may proceed with increment A.
+
+---
+
+## Specification Interview Findings -- Increment B
+
+**Interview date**: 2026-08-08
+**Dimensions covered**: Failure modes; Edge cases & boundaries; Concurrency; Integration
+effects; Migration & compatibility; Operational concerns; Security; Accessibility; User mental
+models (9 of 10 -- scale & performance was already settled in the plan's benchmark section).
+**Convergence status**: Complete. Round 3 produced one design consequence (nested markup vs the
+flat `NavEntry` list, folded into the API above) and otherwise confirmed the recommended
+positions.
+
+### Key decisions from interview
+
+#### Failure modes
+
+- **`create-missing` is honoured, defaulting to true** -- matching mdBook. A `SUMMARY.md` entry
+  whose file is absent causes md-book to write a stub into `src/` and build it. Accepted
+  consequence: the build mutates the user's source tree by default. The stub is a single H1
+  derived from the SUMMARY link text; nothing else is written, and an existing file is never
+  overwritten.
+- **Summary syntax errors are collected, not fail-fast.** Parse the whole file, accumulate every
+  problem with line number and offending text, print them together, exit non-zero. Rationale:
+  migrating a large book should take one build round-trip, not one per typo. This changes
+  `parse_summary` from `Result<Summary, SummaryError>` to returning
+  `Result<Summary, Vec<SummaryError>>` (or a `SummaryErrors` collection implementing
+  `Display` over the set) -- **update the API signature accordingly during B2**.
+
+#### Edge cases and boundaries
+
+Accepted SUMMARY link forms:
+
+| Form | Behaviour |
+|------|-----------|
+| `[API](api.md#errors)` | Fragment stripped for file resolution, preserved on the sidebar href. Depends on increment D's server-side heading IDs to actually land. |
+| `[Rust](https://rust-lang.org)` | Sidebar entry linking off-site; no page generated, no slot in the prev/next chain, `rel="external"`. |
+
+Rejected forms -- both join the collected error set and abort the build:
+
+| Form | Rationale |
+|------|-----------|
+| The same file listed twice | Almost always a copy-paste error; the error names both line numbers. |
+| Non-`.md` target, e.g. `[Sample](sample.rs)` | The summary describes a tree of markdown chapters; assets are reached by in-page links, not sidebar entries. |
+
+- **Unlisted files**: non-markdown files under `src/` are copied through to the build directory
+  preserving relative paths (this is how in-book images work). Orphan `.md` files are not
+  published, and each is named in a warning so accidental omissions stay visible.
+
+#### Concurrency
+
+- **`create-missing` under `--watch`/`--serve`**: md-book records the paths it creates and
+  suppresses the next watcher event for each, so a created stub cannot trigger a rebuild. The
+  system converges after a single build because the second parse finds the file present.
+  Implementation note: the suppression set is consumed (not merely checked), so a genuine user
+  edit to that same file immediately afterwards still triggers a rebuild.
+
+#### Security
+
+- **Path containment is enforced.** Every resolved chapter path is canonicalised and must remain
+  under the source directory; `../../private/notes.md` and absolute paths are refused as
+  collected errors. Rationale: a documentation build that reads outside its tree and republishes
+  the contents is an exfiltration path, and `SUMMARY.md` may arrive from an untrusted pull
+  request in CI. Canonicalisation happens after symlink resolution, so a symlink inside `src/`
+  pointing outside it is also refused.
+- New test: `test_summary_rejects_paths_escaping_src`, including the symlink case.
+
+#### User mental models
+
+- **SUMMARY link text wins as the chapter title**, for the sidebar, `<title>`, prev/next labels
+  and numbering. Inline markdown in the link text is rendered in HTML contexts and flattened for
+  `<title>`. The page's own H1 is left untouched. This also fixes today's defect where raw
+  `**bold**` from a heading leaks into the browser tab (`core.rs:388-393`).
+- **Section numbers appear in the sidebar only**, suppressible with `no-section-label`. Page
+  headings, `<title>` and therefore Pagefind's indexed titles stay as the author wrote them --
+  numbering is a navigation aid, not a rewrite of the author's content.
+
+#### Integration effects
+
+- **Previous/next chain** covers every reachable page in authored order -- prefix, then numbered,
+  then suffix. Draft chapters, part titles, separators and external links are skipped rather
+  than becoming dead ends, since none of them has a page.
+
+#### Accessibility
+
+- The sidebar emits genuinely nested `<ul>` markup mirroring the chapter tree; part titles are
+  real `<h2>` elements between lists; separators are `<hr aria-hidden="true">`; the active page
+  carries `aria-current="page"`; draft chapters render as `<span aria-disabled="true">` rather
+  than links, so keyboard users never tab into a dead end. Section numbers sit inside the link
+  text. The whole nav is wrapped in `<nav aria-label="Book navigation">`.
+- **Design consequence**: Tera macros cannot recurse, so nested markup cannot come from a plain
+  depth-tagged list. `NavEntry` gains `open_lists` / `close_lists` deltas (see the API section
+  above) allowing one template loop to emit correct nesting. New test:
+  `test_to_nav_list_deltas_balance` -- the sum of opens equals the sum of closes for any tree.
+
+#### Migration and compatibility
+
+- The deprecated flat `sections` variable is populated as **one section per top-level chapter**,
+  titled after that chapter and containing its descendants flattened. An unmigrated template
+  renders a sensible, if flatter, sidebar. A deprecation warning fires when a custom template
+  directory is in use. Removal target: **0.3.0**.
+
+### Deferred items
+
+| Item | Deferred because |
+|------|------------------|
+| Scale beyond ~1,000 chapters (hoisting `to_nav` out of the page loop) | Measure first; the corpus is 30 pages. Bench added in increment A. |
+| Non-UTF-8 paths in `SUMMARY.md` | Existing code already surfaces these as errors (`core.rs:485-489`); no new behaviour needed. |
+| Per-chapter search enable (`[output.html.search.chapter]`) | Pagefind-side capability question, not a book-model question. |
+
+### Interview summary
+
+Three rounds, four questions each. The interview changed the plan in five substantive ways.
+Two decisions went against the drafted recommendation: `create-missing` is honoured with mdBook's
+default of true (the plan had assumed a non-destructive warn-and-draft), and summary errors are
+collected rather than fail-fast (the plan's error enum implied one error per build). Both are
+recorded in the API section above and must be reflected in B2's signatures before coding starts.
+
+The security dimension surfaced a requirement absent from the plan entirely: path containment.
+`SUMMARY.md` is author-controlled input that names files to read and republish, which in CI can
+mean input from an untrusted pull request. Rejecting anything that canonicalises outside `src/`
+-- symlinks included -- closes that path, and is cheap to enforce at resolution time.
+
+The accessibility decision had the largest design ripple. Committing to genuinely nested `<ul>`
+markup with `aria-current` and disabled draft entries is incompatible with the flat depth-tagged
+`NavEntry` list, because Tera macros cannot recurse. Adding `open_lists`/`close_lists` deltas
+keeps the single-loop template while producing correct hierarchy for screen readers. The
+remaining decisions -- SUMMARY link text as the title source, sidebar-only numbering, the
+prev/next chain skipping page-less items, and asset pass-through with orphan warnings -- all
+confirmed the drafted positions and needed no structural change.
