@@ -782,3 +782,41 @@ async fn test_index_page_loads_mermaid_from_its_own_source() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_config_defaults_reach_the_page() -> Result<()> {
+    // A book with no book.toml must still get real values: twelf's layering and
+    // `#[serde(default)]` on container fields both drop per-field defaults, which
+    // previously produced <html lang="">, an empty <title> and a broken logo.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Intro](intro.md)\n")?;
+    book.create_file("intro.md", "# Intro\n\nBody.\n")?;
+
+    let config = md_book::config::load_config(None)?;
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("intro.html")?;
+    assert_contains!(html, "<html lang=\"en\">");
+    assert!(
+        !html.contains("| </title>"),
+        "book title must not be empty in <title>"
+    );
+
+    // The default logo must resolve to a file that exists.
+    let logo = html
+        .split("class=\"header-logo-img\"")
+        .next()
+        .and_then(|before| before.rsplit("src=\"").next())
+        .and_then(|s| s.split('"').next())
+        .map(str::to_string)
+        .unwrap_or_default();
+    assert!(!logo.is_empty(), "logo src must not be empty");
+    assert!(
+        book.output_path().join(&logo).exists(),
+        "logo src {logo} does not exist in the output"
+    );
+
+    Ok(())
+}

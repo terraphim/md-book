@@ -174,7 +174,9 @@ Legend: **Have** = implemented; **Partial** = present but divergent/incomplete; 
 | Self-contained offline output | **Missing (defect)** | Shoelace loaded from jsDelivr (`page.html.tera:12-13`); mdBook output is fully offline. |
 | Search backend | **N/A (local decision)** | Pagefind replaces elasticlunr. Consequence: `use-boolean-and`, `boost-*`, `expand`, `teaser-word-count`, `copy-js` have no Pagefind equivalent; `limit-results` and `heading-split-level` do. These keys parse today and are silently ignored. |
 | Templating engine | **N/A (local decision)** | Tera, not Handlebars: `index.hbs`/`head.hbs`/`{{#toc}}`/`{{fa}}` will not be supported. |
-| SEO: canonical URL, meta description, skip link | **Have (superset)** | Added by the browser-validation work. |
+| SEO: canonical URL, meta description, skip link | **Missing** (correction, 2026-08-08) | Originally recorded as "Have". That was read from a **dirty working tree**: these live only in uncommitted WIP (`stash@{0}`, "unrelated SEO/template/dist changes", which also carries ~166 lines in `src/core.rs`). `git show main:src/templates/page.html.tera` has no skip link, no canonical, no meta description. |
+| `<html lang>` attribute | **Missing on main; added by this branch** | `main` emits a bare `<html>`. Wired to `config.book.language` across the page, index, 404 and print templates. |
+| Config defaults (`title`, `language`, `logo`, `edition`, `templates`) | **Broken on main; fixed by this branch** | `#[serde(default = "…")]` never fired: twelf's layering yields empty strings for absent keys, and `#[serde(default)]` on a container field uses `Default::default()`, bypassing per-field defaults. A book with no `book.toml` rendered `<html lang="">`, an empty `<title>` and a broken logo `src=""`. |
 
 ## Constraints
 
@@ -285,6 +287,18 @@ Additionally verified during Phase 2, closing two assumptions from the table abo
    replaces.
 6. **User-supplied templates** -- only this repo's `paths.templates = "src/templates"` was found;
    the one-release `sections` deprecation window is sufficient.
+
+### Correction: research was conducted against a dirty working tree
+
+`git status` at the start of Phase 1 showed modified templates and `src/core.rs`. Several
+observations in the first draft of this document -- canonical URLs, meta descriptions, the skip
+link, and the `canonical_url` / `extract_description` / `first_plaintext_paragraph` helpers cited
+with line numbers -- came from those **uncommitted** changes, not from committed code. They are
+preserved in `stash@{0}`.
+
+Consequence: increments C-E rewrote the same templates from the committed base, so merging that
+stash will conflict, and its SEO work is still absent from the branch. Treat the stash as
+outstanding work, not as shipped behaviour.
 
 ### Assumptions Explicitly Stated
 

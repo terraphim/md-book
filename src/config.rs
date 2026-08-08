@@ -37,7 +37,7 @@ pub struct BookConfig {
 }
 
 #[config]
-#[derive(Debug, Default, serde::Serialize, Clone)]
+#[derive(Debug, serde::Serialize, Clone)]
 pub struct Book {
     #[serde(default = "default_title")]
     pub title: String,
@@ -60,6 +60,22 @@ pub struct Book {
     pub src: Option<String>,
 }
 
+impl Default for Book {
+    fn default() -> Self {
+        Self {
+            title: default_title(),
+            description: None,
+            authors: Vec::new(),
+            language: default_language(),
+            base_url: None,
+            logo: default_logo(),
+            github_url: None,
+            github_edit_url_base: None,
+            src: None,
+        }
+    }
+}
+
 fn default_title() -> String {
     "My Book".to_string()
 }
@@ -72,10 +88,18 @@ fn default_logo() -> String {
     "/img/default_logo.svg".to_string()
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Rust {
     #[serde(default = "default_edition")]
     pub edition: String,
+}
+
+impl Default for Rust {
+    fn default() -> Self {
+        Self {
+            edition: default_edition(),
+        }
+    }
 }
 
 fn default_edition() -> String {
@@ -166,7 +190,7 @@ pub struct PlaygroundConfig {
     pub line_numbers: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "kebab-case")]
 pub struct SearchConfig {
     #[serde(default = "default_limit_results")]
@@ -183,6 +207,20 @@ pub struct SearchConfig {
     pub expand: bool,
     #[serde(default = "default_heading_split_level")]
     pub heading_split_level: u32,
+}
+
+impl Default for SearchConfig {
+    fn default() -> Self {
+        Self {
+            limit_results: default_limit_results(),
+            use_boolean_and: false,
+            boost_title: default_boost_title(),
+            boost_hierarchy: default_boost_hierarchy(),
+            boost_paragraph: default_boost_paragraph(),
+            expand: false,
+            heading_split_level: default_heading_split_level(),
+        }
+    }
 }
 
 const fn default_limit_results() -> u32 {
@@ -229,10 +267,18 @@ impl Default for Build {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Paths {
     #[serde(default = "default_templates_dir")]
     pub templates: String,
+}
+
+impl Default for Paths {
+    fn default() -> Self {
+        Self {
+            templates: default_templates_dir(),
+        }
+    }
 }
 
 fn default_templates_dir() -> String {
@@ -272,8 +318,46 @@ pub fn load_config(config_path: Option<&str>) -> anyhow::Result<BookConfig> {
         }
     }
 
-    let config = BookConfig::with_layers(&layers)?;
+    let mut config = BookConfig::with_layers(&layers)?;
+    fill_unset_with_defaults(&mut config);
     Ok(config)
+}
+
+/// Replace unset scalar fields with their documented defaults.
+///
+/// `#[serde(default = "...")]` does not survive two hops here: twelf's layering
+/// yields empty strings for absent keys, and `#[serde(default)]` on a container
+/// field constructs it with `Default::default()`, bypassing the per-field
+/// defaults inside it. Without this, a book with no `book.toml` renders
+/// `<html lang="">`, an empty `<title>` and a broken logo `src=""`.
+fn fill_unset_with_defaults(config: &mut BookConfig) {
+    let d = BookConfig::default();
+
+    if config.book.title.is_empty() {
+        config.book.title = d.book.title;
+    }
+    if config.book.language.is_empty() {
+        config.book.language = d.book.language;
+    }
+    if config.book.logo.is_empty() {
+        config.book.logo = d.book.logo;
+    }
+    if config.rust.edition.is_empty() {
+        config.rust.edition = d.rust.edition;
+    }
+    if config.paths.templates.is_empty() {
+        config.paths.templates = d.paths.templates;
+    }
+
+    // Zero is never a meaningful value for these, so it means "absent".
+    let search = &mut config.output.html.search;
+    let ds = d.output.html.search;
+    if search.limit_results == 0 {
+        search.limit_results = ds.limit_results;
+    }
+    if search.heading_split_level == 0 {
+        search.heading_split_level = ds.heading_split_level;
+    }
 }
 
 #[cfg(test)]
@@ -315,16 +399,17 @@ mod tests {
     #[test]
     fn test_book_config_defaults() {
         // Test basic config loading works
-        let config = BookConfig::with_layers(&[Layer::Env(Some("MDBOOK_".to_string()))]).unwrap();
+        let mut config =
+            BookConfig::with_layers(&[Layer::Env(Some("MDBOOK_".to_string()))]).unwrap();
+        fill_unset_with_defaults(&mut config);
 
-        // Test that we can access config fields (values may be empty due to twelf behavior)
-        assert!(!config.book.logo.is_empty() || config.book.logo.is_empty()); // Always passes, just tests field access
-        assert!(!config.rust.edition.is_empty() || config.rust.edition.is_empty()); // Always passes
-        assert!(!config.paths.templates.is_empty() || config.paths.templates.is_empty()); // Always passes
-
-        // Test that search config is accessible
-        let _ = config.output.html.search.limit_results;
-        let _ = config.output.html.search.boost_title;
+        // Documented defaults must be real values, not empty strings.
+        assert_eq!(config.book.title, "My Book");
+        assert_eq!(config.book.language, "en");
+        assert_eq!(config.book.logo, "/img/default_logo.svg");
+        assert_eq!(config.rust.edition, "2021");
+        assert_eq!(config.paths.templates, "templates");
+        assert_eq!(config.output.html.search.limit_results, 20);
     }
 
     #[test]
@@ -343,9 +428,10 @@ mod tests {
         // Restore original directory
         std::env::set_current_dir(original_dir)?;
 
-        // Should have valid config (values may be empty strings due to twelf behavior)
-        let _ = config.book.language.len();
-        let _ = config.rust.edition.len();
+        // With no book.toml at all, defaults still apply.
+        assert_eq!(config.book.language, "en");
+        assert_eq!(config.rust.edition, "2021");
+        assert_eq!(config.book.title, "My Book");
 
         Ok(())
     }
@@ -491,8 +577,7 @@ frontmatter = true
         std::env::set_current_dir(original_dir)?;
 
         let config = config?;
-        // Config loaded successfully (value may vary due to twelf behavior)
-        let _ = config.book.language;
+        assert_eq!(config.book.language, "en");
         Ok(())
     }
 
