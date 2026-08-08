@@ -1,42 +1,27 @@
-# Handover: mdBook parity Increment A
+# Handover: mdBook parity A–E
 
 **Date**: 2026-08-08  
-**UTC end**: see verification report  
-**Change slug**: mdbook-parity-a  
-**Issue**: #1  
-**Branch**: `task/1-pipeline-decomposition`
+**Branch**: `task/2-summary-book-model`  
+**PRs**: Gitea #7, GitHub #27 (A-only was #6/#26)
 
 ## Completed
+- A: pipeline decomposition (byte-identical)
+- B: SUMMARY.md book model + dual-review security fixes
+- C: CLI subcommands + path resolution
+- D: path_to_root, heading IDs, 404, code-copy
+- E: themes, keyboard, print, redirects
 
-- Decomposed build into `src/pipeline/` + `src/render/`
-- Identity preprocess seam with tests
-- Byte-identical output vs pre-A baseline (72 files)
-- Verification, validation, review artefacts written
-- Unrelated WIP left in `git stash` (message: `wip: unrelated SEO/template/dist changes`)
+## Known gaps (plan-explicit or deferred)
+- Full Shoelace vendor (CDN still used for Shoelace)
+- Fold interactive collapse UI (config present)
+- additional-css/js file copy (config keys present; inject partial)
+- P2 {{#include}} preprocessing
+- Increment F pulldown-cmark
 
-## Known-good state
+## Unrelated stash
+`git stash list` may still hold SEO/template WIP — do not drop.
 
-- All unit + integration tests listed in verification report pass
-- Clippy clean with `-D warnings`
-
-## Resume steps (next agent)
-
-1. `git checkout task/1-pipeline-decomposition` (or merge PR for #1)
-2. Claim Gitea **#2** (Increment B — SUMMARY.md book model); Phase 2.5 findings already in the plan
-3. Do **not** drop `stash@{0}` without restoring for the user — it holds SEO/template work
-4. B1 starts with structure fixture `tests/fixtures/test_book_mdbook.structure.json`
-
-## Artefacts
-
-- Research: `docs/plans/mdbook-parity-research.md`
-- Design: `docs/plans/mdbook-parity-implementation-plan.md`
-- Session: `.agent/sessions/2026-08-08-mdbook-parity-a.md`
-- Verification: `docs/verification/verification-report-mdbook-parity-a.md`
-- Validation: `docs/validation/validation-report-mdbook-parity-a.md`
-- Review: `docs/plans/review-mdbook-parity-a.md`
-
-## Next actions
-
-1. Open/merge PR for #1  
-2. Start Increment B on `task/2-summary-book-model`  
-3. Restore stash only if resuming SEO WIP separately  
+## Resume
+1. Merge PR #7 after CI
+2. Close Gitea issues #1–#5
+3. Optional: vendor Shoelace, wire additional-css/js fully, fold JS
