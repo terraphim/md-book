@@ -25,7 +25,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     copy_static_assets(&args.output, &config.paths.templates, config)?;
 
     let src_dir = Path::new(&args.input);
-    let create_missing = true; // mdBook default; config flag lands in C/E
+    let create_missing = config.build.create_missing;
     let (book, _created) = load_book(src_dir, create_missing)?;
 
     let chapters: Vec<&crate::book::Chapter> = book.iter_chapters().collect();
@@ -45,7 +45,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     };
 
     let current_year = Zoned::now().year().to_string();
-    let no_section_label = false; // config in E
+    let no_section_label = config.output.html.no_section_label;
 
     #[cfg(feature = "syntax-highlighting")]
     let ss = {
@@ -79,9 +79,11 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
 
         #[cfg(feature = "syntax-highlighting")]
-        let html_content = render_markdown(&preprocessed, config, Some(&ss))?;
+        let html_content =
+            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, Some(&ss))?);
         #[cfg(not(feature = "syntax-highlighting"))]
-        let html_content = render_markdown(&preprocessed, config, None)?;
+        let html_content =
+            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
 
         let previous = if idx > 0 {
             Some(chapter_to_pageinfo(chapters[idx - 1]))
@@ -128,9 +130,11 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         let markdown_content = fs::read_to_string(&source_abs)?;
         let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
         #[cfg(feature = "syntax-highlighting")]
-        let html = render_markdown(&preprocessed, config, Some(&ss))?;
+        let html =
+            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, Some(&ss))?);
         #[cfg(not(feature = "syntax-highlighting"))]
-        let html = render_markdown(&preprocessed, config, None)?;
+        let html =
+            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
         (Some(chapter_to_pageinfo(ch)), Some(html))
     } else {
         // Fallback: look for index.md even if not in book (directory edge case)
@@ -139,9 +143,14 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             let markdown_content = fs::read_to_string(&index_path)?;
             let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
             #[cfg(feature = "syntax-highlighting")]
-            let html = render_markdown(&preprocessed, config, Some(&ss))?;
+            let html = crate::render::inject_heading_ids(&render_markdown(
+                &preprocessed,
+                config,
+                Some(&ss),
+            )?);
             #[cfg(not(feature = "syntax-highlighting"))]
-            let html = render_markdown(&preprocessed, config, None)?;
+            let html =
+                crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
             let info = PageInfo {
                 title: "Documentation".into(),
                 path: "/index.html".into(),
@@ -162,6 +171,73 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         config,
         Some(&book.to_nav(Path::new("index.html"), no_section_label)),
     )?;
+
+    // 404 page
+    {
+        let mut ctx = tera::Context::new();
+        ctx.insert("config", &config);
+        ctx.insert("path_to_root", &"");
+        ctx.insert("year", &current_year);
+        if let Ok(html) = tera.render("404", &ctx) {
+            let _ = fs::write(format!("{}/404.html", args.output), html);
+        }
+    }
+
+    // Redirect stubs
+    for (from, to) in &config.output.html.redirect {
+        let dest = Path::new(&args.output).join(from.trim_start_matches('/'));
+        if let Some(parent) = dest.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+        let body = format!(
+            r#"<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url={to}"><link rel="canonical" href="{to}"></head><body><a href="{to}">Redirect</a></body></html>"#,
+            to = to
+        );
+        let _ = fs::write(dest, body);
+    }
+
+    // Print page (all chapters concatenated)
+    if config.output.html.print.enable {
+        #[derive(serde::Serialize)]
+        struct PrintChapter {
+            title: String,
+            content: String,
+            anchor: String,
+        }
+        let mut print_chapters = Vec::new();
+        for ch in &chapters {
+            let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
+            if let Ok(md) = fs::read_to_string(&source_abs) {
+                if let Ok(pre) = preprocess(&md, &preprocess_ctx) {
+                    #[cfg(feature = "syntax-highlighting")]
+                    let html = crate::render::inject_heading_ids(
+                        &render_markdown(&pre, config, Some(&ss)).unwrap_or_default(),
+                    );
+                    #[cfg(not(feature = "syntax-highlighting"))]
+                    let html = crate::render::inject_heading_ids(
+                        &render_markdown(&pre, config, None).unwrap_or_default(),
+                    );
+                    print_chapters.push(PrintChapter {
+                        title: flatten_title(&ch.name),
+                        content: html,
+                        anchor: ch
+                            .output_path
+                            .as_ref()
+                            .map(|p| p.display().to_string())
+                            .unwrap_or_default(),
+                    });
+                }
+            }
+        }
+        let mut ctx = tera::Context::new();
+        ctx.insert("config", &config);
+        ctx.insert("path_to_root", &"");
+        ctx.insert("print_chapters", &print_chapters);
+        ctx.insert("page_break", &config.output.html.print.page_break);
+        if let Ok(html) = tera.render("print", &ctx) {
+            let _ = fs::write(format!("{}/print.html", args.output), html);
+        }
+    }
 
     #[cfg(not(all(feature = "search", feature = "tokio")))]
     {

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ config.book.title }} — Print</title>
+  <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root }}css/syntax.css">
+  <style>
+    @media print {
+      .no-print { display: none; }
+      {% if page_break %}article { page-break-after: always; }{% endif %}
+    }
+  </style>
+</head>
+<body>
+  <h1>{{ config.book.title }}</h1>
+  {% for chapter in print_chapters %}
+  <article id="{{ chapter.anchor }}">
+    <h1>{{ chapter.title }}</h1>
+    {{ chapter.content | safe }}
+  </article>
+  {% endfor %}
+</body>
+</html>

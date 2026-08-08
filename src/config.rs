@@ -32,6 +32,8 @@ pub struct BookConfig {
     pub markdown: MarkdownInput,
     #[serde(default)]
     pub paths: Paths,
+    #[serde(default)]
+    pub build: Build,
 }
 
 #[config]
@@ -53,6 +55,9 @@ pub struct Book {
     pub github_url: Option<String>,
     #[serde(default)]
     pub github_edit_url_base: Option<String>,
+    /// Source directory relative to book root (mdBook `book.src`).
+    #[serde(default)]
+    pub src: Option<String>,
 }
 
 fn default_title() -> String {
@@ -93,6 +98,63 @@ pub struct HtmlOutput {
     pub playground: PlaygroundConfig,
     #[serde(default)]
     pub search: SearchConfig,
+    #[serde(default)]
+    pub default_theme: Option<String>,
+    #[serde(default)]
+    pub preferred_dark_theme: Option<String>,
+    #[serde(default)]
+    pub additional_css: Vec<String>,
+    #[serde(default)]
+    pub additional_js: Vec<String>,
+    #[serde(default)]
+    pub input_404: Option<String>,
+    #[serde(default)]
+    pub site_url: Option<String>,
+    #[serde(default)]
+    pub no_section_label: bool,
+    #[serde(default)]
+    pub syntax_theme: Option<String>,
+    #[serde(default)]
+    pub fold: FoldConfig,
+    #[serde(default)]
+    pub print: PrintConfig,
+    #[serde(default)]
+    pub redirect: std::collections::BTreeMap<String, String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct FoldConfig {
+    #[serde(default)]
+    pub enable: bool,
+    #[serde(default = "default_fold_level")]
+    pub level: u32,
+}
+
+fn default_fold_level() -> u32 {
+    0
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct PrintConfig {
+    #[serde(default = "default_true")]
+    pub enable: bool,
+    #[serde(default = "default_true")]
+    pub page_break: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+impl Default for PrintConfig {
+    fn default() -> Self {
+        Self {
+            enable: true,
+            page_break: true,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -137,6 +199,34 @@ const fn default_boost_paragraph() -> u32 {
 }
 const fn default_heading_split_level() -> u32 {
     2
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "kebab-case")]
+pub struct Build {
+    /// Output directory relative to book root (mdBook `build.build-dir`).
+    #[serde(default)]
+    pub build_dir: Option<String>,
+    /// Extra directories to watch in watch/serve mode.
+    #[serde(default)]
+    pub extra_watch_dirs: Vec<String>,
+    /// Create missing SUMMARY targets (mdBook default true).
+    #[serde(default = "default_create_missing")]
+    pub create_missing: bool,
+}
+
+fn default_create_missing() -> bool {
+    true
+}
+
+impl Default for Build {
+    fn default() -> Self {
+        Self {
+            build_dir: None,
+            extra_watch_dirs: Vec::new(),
+            create_missing: true,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]

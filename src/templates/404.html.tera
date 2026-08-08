@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Not Found | {{ config.book.title }}</title>
+  <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
+</head>
+<body>
+  <main class="content">
+    <h1>404</h1>
+    <p>Page not found.</p>
+    <p><a href="{{ path_to_root }}index.html">Back to home</a></p>
+  </main>
+  <script src="{{ path_to_root }}js/theme-switch.js"></script>
+</body>
+</html>

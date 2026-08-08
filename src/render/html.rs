@@ -35,6 +35,8 @@ pub fn init_tera(config: &BookConfig) -> Result<Tera> {
         ("sidebar", "sidebar.html.tera"),
         ("footer", "footer.html.tera"),
         ("header", "header.html.tera"),
+        ("404", "404.html.tera"),
+        ("print", "print.html.tera"),
     ];
 
     for (name, file) in template_files {
@@ -49,6 +51,8 @@ pub fn init_tera(config: &BookConfig) -> Result<Tera> {
                 "sidebar.html.tera" => include_str!("../templates/sidebar.html.tera").to_string(),
                 "footer.html.tera" => include_str!("../templates/footer.html.tera").to_string(),
                 "header.html.tera" => include_str!("../templates/header.html.tera").to_string(),
+                "404.html.tera" => include_str!("../templates/404.html.tera").to_string(),
+                "print.html.tera" => include_str!("../templates/print.html.tera").to_string(),
                 _ => return Err(anyhow::anyhow!("Unknown template file: {}", file)),
             }
         };
@@ -66,6 +70,30 @@ pub fn extract_title(markdown: &str) -> Option<String> {
         .lines()
         .find(|line| line.starts_with("# "))
         .map(|line| line[2..].trim().to_string())
+}
+
+/// `../`-style prefix from a page to the build-dir root; `""` at the root.
+pub fn path_to_root(page: &Path) -> String {
+    let depth = page.components().count().saturating_sub(1);
+    if depth == 0 {
+        String::new()
+    } else {
+        "../".repeat(depth)
+    }
+}
+
+#[cfg(test)]
+mod path_to_root_tests {
+    use super::*;
+    use std::path::Path;
+
+    #[test]
+    fn test_path_to_root_depths() {
+        assert_eq!(path_to_root(Path::new("index.html")), "");
+        assert_eq!(path_to_root(Path::new("a.html")), "");
+        assert_eq!(path_to_root(Path::new("dir/a.html")), "../");
+        assert_eq!(path_to_root(Path::new("a/b/c.html")), "../../");
+    }
 }
 
 /// Write a single chapter HTML page.
@@ -101,6 +129,8 @@ pub fn render_page(
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
     }
+    let root = path_to_root(Path::new(current_path));
+    context.insert("path_to_root", &root);
 
     let rendered = tera
         .render("page", &context)
@@ -130,6 +160,7 @@ pub fn render_index(
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
     }
+    context.insert("path_to_root", &"");
 
     if let (Some(index), Some(html_content)) = (index_page, index_content) {
         context.insert("has_index", &true);
@@ -260,6 +291,28 @@ pub fn copy_static_assets(
         include_str!("../templates/components/search-modal.js"),
     )
     .context("Failed to write Search Modal component")?;
+
+    // Always emit theme + keyboard assets (embedded defaults)
+    fs::write(
+        format!("{}/css/themes.css", output_dir),
+        include_str!("../templates/css/themes.css"),
+    )
+    .context("Failed to write themes.css")?;
+    fs::write(
+        format!("{}/js/theme-switch.js", output_dir),
+        include_str!("../templates/js/theme-switch.js"),
+    )
+    .context("Failed to write theme-switch.js")?;
+    fs::write(
+        format!("{}/js/keyboard.js", output_dir),
+        include_str!("../templates/js/keyboard.js"),
+    )
+    .context("Failed to write keyboard.js")?;
+    fs::write(
+        format!("{}/js/code-copy.js", output_dir),
+        include_str!("../templates/js/code-copy.js"),
+    )
+    .context("Failed to write code-copy.js")?;
 
     Ok(())
 }
