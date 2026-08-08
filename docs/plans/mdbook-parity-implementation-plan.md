@@ -569,7 +569,9 @@ existing IDs instead of minting them. *Est:* 5 h.
 depth. *Est:* 4 h.
 **E6. Keyboard shortcuts** — `←`/`→`/`s`/`/`/`?`. *Est:* 2 h.
 
-**E7. Load mermaid only on pages that contain a diagram** — `page.html.tera:14-15` loads
+**E7. Load mermaid only on pages that contain a diagram** — *shipped.* Two extras found while
+building: `index.html.tera` and `print.html.tera` never loaded mermaid at all, so a diagram in
+`index.md` or in the print view silently failed to render. Both now load it, gated. — `page.html.tera:14-15` loads
 `js/mermaid.min.js` (2.9MB) and `js/mermaid-init.js` on *every* page, whether or not it has a
 diagram. On the 30-page corpus that is 2.9MB of the 4.2MB output, and a parse-and-execute cost
 on every page load for the majority of books that contain no diagrams at all.
@@ -605,8 +607,9 @@ Tests:
 | `test_mermaid_class_in_code_sample_does_not_trigger_load` | A page that shows ```` ```language-mermaid ```` inside a fenced sample must not load mermaid -- guards the fence-level detection against a substring shortcut |
 | `test_print_page_loads_mermaid_when_any_chapter_has_one` | Aggregate page behaviour |
 
-*Est:* 3 h. Expected effect on the corpus: 4.2MB → ~1.3MB of transferred bytes for a reader who
-visits only non-diagram pages, and no mermaid parse cost on 29 of its 30 pages.
+*Est:* 3 h. Measured on the corpus: pages loading the bundle went from all 38 to zero (it has no
+mermaid fences), so a reader pulls ~440KB instead of ~3.3MB per page. Five tests, including the
+code-sample guard and both print-page directions.
 
 **Gate:** theme choice persists across pages; `print.html` contains every chapter in book order;
 a page with no diagram references no mermaid script.

@@ -11,6 +11,10 @@
       {% if page_break %}article { page-break-after: always; }{% endif %}
     }
   </style>
+    {% if has_mermaid %}
+    <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
 </head>
 <body>
   <h1>{{ config.book.title }}</h1>

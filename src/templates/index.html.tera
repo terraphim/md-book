@@ -13,6 +13,10 @@
     <script src="{{ path_to_root }}js/pagefind-search.js" type="module"></script>
     <script src="{{ path_to_root }}components/search-modal.js" type="module"></script>
     <script src="{{ path_to_root }}js/search-init.js" type="module"></script>
+    {% if has_mermaid %}
+    <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
 </head>
 <body>
     <div class="container index-container">

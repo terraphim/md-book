@@ -111,6 +111,7 @@ pub fn render_page(
     current_path: &str,
     watch_enabled: bool,
     chapters: Option<&[crate::book::NavEntry]>,
+    has_mermaid: bool,
 ) -> Result<()> {
     let page_data = PageData {
         title,
@@ -131,6 +132,8 @@ pub fn render_page(
     }
     let root = path_to_root(Path::new(current_path));
     context.insert("path_to_root", &root);
+    // Gates the mermaid bundle: 2.9MB that most pages never need.
+    context.insert("has_mermaid", &has_mermaid);
 
     let rendered = tera
         .render("page", &context)
@@ -151,11 +154,13 @@ pub fn render_index(
     year: &str,
     config: &BookConfig,
     chapters: Option<&[crate::book::NavEntry]>,
+    has_mermaid: bool,
 ) -> Result<()> {
     let mut context = TeraContext::new();
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);
+    context.insert("has_mermaid", &has_mermaid);
     context.insert("current_path", &"index.html");
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);

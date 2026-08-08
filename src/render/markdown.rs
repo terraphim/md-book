@@ -14,6 +14,42 @@ use syntect::parsing::SyntaxSet;
 #[cfg(feature = "syntax-highlighting")]
 use syntect::util::LinesWithEndings;
 
+/// A rendered markdown fragment plus what the page needs at runtime.
+#[derive(Debug, Clone, Default)]
+pub struct RenderedMarkdown {
+    pub html: String,
+    /// True when the source contains at least one ```mermaid fence, so the page
+    /// template can load the (2.9MB) mermaid bundle only where it is used.
+    pub has_mermaid: bool,
+}
+
+/// Whether `content` contains a mermaid code fence.
+///
+/// Detection is at fence level, over the parsed AST, not by searching the
+/// rendered HTML for `language-mermaid`: a page that *documents* mermaid by
+/// showing a fence inside a sample would match the latter and load the bundle
+/// to render nothing.
+///
+/// Costs one extra mdast parse per page, which keeps a single definition of the
+/// predicate shared by every rendering backend rather than one per path.
+pub fn has_mermaid_fence(content: &str, config: &BookConfig) -> Result<bool> {
+    fn walk(node: &Node) -> bool {
+        if let Node::Code(code) = node {
+            if code.lang.as_deref() == Some("mermaid") {
+                return true;
+            }
+        }
+        node.children()
+            .map(|children| children.iter().any(walk))
+            .unwrap_or(false)
+    }
+
+    let options = markdown_options(config);
+    let ast = to_mdast(content, &options.parse)
+        .map_err(|e| anyhow::anyhow!("Markdown parsing error: {:?}", e))?;
+    Ok(walk(&ast))
+}
+
 /// Render markdown content to an HTML fragment, then rewrite internal `.md` links to `.html`.
 ///
 /// When the `syntax-highlighting` feature is enabled, `syntax_set` must be `Some`.
@@ -22,21 +58,27 @@ pub fn render_markdown(
     config: &BookConfig,
     #[cfg(feature = "syntax-highlighting")] syntax_set: Option<&SyntaxSet>,
     #[cfg(not(feature = "syntax-highlighting"))] _syntax_set: Option<&()>,
-) -> Result<String> {
+) -> Result<RenderedMarkdown> {
+    let has_mermaid = has_mermaid_fence(content, config)?;
+
     #[cfg(feature = "syntax-highlighting")]
     {
         let ss = syntax_set.ok_or_else(|| {
             anyhow::anyhow!("syntax_set required when syntax-highlighting feature is enabled")
         })?;
-        Ok(convert_md_links_to_html(
-            &process_markdown_with_highlighting(content, ss, config)?,
-        ))
+        Ok(RenderedMarkdown {
+            html: convert_md_links_to_html(&process_markdown_with_highlighting(
+                content, ss, config,
+            )?),
+            has_mermaid,
+        })
     }
     #[cfg(not(feature = "syntax-highlighting"))]
     {
-        Ok(convert_md_links_to_html(&process_markdown_basic(
-            content, config,
-        )?))
+        Ok(RenderedMarkdown {
+            html: convert_md_links_to_html(&process_markdown_basic(content, config)?),
+            has_mermaid,
+        })
     }
 }
 

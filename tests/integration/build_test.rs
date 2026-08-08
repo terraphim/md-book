@@ -660,3 +660,125 @@ async fn test_default_assets_emitted_without_templates_dir() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// E7: mermaid.min.js is 2.9MB, so it loads only where a diagram exists.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_mermaid_scripts_only_on_diagram_pages() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [Diagram](diagram.md)\n- [Plain](plain.md)\n",
+    )?;
+    book.create_file(
+        "diagram.md",
+        "# Diagram\n\n```mermaid\ngraph TD;\n  A-->B;\n```\n",
+    )?;
+    book.create_file("plain.md", "# Plain\n\nNo diagrams here.\n")?;
+
+    book.build().await?;
+
+    let diagram = book.read_output("diagram.html")?;
+    assert_contains!(diagram, "js/mermaid.min.js");
+    assert_contains!(diagram, "js/mermaid-init.js");
+
+    let plain = book.read_output("plain.html")?;
+    assert_not_contains!(plain, "mermaid.min.js");
+    assert_not_contains!(plain, "mermaid-init.js");
+
+    // The asset itself is always emitted, so adding a diagram later cannot
+    // reference a file that is missing.
+    assert!(book.output_exists("js/mermaid.min.js"));
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_mermaid_class_in_code_sample_does_not_trigger_load() -> Result<()> {
+    // A page documenting mermaid contains the fence and the class name as
+    // escaped text. Searching rendered HTML for "language-mermaid" would match
+    // here and pull in 2.9MB to render nothing; fence-level detection does not.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Docs](docs.md)\n")?;
+    book.create_file(
+        "docs.md",
+        "# How to write diagrams\n\n\
+         Wrap your diagram in a fence:\n\n\
+         ````markdown\n\
+         ```mermaid\n\
+         graph TD;\n\
+         ```\n\
+         ````\n\n\
+         It renders into `<code class=\"language-mermaid\">`.\n",
+    )?;
+
+    book.build().await?;
+
+    let html = book.read_output("docs.html")?;
+    // The page really does contain the class name as text...
+    assert_contains!(html, "language-mermaid");
+    // ...but has no diagram of its own, so the bundle is not loaded.
+    assert_not_contains!(html, "mermaid.min.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_print_page_loads_mermaid_when_any_chapter_has_one() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [Plain](plain.md)\n- [Diagram](diagram.md)\n",
+    )?;
+    book.create_file("plain.md", "# Plain\n\nNothing.\n")?;
+    book.create_file(
+        "diagram.md",
+        "# Diagram\n\n```mermaid\ngraph TD;\n  A-->B;\n```\n",
+    )?;
+
+    book.build().await?;
+
+    let print = book.read_output("print.html")?;
+    assert_contains!(print, "js/mermaid.min.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_print_page_omits_mermaid_when_no_chapter_has_one() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Plain](plain.md)\n")?;
+    book.create_file("plain.md", "# Plain\n\nNothing.\n")?;
+
+    book.build().await?;
+
+    let print = book.read_output("print.html")?;
+    assert_not_contains!(print, "mermaid.min.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_index_page_loads_mermaid_from_its_own_source() -> Result<()> {
+    // index.md is rendered by a different path from ordinary chapters.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Home](README.md)\n")?;
+    book.create_file(
+        "README.md",
+        "# Home\n\n```mermaid\ngraph TD;\n  A-->B;\n```\n",
+    )?;
+
+    book.build().await?;
+
+    let index = book.read_output("index.html")?;
+    assert_contains!(index, "js/mermaid.min.js");
+
+    Ok(())
+}

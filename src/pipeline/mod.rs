@@ -87,11 +87,11 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
 
         #[cfg(feature = "syntax-highlighting")]
-        let html_content =
-            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, Some(&ss))?);
+        let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
         #[cfg(not(feature = "syntax-highlighting"))]
-        let html_content =
-            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
+        let rendered = render_markdown(&preprocessed, config, None)?;
+        let html_content = crate::render::inject_heading_ids(&rendered.html);
+        let page_has_mermaid = rendered.has_mermaid;
 
         // Prev/next links are relative to this page, like every other URL.
         let page_root = crate::render::html::path_to_root(output_rel);
@@ -124,6 +124,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             &output_rel.display().to_string(),
             watch_enabled,
             Some(&nav),
+            page_has_mermaid,
         )?;
     }
 
@@ -135,18 +136,21 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             .unwrap_or(false)
     });
 
-    let (index_page_info, index_content) = if let Some(ch) = index_chapter {
+    let (index_page_info, index_content, index_has_mermaid) = if let Some(ch) = index_chapter {
         let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
         let markdown_content = fs::read_to_string(&source_abs)?;
         let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
         #[cfg(feature = "syntax-highlighting")]
-        let html =
-            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, Some(&ss))?);
+        let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
         #[cfg(not(feature = "syntax-highlighting"))]
-        let html =
-            crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
+        let rendered = render_markdown(&preprocessed, config, None)?;
+        let html = crate::render::inject_heading_ids(&rendered.html);
         // index.html sits at the build root, so links from it need no prefix.
-        (Some(chapter_to_pageinfo(ch, "")), Some(html))
+        (
+            Some(chapter_to_pageinfo(ch, "")),
+            Some(html),
+            rendered.has_mermaid,
+        )
     } else {
         // Fallback: look for index.md even if not in book (directory edge case)
         let index_path = src_dir.join("index.md");
@@ -154,21 +158,17 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             let markdown_content = fs::read_to_string(&index_path)?;
             let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
             #[cfg(feature = "syntax-highlighting")]
-            let html = crate::render::inject_heading_ids(&render_markdown(
-                &preprocessed,
-                config,
-                Some(&ss),
-            )?);
+            let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
             #[cfg(not(feature = "syntax-highlighting"))]
-            let html =
-                crate::render::inject_heading_ids(&render_markdown(&preprocessed, config, None)?);
+            let rendered = render_markdown(&preprocessed, config, None)?;
+            let html = crate::render::inject_heading_ids(&rendered.html);
             let info = PageInfo {
                 title: "Documentation".into(),
                 path: "/index.html".into(),
             };
-            (Some(info), Some(html))
+            (Some(info), Some(html), rendered.has_mermaid)
         } else {
-            (None, None)
+            (None, None, false)
         }
     };
 
@@ -181,6 +181,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         &current_year,
         config,
         Some(&book.to_nav(Path::new("index.html"), no_section_label)),
+        index_has_mermaid,
     )?;
 
     // 404 page
@@ -256,18 +257,17 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             anchor: String,
         }
         let mut print_chapters = Vec::new();
+        let mut print_has_mermaid = false;
         for ch in &chapters {
             let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
             if let Ok(md) = fs::read_to_string(&source_abs) {
                 if let Ok(pre) = preprocess(&md, &preprocess_ctx) {
                     #[cfg(feature = "syntax-highlighting")]
-                    let html = crate::render::inject_heading_ids(
-                        &render_markdown(&pre, config, Some(&ss)).unwrap_or_default(),
-                    );
+                    let rendered = render_markdown(&pre, config, Some(&ss)).unwrap_or_default();
                     #[cfg(not(feature = "syntax-highlighting"))]
-                    let html = crate::render::inject_heading_ids(
-                        &render_markdown(&pre, config, None).unwrap_or_default(),
-                    );
+                    let rendered = render_markdown(&pre, config, None).unwrap_or_default();
+                    let html = crate::render::inject_heading_ids(&rendered.html);
+                    print_has_mermaid |= rendered.has_mermaid;
                     print_chapters.push(PrintChapter {
                         title: flatten_title(&ch.name),
                         content: html,
@@ -285,6 +285,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("path_to_root", &"");
         ctx.insert("print_chapters", &print_chapters);
         ctx.insert("page_break", &config.output.html.print.page_break);
+        ctx.insert("has_mermaid", &print_has_mermaid);
         if let Ok(html) = tera.render("print", &ctx) {
             let _ = fs::write(format!("{}/print.html", args.output), html);
         }
