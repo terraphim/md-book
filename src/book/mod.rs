@@ -302,7 +302,7 @@ impl Book {
                 if let Some(ref out) = ch.output_path {
                     pages.push(PageInfo {
                         title: flatten_title(&ch.name),
-                        path: crate::render::to_url_path(out),
+                        path: crate::render::escape_url_attr(&crate::render::to_url_path(out)),
                     });
                 }
                 fn collect_desc(items: &[BookItem], pages: &mut Vec<PageInfo>) {
@@ -311,7 +311,9 @@ impl Book {
                             if let Some(ref out) = c.output_path {
                                 pages.push(PageInfo {
                                     title: flatten_title(&c.name),
-                                    path: crate::render::to_url_path(out),
+                                    path: crate::render::escape_url_attr(
+                                        &crate::render::to_url_path(out),
+                                    ),
                                 });
                             }
                             collect_desc(&c.sub_items, pages);

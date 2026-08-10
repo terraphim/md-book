@@ -1069,3 +1069,22 @@ async fn test_ordinary_urls_stay_readable() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_quoted_filename_cannot_break_out_of_href() -> Result<()> {
+    // Output paths derive from filenames, and the templates mark them `| safe`,
+    // so they must be safe by construction — including previous/next, which is
+    // a different code path from the sidebar.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [A](a\".md)\n- [B](b.md)\n")?;
+    book.create_file("a\".md", "# A\n\nx\n")?;
+    book.create_file("b.md", "# B\n\ny\n")?;
+    book.build().await?;
+
+    let html = book.read_output("b.html")?;
+    assert_not_contains!(html, "href=\"a\".html\"");
+    assert_contains!(html, "a&quot;.html");
+
+    Ok(())
+}

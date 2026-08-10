@@ -39,9 +39,9 @@
                 </a>
             </div>
             {% endif %}
-            {% if config.book.github_edit_url_base %}
+            {% if edit_url %}
             <div class="header-links">
-                <a href="{{ config.book.github_edit_url_base }}{{ current_path | replace(from='.html', to='.md') }}" class="header-link" target="_blank" rel="noopener" aria-label="Edit this page">
+                <a href="{{ edit_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="Edit this page">
                     <sl-icon name="pencil-square"></sl-icon>
                 </a>
             </div>

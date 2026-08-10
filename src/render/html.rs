@@ -91,6 +91,16 @@ pub fn logo_url(logo: &str, root: &str) -> String {
     escape_url_attr(&url)
 }
 
+/// Resolve the "edit this page" URL for a chapter, or `None` when unconfigured.
+#[must_use]
+pub fn edit_url(base: Option<&str>, current_path: &str) -> Option<String> {
+    let base = base?;
+    let source = current_path
+        .strip_suffix(".html")
+        .map_or_else(|| current_path.to_string(), |stem| format!("{stem}.md"));
+    Some(escape_url_attr(&format!("{base}{source}")))
+}
+
 /// Escape a URL for use inside a double-quoted HTML attribute.
 ///
 /// Escapes `&` and `"` only, leaving `/` readable. Without this a chapter whose
@@ -176,6 +186,10 @@ pub fn render_page(
     // Gates the mermaid bundle: 2.9MB that most pages never need.
     context.insert("has_mermaid", &has_mermaid);
     context.insert("logo_url", &logo_url(&config.book.logo, &root));
+    context.insert(
+        "edit_url",
+        &edit_url(config.book.github_edit_url_base.as_deref(), current_path),
+    );
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(
         "preferred_dark_theme",
@@ -209,6 +223,10 @@ pub fn render_index(
     context.insert("sections", &sections);
     context.insert("has_mermaid", &has_mermaid);
     context.insert("logo_url", &logo_url(&config.book.logo, ""));
+    context.insert(
+        "edit_url",
+        &edit_url(config.book.github_edit_url_base.as_deref(), "index.html"),
+    );
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(
         "preferred_dark_theme",

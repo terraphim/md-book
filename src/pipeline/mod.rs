@@ -399,15 +399,17 @@ fn site_url_prefix(config: &BookConfig) -> String {
 }
 
 fn chapter_to_pageinfo(ch: &crate::book::Chapter, root: &str) -> PageInfo {
+    // Marked `| safe` in the templates, so it must be safe by construction:
+    // output paths come from filenames, which may contain a quote.
     PageInfo {
         title: flatten_title(&ch.name),
-        path: format!(
+        path: crate::render::escape_url_attr(&format!(
             "{root}{}",
             ch.output_path
                 .as_ref()
                 .map(|p| crate::render::to_url_path(p))
                 .unwrap_or_default()
-        ),
+        )),
     }
 }
 
