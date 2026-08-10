@@ -988,3 +988,84 @@ async fn test_404_falls_back_to_relative_without_site_url() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// SUMMARY.md is authored input that reaches every page's sidebar and <title>.
+// Chapter content is escaped when allow_html is false; these paths must honour
+// the same policy rather than quietly bypassing it.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_summary_label_cannot_inject_html() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [<img src=x onerror=alert(1)>](one.md)\n",
+    )?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    assert_not_contains!(html, "<img src=x onerror");
+    assert_contains!(html, "&lt;img src=x onerror");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_summary_external_url_cannot_break_out_of_href() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [One](one.md)\n- [Ext](https://example.com/\" onmouseover=\"alert(2))\n",
+    )?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    // The payload may appear, but only as escaped data inside the attribute.
+    assert_not_contains!(html, "\" onmouseover=\"alert(2)\"");
+    assert_contains!(html, "&quot; onmouseover=&quot;");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_summary_label_still_renders_inline_markdown() -> Result<()> {
+    // Escaping must not cost the feature: SUMMARY labels carry inline markdown.
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [**Bold** and `code`](one.md)\n",
+    )?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    assert_contains!(html, "<strong>Bold</strong>");
+    assert_contains!(html, "<code>code</code>");
+    // …but the plain-text form drives <title>.
+    assert_contains!(html, "<title>Bold and code | ");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_ordinary_urls_stay_readable() -> Result<()> {
+    // Guards against escaping URLs with a generic HTML escaper, which rewrites
+    // every '/' as &#x2F; and turns each href into noise.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Deep](nested/deep.md)\n")?;
+    book.create_file("nested/deep.md", "# Deep\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("nested/deep.html")?;
+    assert_contains!(html, "href=\"../css/styles.css\"");
+    assert_not_contains!(html, "&#x2F;");
+
+    Ok(())
+}

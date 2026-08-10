@@ -141,7 +141,10 @@ impl Book {
 
         fn chapter_href(ch: &Chapter, root: &str) -> Option<String> {
             if ch.is_external {
-                return ch.external_url.clone();
+                return ch
+                    .external_url
+                    .as_deref()
+                    .map(crate::render::escape_url_attr);
             }
             ch.output_path.as_ref().map(|out_path| {
                 let mut h = format!("{root}{}", crate::render::to_url_path(out_path));
@@ -149,7 +152,7 @@ impl Book {
                     h.push('#');
                     h.push_str(frag);
                 }
-                h
+                crate::render::escape_url_attr(&h)
             })
         }
 
@@ -194,7 +197,7 @@ impl Book {
                         let close_lists = emit_closes(list_depth, depth as isize - 1);
                         out.push(NavEntry {
                             kind: NavKind::PartTitle,
-                            title_html: title.clone(),
+                            title_html: render_label_html(title),
                             title_text: flatten_title(title),
                             href: None,
                             is_external: false,
@@ -229,7 +232,7 @@ impl Book {
 
                         out.push(NavEntry {
                             kind: NavKind::Chapter,
-                            title_html: ch.name.clone(),
+                            title_html: render_label_html(&ch.name),
                             title_text: flatten_title(&ch.name),
                             href: chapter_href(ch, root),
                             is_external: ch.is_external,
@@ -379,10 +382,48 @@ impl<'a> Iterator for BookAllChapterIter<'a> {
 
 /// Flatten inline markdown in titles for plain-text contexts.
 pub fn flatten_title(title: &str) -> String {
-    title
+    // Strips inline markdown *and* any HTML tags: SUMMARY.md is authored input
+    // that reaches <title> and aria-label, where markup would either render or
+    // leak as noise.
+    let without_markdown = title
         .replace("**", "")
         .replace("__", "")
-        .replace(['*', '_', '`', '[', ']'], "")
+        .replace(['*', '_', '`', '[', ']'], "");
+
+    let mut out = String::with_capacity(without_markdown.len());
+    let mut depth = 0usize;
+    for c in without_markdown.chars() {
+        match c {
+            '<' => depth += 1,
+            '>' => depth = depth.saturating_sub(1),
+            _ if depth == 0 => out.push(c),
+            _ => {}
+        }
+    }
+    out.trim().to_string()
+}
+
+/// Render a SUMMARY.md link label as an inline HTML fragment.
+///
+/// The label is authored input that lands in every page's sidebar, so raw HTML
+/// in it must not survive -- chapter content is escaped when `allow_html` is
+/// false, and this path has to honour the same policy. Inline markdown is
+/// rendered, everything else is escaped.
+pub fn render_label_html(label: &str) -> String {
+    let mut options = markdown::Options::default();
+    options.compile.allow_dangerous_html = false;
+    options.compile.allow_dangerous_protocol = false;
+
+    let rendered = markdown::to_html_with_options(label, &options)
+        .unwrap_or_else(|_| html_escape::encode_text(label).into_owned());
+
+    // to_html wraps in a block element; the label is inline.
+    let trimmed = rendered.trim();
+    let inner = trimmed
+        .strip_prefix("<p>")
+        .and_then(|s| s.strip_suffix("</p>"))
+        .unwrap_or(trimmed);
+    inner.trim().to_string()
 }
 
 /// Load a book: SUMMARY.md if present, otherwise directory walk.

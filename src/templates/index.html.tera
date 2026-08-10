@@ -7,23 +7,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ title }} | {{ config.book.title }}</title>
     <!-- Include Shoelace assets -->
-    <link rel="stylesheet" href="{{ path_to_root }}vendor/shoelace/themes/light.css" />
-    <script type="module" src="{{ path_to_root }}vendor/shoelace/shoelace-local.js"></script>
-    <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
-    <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
-    <link rel="stylesheet" href="{{ path_to_root }}css/search.css">
-    <script type="module" src="{{ path_to_root }}components/simple-block.js"></script>
-    <script src="{{ path_to_root }}js/pagefind-search.js" type="module"></script>
-    <script src="{{ path_to_root }}components/search-modal.js" type="module"></script>
-    <script src="{{ path_to_root }}js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}vendor/shoelace/themes/light.css" />
+    <script type="module" src="{{ path_to_root | safe }}vendor/shoelace/shoelace-local.js"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">
+    <script type="module" src="{{ path_to_root | safe }}components/simple-block.js"></script>
+    <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
     {% if has_mermaid %}
-    <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
-    <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
 </head>
 <body>
     <div class="container index-container">
-        {% include "header" %}
+        {% include "header.html" %}
         <main class="content index-content">
             {% if has_index %}
                 <article class="main-article">
@@ -41,7 +41,7 @@
                                 {% for page in section.pages %}
                                     <sl-card class="doc-card">
                                         <h3 slot="header">{{ page.title }}</h3>
-                                        <sl-button href="{{ path_to_root }}{{ page.path }}" variant="default">
+                                        <sl-button href="{{ path_to_root | safe }}{{ page.path }}" variant="default">
                                             Read More
                                             <sl-icon slot="suffix" name="arrow-right"></sl-icon>
                                         </sl-button>
@@ -57,8 +57,8 @@
     
     <!-- Search Modal -->
     <search-modal></search-modal>
-    <script src="{{ path_to_root }}js/theme-switch.js"></script>
-    <script src="{{ path_to_root }}js/keyboard.js"></script>
-    <script src="{{ path_to_root }}js/code-copy.js"></script>
+    <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
 </body>
 </html> 

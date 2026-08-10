@@ -5,9 +5,9 @@
 <head>
   <meta charset="utf-8">
   <title>{{ config.book.title }} — Print</title>
-  <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
-  <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
-  <link rel="stylesheet" href="{{ path_to_root }}css/syntax.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
   <style>
     @media print {
       .no-print { display: none; }
@@ -15,8 +15,8 @@
     }
   </style>
     {% if has_mermaid %}
-    <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
-    <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
 </head>
 <body>

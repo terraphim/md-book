@@ -193,22 +193,32 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         let root_prefix = site_url_prefix(config);
 
         // Optional custom body from `output.html.input-404`.
-        let custom_404 = config
-            .output
-            .html
-            .input_404
-            .as_deref()
-            .map(|name| src_dir.join(name))
-            .filter(|path| path.exists())
-            .and_then(|path| fs::read_to_string(&path).ok())
-            .and_then(|md| preprocess(&md, &preprocess_ctx).ok())
-            .and_then(|pre| {
-                #[cfg(feature = "syntax-highlighting")]
-                let rendered = render_markdown(&pre, config, Some(&ss)).ok()?;
-                #[cfg(not(feature = "syntax-highlighting"))]
-                let rendered = render_markdown(&pre, config, None).ok()?;
-                Some(crate::render::inject_heading_ids(&rendered.html))
-            });
+        let custom_404 = match config.output.html.input_404.as_deref() {
+            None => None,
+            Some(name) => {
+                let path = src_dir.join(name);
+                match render_custom_404(&path, config, &preprocess_ctx, {
+                    #[cfg(feature = "syntax-highlighting")]
+                    {
+                        Some(&ss)
+                    }
+                    #[cfg(not(feature = "syntax-highlighting"))]
+                    {
+                        None
+                    }
+                }) {
+                    Ok(html) => Some(html),
+                    Err(e) => {
+                        eprintln!(
+                            "warning: input-404 '{}' could not be rendered, \
+                             using the built-in 404 body: {e}",
+                            path.display()
+                        );
+                        None
+                    }
+                }
+            }
+        };
 
         let mut ctx = tera::Context::new();
         ctx.insert("config", &config);
@@ -221,7 +231,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             &config.output.html.preferred_dark_theme_name(),
         );
 
-        match tera.render("404", &ctx) {
+        match tera.render("404.html", &ctx) {
             Ok(html) => {
                 if let Err(e) = fs::write(format!("{}/404.html", args.output), html) {
                     eprintln!("warning: failed to write 404.html: {e}");
@@ -294,25 +304,31 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             std::collections::HashMap::new();
         for ch in &chapters {
             let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
-            if let Ok(md) = fs::read_to_string(&source_abs) {
-                if let Ok(pre) = preprocess(&md, &preprocess_ctx) {
-                    #[cfg(feature = "syntax-highlighting")]
-                    let rendered = render_markdown(&pre, config, Some(&ss)).unwrap_or_default();
-                    #[cfg(not(feature = "syntax-highlighting"))]
-                    let rendered = render_markdown(&pre, config, None).unwrap_or_default();
-                    let html =
-                        crate::render::inject_heading_ids_with(&mut print_ids, &rendered.html);
-                    print_has_mermaid |= rendered.has_mermaid;
-                    print_chapters.push(PrintChapter {
-                        title: flatten_title(&ch.name),
-                        content: html,
-                        anchor: ch
-                            .output_path
-                            .as_ref()
-                            .map(|p| crate::render::to_url_path(p))
-                            .unwrap_or_default(),
-                    });
-                }
+            match fs::read_to_string(&source_abs) {
+                Err(e) => eprintln!("warning: print page omits '{}': {e}", source_abs.display()),
+                Ok(md) => match preprocess(&md, &preprocess_ctx) {
+                    Err(e) => {
+                        eprintln!("warning: print page omits '{}': {e}", source_abs.display())
+                    }
+                    Ok(pre) => {
+                        #[cfg(feature = "syntax-highlighting")]
+                        let rendered = render_markdown(&pre, config, Some(&ss))?;
+                        #[cfg(not(feature = "syntax-highlighting"))]
+                        let rendered = render_markdown(&pre, config, None)?;
+                        let html =
+                            crate::render::inject_heading_ids_with(&mut print_ids, &rendered.html);
+                        print_has_mermaid |= rendered.has_mermaid;
+                        print_chapters.push(PrintChapter {
+                            title: flatten_title(&ch.name),
+                            content: html,
+                            anchor: ch
+                                .output_path
+                                .as_ref()
+                                .map(|p| crate::render::to_url_path(p))
+                                .unwrap_or_default(),
+                        });
+                    }
+                },
             }
         }
         let mut ctx = tera::Context::new();
@@ -327,8 +343,13 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             &config.output.html.preferred_dark_theme_name(),
         );
 
-        if let Ok(html) = tera.render("print", &ctx) {
-            let _ = fs::write(format!("{}/print.html", args.output), html);
+        match tera.render("print.html", &ctx) {
+            Ok(html) => {
+                if let Err(e) = fs::write(format!("{}/print.html", args.output), html) {
+                    eprintln!("warning: failed to write print.html: {e}");
+                }
+            }
+            Err(e) => eprintln!("warning: failed to render print.html: {e}"),
         }
     }
 
@@ -338,6 +359,21 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     }
 
     Ok(BuildReport { created })
+}
+
+/// Render the configured `input-404` markdown into an HTML fragment.
+fn render_custom_404(
+    path: &Path,
+    config: &BookConfig,
+    preprocess_ctx: &PreprocessCtx,
+    #[cfg(feature = "syntax-highlighting")] syntax_set: Option<&syntect::parsing::SyntaxSet>,
+    #[cfg(not(feature = "syntax-highlighting"))] syntax_set: Option<&()>,
+) -> Result<String> {
+    let markdown =
+        fs::read_to_string(path).with_context(|| format!("Failed to read {}", path.display()))?;
+    let preprocessed = preprocess(&markdown, preprocess_ctx)?;
+    let rendered = render_markdown(&preprocessed, config, syntax_set)?;
+    Ok(crate::render::inject_heading_ids(&rendered.html))
 }
 
 /// Absolute prefix for pages that may be served from an unknown path.

@@ -29,14 +29,17 @@ pub struct Section {
 pub fn init_tera(config: &BookConfig) -> Result<Tera> {
     let mut tera = Tera::default();
 
+    // Names end in .html so Tera autoescapes them. Registered as bare "page",
+    // "index", … nothing was escaped anywhere, and authored SUMMARY.md text
+    // reached the sidebar and <title> as raw markup.
     let template_files = [
-        ("page", "page.html.tera"),
-        ("index", "index.html.tera"),
-        ("sidebar", "sidebar.html.tera"),
-        ("footer", "footer.html.tera"),
-        ("header", "header.html.tera"),
-        ("404", "404.html.tera"),
-        ("print", "print.html.tera"),
+        ("page.html", "page.html.tera"),
+        ("index.html", "index.html.tera"),
+        ("sidebar.html", "sidebar.html.tera"),
+        ("footer.html", "footer.html.tera"),
+        ("header.html", "header.html.tera"),
+        ("404.html", "404.html.tera"),
+        ("print.html", "print.html.tera"),
     ];
 
     for (name, file) in template_files {
@@ -73,6 +76,31 @@ pub fn extract_title(markdown: &str) -> Option<String> {
 }
 
 /// `../`-style prefix from a page to the build-dir root; `""` at the root.
+/// Resolve the configured logo to a URL for a page at `root` depth.
+///
+/// External logos pass through; local ones become relative to the page. Built
+/// here rather than in the template so the value can be escaped once, as an
+/// attribute, without Tera also rewriting `/` as `&#x2F;`.
+#[must_use]
+pub fn logo_url(logo: &str, root: &str) -> String {
+    let url = if logo.starts_with("http://") || logo.starts_with("https://") {
+        logo.to_string()
+    } else {
+        format!("{root}{}", logo.trim_start_matches('/'))
+    };
+    escape_url_attr(&url)
+}
+
+/// Escape a URL for use inside a double-quoted HTML attribute.
+///
+/// Escapes `&` and `"` only, leaving `/` readable. Without this a chapter whose
+/// SUMMARY.md target contains a quote could close the attribute and inject
+/// event handlers.
+#[must_use]
+pub fn escape_url_attr(url: &str) -> String {
+    html_escape::encode_double_quoted_attribute(url).into_owned()
+}
+
 /// Render a relative path as a URL path.
 ///
 /// `Path::display()` uses the platform separator, so on Windows it yields
@@ -147,6 +175,7 @@ pub fn render_page(
     context.insert("path_to_root", &root);
     // Gates the mermaid bundle: 2.9MB that most pages never need.
     context.insert("has_mermaid", &has_mermaid);
+    context.insert("logo_url", &logo_url(&config.book.logo, &root));
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(
         "preferred_dark_theme",
@@ -154,7 +183,7 @@ pub fn render_page(
     );
 
     let rendered = tera
-        .render("page", &context)
+        .render("page.html", &context)
         .with_context(|| format!("Failed to render page: {}", html_path))?;
     fs::write(html_path, rendered)
         .with_context(|| format!("Failed to write file: {}", html_path))?;
@@ -179,6 +208,7 @@ pub fn render_index(
     context.insert("config", &config);
     context.insert("sections", &sections);
     context.insert("has_mermaid", &has_mermaid);
+    context.insert("logo_url", &logo_url(&config.book.logo, ""));
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(
         "preferred_dark_theme",
@@ -200,7 +230,7 @@ pub fn render_index(
     }
 
     let rendered = tera
-        .render("index", &context)
+        .render("index.html", &context)
         .context("Failed to render index page")?;
     fs::write(format!("{}/index.html", output_dir), rendered)
         .context("Failed to write index.html")?;

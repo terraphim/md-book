@@ -7,27 +7,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page.title }} | {{ config.book.title }}</title>
     <!-- Include Shoelace assets -->
-    <link rel="stylesheet" href="{{ path_to_root }}vendor/shoelace/themes/light.css" />
-    <script type="module" src="{{ path_to_root }}vendor/shoelace/shoelace-local.js"></script>
-    <link rel="stylesheet" href="{{ path_to_root }}css/styles.css">
-    <link rel="stylesheet" href="{{ path_to_root }}css/themes.css">
-    <link rel="stylesheet" href="{{ path_to_root }}css/search.css">
-    <script src="{{ path_to_root }}components/doc-toc.js" type="module"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}vendor/shoelace/themes/light.css" />
+    <script type="module" src="{{ path_to_root | safe }}vendor/shoelace/shoelace-local.js"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">
+    <script src="{{ path_to_root | safe }}components/doc-toc.js" type="module"></script>
     {% if has_mermaid %}
-    <script src="{{ path_to_root }}js/mermaid.min.js" type="module"></script>
-    <script src="{{ path_to_root }}js/mermaid-init.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
-    <script src="{{ path_to_root }}js/pagefind-search.js" type="module"></script>
-    <script src="{{ path_to_root }}components/search-modal.js" type="module"></script>
-    <script src="{{ path_to_root }}js/search-init.js" type="module"></script>
-    <link rel="stylesheet" href="{{ path_to_root }}css/syntax.css">
+    <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
     
 </head>
 <body>
     <div class="container">
-        {% include "header" %}
+        {% include "header.html" %}
         <div class="sidebar">
-            {% include "sidebar" %}
+            {% include "sidebar.html" %}
         </div>
         <main class="content">
             <article class="main-article">
@@ -55,9 +55,9 @@
     <!-- Search Modal -->
     <search-modal></search-modal>
     
-    {% include "footer" %}
+    {% include "footer.html" %}
     {% if watch_enabled %}
-    <script src="{{ path_to_root }}js/live-reload.js"></script>
+    <script src="{{ path_to_root | safe }}js/live-reload.js"></script>
     {% endif %}
     <script>
         // Mobile Interactions
@@ -97,8 +97,8 @@
             }
         });
     </script>
-    <script src="{{ path_to_root }}js/code-copy.js"></script>
-    <script src="{{ path_to_root }}js/theme-switch.js"></script>
-    <script src="{{ path_to_root }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
+    <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
 </body>
 </html> 
