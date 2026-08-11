@@ -685,9 +685,11 @@ Tests:
 
 **Gate: met.** A built page carries a description and, with `site-url` set, a canonical URL; the
 skip link is the first focusable element and `#main-content` exists; with no Pagefind index no
-search UI is emitted, and it reappears once an index is present. `stash@{0}` was dropped after
-this landed -- its remaining content was the four items above, all now implemented against the
-rewritten templates.
+search UI is emitted, and it reappears once an index is present. `stash@{0}` is now fully superseded: its
+`src/core.rs` helpers, the four template items and the skip-link style were checked one by one
+against what shipped. It is left in place for the owner to drop (`git stash drop stash@{0}`);
+nothing in it is still needed. The skip-link style differs deliberately -- it uses the theme
+variables rather than the stash's `--sl-color-primary-600`, so it adapts to all five themes.
 
 Deviation worth noting: `render_page` had grown to 16 positional arguments, so this increment
 collapsed them into a `PageRender` struct rather than adding two more.
