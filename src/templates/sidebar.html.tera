@@ -26,7 +26,7 @@
         {% endif %}
     {% endfor %}
     {% else %}
-    {% for section in page.sections %}
+    {% for section in nav_sections %}
     <div class="sidebar-section">
         <h2 class="sidebar-section-title">{{ section.title }}</h2>
         <ul class="sidebar-items">

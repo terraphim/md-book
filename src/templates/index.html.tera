@@ -35,6 +35,12 @@
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="container index-container">
         {% include "header.html" %}
+        {# The landing page needs the same navigation as any chapter: with a
+           README-backed index the card grid is skipped, which used to leave the
+           page with no way to reach the book at all. #}
+        <div class="sidebar">
+            {% include "sidebar.html" %}
+        </div>
         <main class="content index-content" id="main-content">
             {% if has_index %}
                 <article class="main-article">

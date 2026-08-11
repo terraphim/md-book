@@ -1304,3 +1304,26 @@ async fn test_mdbook_repo_and_edit_url_keys_are_honoured() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_index_page_is_navigable() -> Result<()> {
+    // A README-backed index skips the card grid, which used to leave the
+    // landing page with no route into the book at all.
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [Home](README.md)\n- [One](one.md)\n- [Two](sub/two.md)\n",
+    )?;
+    book.create_file("README.md", "# Home\n\nWelcome.\n")?;
+    book.create_file("one.md", "# One\n\nx\n")?;
+    book.create_file("sub/two.md", "# Two\n\ny\n")?;
+    book.build().await?;
+
+    let index = book.read_output("index.html")?;
+    assert_contains!(index, "one.html");
+    assert_contains!(index, "sub/two.html");
+    assert_contains!(index, "sidebar-nav");
+
+    Ok(())
+}

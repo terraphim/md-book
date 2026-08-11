@@ -219,6 +219,7 @@ pub fn render_page(
     context.insert("current_path", &current_path);
     context.insert("watch_enabled", &watch_enabled);
     context.insert("search_enabled", &search_enabled);
+    context.insert("nav_sections", &page_data.sections);
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
     }
@@ -276,6 +277,7 @@ pub fn render_index(
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);
+    context.insert("nav_sections", &sections);
     context.insert("has_mermaid", &has_mermaid);
     context.insert("logo_url", &logo_url(&config.book.logo, ""));
     context.insert("additional_css", &additional.css);
