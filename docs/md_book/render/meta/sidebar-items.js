@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["MAX_DESCRIPTION"],"fn":["canonical_url","first_paragraph_text","page_description","truncate_on_word"]};

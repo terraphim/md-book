@@ -1,2 +1,2 @@
-createSrcSidebar('[["md_book",["",[],["config.rs","core.rs","lib.rs","pagefind_service.rs","server.rs"]]]]');
-//{"start":19,"fragment_lengths":[86]}
+createSrcSidebar('[["md_book",["",[["book",[],["directory.rs","mod.rs","summary.rs"]],["pipeline",[],["mod.rs","preprocess.rs"]],["render",[],["html.rs","markdown.rs","meta.rs","mod.rs","slug.rs"]]],["config.rs","core.rs","lib.rs","pagefind_service.rs","paths.rs","server.rs","watch.rs"]]]]');
+//{"start":19,"fragment_lengths":[270]}

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["copy_static_assets","copy_tree","edit_url","escape_url_attr","extract_title","init_tera","logo_url","path_to_root","render_index","render_page","scope_css","to_url_path","write_embedded","write_syntax_css"],"static":["DEFAULT_COMPONENTS","DEFAULT_CSS","DEFAULT_IMG","DEFAULT_JS","VENDOR_DIR"],"struct":["PageData","PageRender","Section"]};

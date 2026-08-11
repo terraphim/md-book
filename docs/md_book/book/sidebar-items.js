@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BookItem","NavKind"],"fn":["flatten_title","load_book","render_label_html"],"mod":["directory","summary"],"struct":["Book","BookAllChapterIter","BookChapterIter","Chapter","NavEntry","SectionNumber"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["chapter_to_pageinfo","copy_additional_assets","copy_non_markdown_assets","index","legacy_directory_sections","render_custom_404","run_sync","search_index_available","site_url_prefix","warn_orphan_markdown"],"mod":["preprocess"],"struct":["AdditionalAssets","BuildReport"]};

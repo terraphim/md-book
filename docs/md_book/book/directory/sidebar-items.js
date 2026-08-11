@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["book_from_directory"]};

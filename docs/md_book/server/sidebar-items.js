@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["handle_live_reload","serve_book"]};
+window.SIDEBAR_ITEMS = {"fn":["handle_live_reload","serve_book","serve_book_on"]};

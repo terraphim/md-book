@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["config","core","pagefind_service","server"]};
+window.SIDEBAR_ITEMS = {"mod":["book","config","core","pagefind_service","paths","pipeline","render","server","watch"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["extract_id_attr","find_heading_open","inject_heading_ids","inject_heading_ids_with","slugify","strip_tags"]};
