@@ -4,7 +4,7 @@
             <button class="mobile-menu-toggle" aria-label="Toggle navigation">
                 <sl-icon name="list"></sl-icon>
             </button>
-            <a href="{{ path_to_root | safe }}index.html" class="header-logo">
+            <a href="{{ path_to_root | safe }}index.html" class="header-logo" aria-label="{{ config.book.title }} home">
                 <img src="{{ logo_url | safe }}" alt="" class="header-logo-img" height="48px">
             </a>
             <span class="header-title">{{ config.book.title }}</span>

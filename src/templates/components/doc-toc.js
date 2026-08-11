@@ -119,8 +119,10 @@ class DocToc extends HTMLElement {
           }
         }
       </style>
-      <div class="toc-header">On this page</div>
-      <div class="toc-content"></div>
+      <nav class="toc-nav" aria-labelledby="toc-header">
+        <h2 class="toc-header" id="toc-header">On this page</h2>
+        <div class="toc-content"></div>
+      </nav>
     `;
   }
 }
