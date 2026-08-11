@@ -1251,14 +1251,22 @@ async fn test_search_ui_omitted_without_an_index() -> Result<()> {
     book.create_file("one.md", "# One\n\nBody.\n")?;
     book.build().await?;
 
+    // Indexing runs after rendering, so the second build is the one that sees
+    // the index state the first produced. Asserting the invariant rather than
+    // "there is no index here" keeps this honest on CI, which installs the
+    // pagefind CLI, and locally, which usually does not.
+    let index_exists = book.output_path().join("pagefind/pagefind.js").exists();
+    book.build().await?;
+
     let html = book.read_output("one.html")?;
-    assert!(
-        !book.output_path().join("pagefind/pagefind.js").exists(),
-        "precondition: no index in this test environment"
-    );
-    assert_not_contains!(html, "<search-modal>");
-    assert_not_contains!(html, "js/search-init.js");
-    assert_not_contains!(html, "header-search");
+    if index_exists {
+        assert_contains!(html, "<search-modal>");
+        assert_contains!(html, "js/search-init.js");
+    } else {
+        assert_not_contains!(html, "<search-modal>");
+        assert_not_contains!(html, "js/search-init.js");
+        assert_not_contains!(html, "header-search");
+    }
 
     Ok(())
 }
