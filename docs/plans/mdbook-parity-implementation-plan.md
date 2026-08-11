@@ -61,6 +61,27 @@ targets exactly one stage.
 - Structural conformance fixtures over `test_book_mdbook/`.
 - Interface-level design for the `pulldown-cmark` backend (increment F).
 
+### Closed as not needed (2026-08-11)
+
+Increments **P2** (`{{#include}}`, anchors, `{{#rustdoc_include}}`, `{{#playground}}`, `{{#title}}`,
+hidden lines, Rust code-block attributes) and **F** (`pulldown-cmark` backend) are closed
+unstarted, on evidence rather than on preference.
+
+The only consumer of md-book is `terraphim-ai/docs`, built by that repo's `deploy-docs.yml` into
+docs.terraphim.ai. Scanning its 129 markdown files:
+
+| Feature the increment would add | Uses in the real corpus |
+|---|---|
+| `{{#…}}` directives (P2) | 0 |
+| Footnotes (F) | 0 |
+| Admonitions (F) | 0 |
+| Definition lists (F) | 0 |
+| Heading attributes (F) | 0 |
+| Mermaid diagrams (already supported) | 7 files |
+
+Neither increment buys anything for the book md-book actually builds. Reopen either one when a
+real book needs it; do not build them speculatively.
+
 **Out of scope (deferred to their own cycles):**
 
 - **P2 preprocessing** -- `{{#include}}` (+ line ranges, anchors), `{{#rustdoc_include}}`,
