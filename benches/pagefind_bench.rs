@@ -300,7 +300,11 @@ fn bench_error_handling(c: &mut Criterion) {
         });
     });
 
-    group.bench_function("multiple_configs", |b| {
+    // Measures construction when pagefind config files are present. It used to
+    // assert PagefindError::MultipleConfigs, which PagefindBuilder::new has
+    // never produced -- the variant is declared but never constructed -- so the
+    // whole bench target panicked and could not be run.
+    group.bench_function("with_config_files_present", |b| {
         b.iter(|| {
             rt.block_on(async {
                 let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -321,13 +325,10 @@ fn bench_error_handling(c: &mut Criterion) {
 
                 std::env::set_current_dir(original_dir).expect("Failed to restore dir");
 
-                assert!(result.is_err());
-                match result.unwrap_err() {
-                    PagefindError::MultipleConfigs { .. } => {
-                        // Expected error
-                    }
-                    other => panic!("Unexpected error: {:?}", other),
-                }
+                assert!(
+                    result.is_ok(),
+                    "construction should succeed regardless of config files present"
+                );
             })
         });
     });

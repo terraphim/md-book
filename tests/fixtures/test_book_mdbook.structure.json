@@ -1,0 +1,57 @@
+{
+  "from_summary": true,
+  "chapters": [
+    {
+      "name": "Prefix Chapter",
+      "source": "prefix.md",
+      "output": "prefix.html",
+      "number": null
+    },
+    {
+      "name": "Introduction",
+      "source": "README.md",
+      "output": "index.html",
+      "number": "1."
+    },
+    {
+      "name": "Draft Chapter",
+      "source": null,
+      "output": null,
+      "number": null,
+      "draft": true
+    },
+    {
+      "name": "Markdown Individual tags",
+      "source": "individual/README.md",
+      "output": "individual/index.html",
+      "number": "2."
+    },
+    {
+      "name": "Heading",
+      "source": "individual/heading.md",
+      "output": "individual/heading.html",
+      "number": "2.1."
+    },
+    {
+      "name": "Last numbered chapter",
+      "source": "last.md",
+      "output": "last.html",
+      "number": "6."
+    },
+    {
+      "name": "Suffix Chapter",
+      "source": "suffix.md",
+      "output": "suffix.html",
+      "number": null
+    }
+  ],
+  "prev_next_chain": [
+    "prefix.html",
+    "index.html",
+    "individual/index.html"
+  ],
+  "part_titles": [
+    "Actual Markdown Tag Examples"
+  ],
+  "notes": "Partial fixture; structure_test validates full chain against live parse"
+}

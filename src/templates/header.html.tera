@@ -4,30 +4,50 @@
             <button class="mobile-menu-toggle" aria-label="Toggle navigation">
                 <sl-icon name="list"></sl-icon>
             </button>
-            <a href="/" class="header-logo">
-                <img src="{{ config.book.logo }}" alt="Logo" class="header-logo-img" height="48px">
+            <a href="{{ path_to_root | safe }}index.html" class="header-logo">
+                <img src="{{ logo_url | safe }}" alt="" class="header-logo-img" height="48px">
             </a>
             <span class="header-title">{{ config.book.title }}</span>
         </div>
         <div class="header-right">
+            {% if search_enabled %}
             <button class="mobile-search-toggle" aria-label="Search">
                 <sl-icon name="search"></sl-icon>
             </button>
-            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input">
+            <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input" aria-label="Search documentation">
                 <sl-icon name="search" slot="prefix"></sl-icon>
             </sl-input>
+            {% endif %}
+
+            {# Theme picker. <details> gives keyboard support and an open/close
+               state without script; theme-switch.js handles the selection. #}
+            <details class="theme-menu">
+                <summary class="header-link" aria-label="Change theme" title="Change theme">
+                    <sl-icon name="palette"></sl-icon>
+                </summary>
+                <ul class="theme-list" role="list">
+                    {% for theme in ["light", "rust", "coal", "navy", "ayu"] %}
+                    <li>
+                        <button type="button" data-theme-set="{{ theme }}">{{ theme | capitalize }}</button>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </details>
+
+            {% if repo_url %}
             <div class="header-links">
-                <a href="{{ config.book.github_url }}" class="header-link" target="_blank">
+                <a href="{{ repo_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="View source repository">
                     <sl-icon name="github"></sl-icon>
                 </a>
             </div>
+            {% endif %}
+            {% if edit_url %}
             <div class="header-links">
-                {% if config.book.github_url %}
-                <a href="{{ config.book.github_edit_url_base }}{{ current_path | replace(from='.html', to='.md') }}" class="header-link" target="_blank">
+                <a href="{{ edit_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="Edit this page">
                     <sl-icon name="pencil-square"></sl-icon>
                 </a>
-                {% endif %}
             </div>
+            {% endif %}
         </div>
     </div>
-</header> 
+</header>

@@ -1,0 +1,132 @@
+:root, [data-theme="light"] {
+  --bg: #fafafa;
+  --fg: #1a1a1a;
+  --sidebar-bg: #f0f0f0;
+  --accent: #6640c0;
+}
+[data-theme="rust"] {
+  --bg: #e1e1db;
+  --fg: #262625;
+  --sidebar-bg: #d1c7a5;
+  --accent: #a72145;
+}
+[data-theme="coal"] {
+  --bg: #141617;
+  --fg: #98a3ad;
+  --sidebar-bg: #292c2f;
+  --accent: #3473ad;
+}
+[data-theme="navy"] {
+  --bg: #161923;
+  --fg: #bcbdd0;
+  --sidebar-bg: #212942;
+  --accent: #2b79a2;
+}
+[data-theme="ayu"] {
+  --bg: #0f1419;
+  --fg: #c5c5c5;
+  --sidebar-bg: #14191f;
+  --accent: #ffb454;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+/* Theme picker (see header.html.tera). Plain <details> so it works without JS
+   and stays keyboard accessible; theme-switch.js only handles the choice. */
+.theme-menu {
+  position: relative;
+}
+
+.theme-menu > summary {
+  cursor: pointer;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+}
+
+.theme-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.theme-menu .theme-list {
+  position: absolute;
+  right: 0;
+  z-index: 20;
+  margin: 0.25rem 0 0;
+  padding: 0.25rem;
+  min-width: 8rem;
+  list-style: none;
+  border-radius: 0.375rem;
+  background: var(--bg, #fff);
+  color: var(--fg, #1a1a1a);
+  border: 1px solid var(--sidebar-bg, rgba(0, 0, 0, 0.15));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.theme-menu .theme-list button {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  text-align: left;
+  border: 0;
+  border-radius: 0.25rem;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.theme-menu .theme-list button:hover,
+.theme-menu .theme-list button:focus-visible {
+  background: var(--sidebar-bg, rgba(0, 0, 0, 0.08));
+}
+
+.theme-menu .theme-list button[aria-current="true"]::after {
+  content: " ✓";
+}
+
+/* Sidebar folding ([output.html.fold]). The list is hidden by class rather
+   than removed, so expanding it needs no rebuild. */
+.sidebar-items.folded {
+  display: none;
+}
+
+.fold-toggle {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0 0.35rem 0 0;
+  line-height: 1;
+}
+
+.fold-toggle::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.fold-toggle[aria-expanded="true"]::before {
+  transform: rotate(90deg);
+}
+
+/* Skip link: off-screen until focused, so keyboard users can bypass the
+   sidebar without it appearing for everyone else. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg, #fff);
+  color: var(--fg, #000);
+  border: 2px solid var(--accent, #6640c0);
+  border-radius: 0 0 0.25rem 0;
+}
+
+.skip-link:focus {
+  left: 0;
+}

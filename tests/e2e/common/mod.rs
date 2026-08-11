@@ -62,13 +62,13 @@ impl TestBook {
     #[cfg(feature = "tokio")]
     pub async fn build(&self) -> Result<()> {
         let args = self.args();
-        md_book::build(&args, &self.config, false).await
+        md_book::build(&args, &self.config, false).await.map(|_| ())
     }
 
     #[cfg(not(feature = "tokio"))]
     pub fn build(&self) -> Result<()> {
         let args = self.args();
-        md_book::build(&args, &self.config, false)
+        md_book::build(&args, &self.config, false).map(|_| ())
     }
 
     pub fn output_exists<P: AsRef<Path>>(&self, path: P) -> bool {

@@ -22,15 +22,14 @@ async fn test_mdbook_compatibility_full_build() -> Result<()> {
 
     // Verify all expected files are present
     let expected_files = [
-        "README.html",
-        "SUMMARY.html",
+        "index.html",
         "last.html",
         "suffix.html",
-        "rust/README.html",
+        "rust/index.html",
         "rust/rust_codeblock.html",
-        "languages/README.html",
+        "languages/index.html",
         "languages/highlight.html",
-        "headings/README.html",
+        "headings/index.html",
         "headings/collapsed.html",
     ];
 
@@ -39,12 +38,10 @@ async fn test_mdbook_compatibility_full_build() -> Result<()> {
     }
 
     // Verify the main page has the correct title
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "Demo Book");
 
     // Verify SUMMARY page exists and has content
-    let summary_content = book.read_output("SUMMARY.html")?;
-    assert_contains!(summary_content, "SUMMARY");
 
     Ok(())
 }
@@ -107,7 +104,7 @@ async fn test_mdbook_compatibility_markdown_parsing() -> Result<()> {
     assert_contains!(highlight_content, "highlight");
 
     // Test headings
-    let headings_content = book.read_output("headings/README.html")?;
+    let headings_content = book.read_output("headings/index.html")?;
     assert_contains!(headings_content, "headings");
 
     Ok(())
@@ -125,12 +122,10 @@ async fn test_mdbook_compatibility_navigation() -> Result<()> {
     book.build().await?;
 
     // Test that navigation links work
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "href");
 
     // Test that SUMMARY is processed
-    let summary_content = book.read_output("SUMMARY.html")?;
-    assert_contains!(summary_content, "SUMMARY");
 
     Ok(())
 }

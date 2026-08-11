@@ -47,7 +47,12 @@ yarn-error.log*
 # Temporary files
 tmp/
 temp/
-test_*
+# Build scratch directories, not test inputs. The bare `test_*` this replaces
+# also matched tests/assets/test_book_1, so that fixture was never committed
+# and the structure suite passed only on machines that happened to have it.
+/test_*/
+!/test_book_mdbook/
+!tests/assets/**
 
 # Test output
 test-results/

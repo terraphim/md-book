@@ -1,0 +1,15 @@
+# cargo-audit configuration.
+#
+# Ignores are last-resort and each needs a reason and an exit route. Prefer
+# updating the dependency; only list an advisory here when the fix sits behind
+# an upstream release we do not control.
+
+[advisories]
+ignore = [
+    # quick-xml <0.41 reached only through syntect -> plist, which parses the
+    # syntax and theme definitions md-book ships, never user input. The fix
+    # needs plist to take a semver-major bump of quick-xml; revisit when
+    # syntect releases against plist >=2.
+    "RUSTSEC-2026-0194", # quadratic parse time on duplicate attribute names
+    "RUSTSEC-2026-0195", # unbounded namespace-declaration allocation
+]

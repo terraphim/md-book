@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ config.book.title }} — Print</title>
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
+  <style>
+    @media print {
+      .no-print { display: none; }
+      {% if page_break %}article { page-break-after: always; }{% endif %}
+    }
+  </style>
+    {% if has_mermaid %}
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
+</head>
+<body>
+  <h1>{{ config.book.title }}</h1>
+  {% for chapter in print_chapters %}
+  <article id="{{ chapter.anchor }}">
+    <h1>{{ chapter.title }}</h1>
+    {{ chapter.content | safe }}
+  </article>
+  {% endfor %}
+</body>
+</html>

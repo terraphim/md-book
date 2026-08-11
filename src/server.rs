@@ -14,6 +14,17 @@ pub async fn serve_book(
     port: u16,
     reload_tx: broadcast::Sender<()>,
 ) -> Result<()> {
+    serve_book_on(output_dir, "127.0.0.1", port, reload_tx).await
+}
+
+/// Serve on a specific hostname (`127.0.0.1`, `0.0.0.0`, or an IP literal).
+#[cfg(feature = "server")]
+pub async fn serve_book_on(
+    output_dir: String,
+    hostname: &str,
+    port: u16,
+    reload_tx: broadcast::Sender<()>,
+) -> Result<()> {
     let static_files =
         warp::fs::dir(output_dir.clone()).or(warp::fs::file(format!("{}/index.html", output_dir)));
 
@@ -25,10 +36,28 @@ pub async fn serve_book(
             ws.on_upgrade(move |socket| handle_live_reload(socket, reload_tx))
         });
 
-    println!("Serving book at http://localhost:{}", port);
-    warp::serve(static_files.or(reload))
-        .run(([127, 0, 0, 1], port))
-        .await;
+    // Resolve DNS names rather than silently falling back to loopback while
+    // printing the name the user asked for.
+    let addr: std::net::IpAddr = match hostname.parse() {
+        Ok(ip) => ip,
+        Err(_) => {
+            use std::net::ToSocketAddrs;
+            (hostname, port)
+                .to_socket_addrs()
+                .ok()
+                .and_then(|mut addrs| addrs.next())
+                .map(|resolved| resolved.ip())
+                .ok_or_else(|| {
+                    anyhow::anyhow!("cannot resolve hostname '{hostname}'; pass an IP address")
+                })?
+        }
+    };
+
+    println!(
+        "Serving book at http://{}:{} (bound to {})",
+        hostname, port, addr
+    );
+    warp::serve(static_files.or(reload)).run((addr, port)).await;
     Ok(())
 }
 

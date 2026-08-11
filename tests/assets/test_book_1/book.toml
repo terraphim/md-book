@@ -1,0 +1,20 @@
+[book]
+title = "Test Book 1"
+description = "A comprehensive test book for md-book functionality"
+authors = ["Test Author"]
+language = "en"
+
+[output.html]
+mathjax_support = false
+allow_html = false
+
+[output.html.search]
+limit_results = 20
+boost_title = 2
+
+[markdown]
+format = "markdown"
+frontmatter = false
+
+[rust]
+edition = "2021"

@@ -1,12 +1,13 @@
-use anyhow::Result;
-use md_book::config;
+use anyhow::{Context, Result};
+use clap::{Parser, Subcommand};
+use md_book::config::BookConfig;
 use md_book::core::{build, Args};
+use md_book::paths::{self, BookPaths};
+use std::path::{Path, PathBuf};
 
 #[cfg(any(feature = "server", feature = "watcher"))]
 use futures::future;
 
-#[cfg(feature = "server")]
-use md_book::serve_book;
 #[cfg(feature = "server")]
 use tokio::sync::broadcast;
 
@@ -15,8 +16,69 @@ use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 #[cfg(feature = "watcher")]
 use tokio::time::Duration;
 
-use clap::Parser;
-use std::path::Path;
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+
+    /// Input directory containing markdown files (legacy / override)
+    #[arg(short, long, global = true)]
+    input: Option<String>,
+
+    /// Output directory for HTML files (legacy / override)
+    #[arg(short = 'o', long, global = true)]
+    output: Option<String>,
+
+    /// Destination directory (mdBook-compatible alias for --output)
+    #[arg(short = 'd', long = "dest-dir", global = true)]
+    dest_dir: Option<String>,
+
+    /// Optional path to config file
+    #[arg(short, long, global = true)]
+    config: Option<String>,
+
+    /// Watch for changes and rebuild
+    #[arg(short, long, global = true)]
+    #[cfg(feature = "watcher")]
+    watch: bool,
+
+    /// Serve the book
+    #[arg(short, long, global = true)]
+    #[cfg(feature = "server")]
+    serve: bool,
+
+    /// Port to serve on (default: 3000)
+    #[arg(long, default_value = "3000", global = true)]
+    #[cfg(feature = "server")]
+    port: u16,
+
+    /// Hostname to bind (default: 127.0.0.1)
+    #[arg(short = 'n', long, default_value = "127.0.0.1", global = true)]
+    #[cfg(feature = "server")]
+    hostname: String,
+
+    /// Open browser after serve (best-effort)
+    #[arg(long, global = true)]
+    open: bool,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Build the book
+    Build {
+        /// Book directory (contains book.toml)
+        dir: Option<PathBuf>,
+    },
+    /// Build and serve with live reload
+    Serve { dir: Option<PathBuf> },
+    /// Watch and rebuild on change
+    Watch { dir: Option<PathBuf> },
+    /// Create a new book scaffold
+    Init { dir: Option<PathBuf> },
+    /// Remove the build directory
+    Clean { dir: Option<PathBuf> },
+}
 
 #[cfg(any(
     feature = "server",
@@ -36,18 +98,60 @@ async fn main() -> Result<()> {
     feature = "core"
 )))]
 fn main() -> Result<()> {
-    // For WASM builds without async features, use a synchronous main
     main_impl_sync()
 }
 
 async fn main_impl() -> Result<()> {
-    let args = Args::parse();
+    let cli = Cli::parse();
+
+    match &cli.command {
+        Some(Commands::Init { dir }) => {
+            let d = dir.clone().unwrap_or_else(|| PathBuf::from("."));
+            return paths::init_book(&d);
+        }
+        Some(Commands::Clean { dir }) => {
+            let d = dir.clone().unwrap_or_else(|| PathBuf::from("."));
+            let config = load_config_resolved(Some(d.as_path()), cli.config.as_deref())?;
+            let resolved = resolve_paths(&cli, Some(d.as_path()), &config)?;
+            if resolved.build.exists() {
+                std::fs::remove_dir_all(&resolved.build)
+                    .with_context(|| format!("Failed to remove {}", resolved.build.display()))?;
+                println!("Removed {}", resolved.build.display());
+            }
+            return Ok(());
+        }
+        _ => {}
+    }
+
+    let (book_dir, force_watch, force_serve) = match &cli.command {
+        Some(Commands::Build { dir }) => (dir.clone(), false, false),
+        Some(Commands::Serve { dir }) => (dir.clone(), false, true),
+        Some(Commands::Watch { dir }) => (dir.clone(), true, false),
+        None => (None, false, false),
+        _ => unreachable!(),
+    };
+
+    let config = load_config_resolved(book_dir.as_deref(), cli.config.as_deref())?;
+    let resolved = resolve_paths(&cli, book_dir.as_deref(), &config)?;
+    resolved.validate_for_build(cli.input.is_some())?;
+
+    let args = Args {
+        input: resolved.src.to_string_lossy().into_owned(),
+        output: resolved.build.to_string_lossy().into_owned(),
+        config: cli.config.clone(),
+        #[cfg(feature = "watcher")]
+        watch: force_watch || cli.watch,
+        #[cfg(feature = "server")]
+        serve: force_serve || cli.serve,
+        #[cfg(feature = "server")]
+        port: cli.port,
+    };
 
     #[cfg(any(feature = "watcher", feature = "server"))]
     let watch_enabled = {
         #[cfg(feature = "watcher")]
         {
-            args.watch
+            args.watch || force_watch
         }
         #[cfg(not(feature = "watcher"))]
         {
@@ -58,14 +162,10 @@ async fn main_impl() -> Result<()> {
     #[cfg(not(any(feature = "watcher", feature = "server")))]
     let watch_enabled = false;
 
-    // Load configuration
-    let config = config::load_config(args.config.as_deref())?;
-
-    // Initial build
-    #[cfg(any(feature = "server", feature = "watcher"))]
-    build(&args, &config, watch_enabled).await?;
-    #[cfg(not(any(feature = "server", feature = "watcher")))]
-    build(&args, &config, watch_enabled)?;
+    #[cfg(feature = "tokio")]
+    let initial_report = build(&args, &config, watch_enabled).await?;
+    #[cfg(not(feature = "tokio"))]
+    let initial_report = build(&args, &config, watch_enabled)?;
 
     #[cfg(any(feature = "watcher", feature = "server"))]
     {
@@ -99,60 +199,64 @@ async fn main_impl() -> Result<()> {
 
             let mut handles = vec![];
 
-            // Start server if requested
             #[cfg(feature = "server")]
             if should_serve {
                 let output_dir = args.output.clone();
                 let port = args.port;
+                let hostname = cli.hostname.clone();
                 let reload_tx = reload_tx.clone();
+                if cli.open {
+                    println!("Open http://{}:{}/ in your browser", hostname, port);
+                }
 
                 handles.push(tokio::spawn(async move {
-                    if let Err(e) = serve_book(output_dir, port, reload_tx).await {
-                        eprintln!("Server error: {}", e);
+                    if let Err(e) =
+                        serve_book_with_host(output_dir, &hostname, port, reload_tx).await
+                    {
+                        // A dev server that cannot bind is fatal: leaving the
+                        // process alive would look like a working server.
+                        eprintln!("Server error: {e}");
+                        std::process::exit(1);
                     }
                 }));
             }
 
-            // Start watcher if requested
             #[cfg(feature = "watcher")]
             if should_watch {
                 let mut watch_paths = vec![args.input.clone()];
                 if let Some(templates_dir) = get_templates_dir(&config) {
-                    println!("Adding template dir to watch: {}", templates_dir);
                     watch_paths.push(templates_dir);
                 }
+                for extra in &config.build.extra_watch_dirs {
+                    let p = book_dir
+                        .as_ref()
+                        .map(|d| d.join(extra))
+                        .unwrap_or_else(|| PathBuf::from(extra));
+                    watch_paths.push(p.to_string_lossy().into_owned());
+                }
 
-                let args = args.clone();
-                let config = config.clone();
+                let args_clone = args.clone();
+                let config_clone = config.clone();
+                #[cfg(feature = "server")]
                 let reload_tx = reload_tx.clone();
 
+                let initial = initial_report.clone();
                 handles.push(tokio::spawn(async move {
-                    if let Err(e) = watch_files(
+                    if let Err(e) = watch_and_rebuild(
                         watch_paths,
-                        move || {
-                            let args = args.clone();
-                            let config = config.clone();
-                            async move {
-                                #[cfg(feature = "tokio")]
-                                {
-                                    build(&args, &config, watch_enabled).await
-                                }
-                                #[cfg(not(feature = "tokio"))]
-                                {
-                                    build(&args, &config, watch_enabled)
-                                }
-                            }
-                        },
+                        args_clone,
+                        config_clone,
+                        initial,
+                        #[cfg(feature = "server")]
                         reload_tx,
                     )
                     .await
                     {
-                        eprintln!("Watch error: {}", e);
+                        eprintln!("Watcher error: {}", e);
                     }
                 }));
             }
 
-            // Keep the main task running
             if !handles.is_empty() {
                 let _ = future::join_all(handles).await;
             }
@@ -162,84 +266,124 @@ async fn main_impl() -> Result<()> {
     Ok(())
 }
 
-#[allow(dead_code)]
-fn main_impl_sync() -> Result<()> {
-    let args = Args::parse();
-
-    // Load configuration
-    let _config = config::load_config(args.config.as_deref())?;
-
-    // Initial build (synchronous)
-    #[cfg(not(feature = "tokio"))]
-    {
-        md_book::core::build(&args, &_config, false)?;
-        Ok(())
-    }
-
-    #[cfg(feature = "tokio")]
-    anyhow::bail!("Cannot use sync main with tokio feature enabled")
+// Single loader in the library: it carries the defaults fill and the
+// unsupported-key warnings, which a duplicate here would silently skip.
+fn load_config_resolved(book_dir: Option<&Path>, config_path: Option<&str>) -> Result<BookConfig> {
+    md_book::config::load_config_from(book_dir, config_path).context("Failed to load configuration")
 }
 
-fn get_templates_dir(config: &md_book::BookConfig) -> Option<String> {
-    let templates_dir = &config.paths.templates;
-    if Path::new(templates_dir).exists() {
-        Some(templates_dir.clone())
+fn resolve_paths(cli: &Cli, book_dir: Option<&Path>, config: &BookConfig) -> Result<BookPaths> {
+    let output = cli.dest_dir.as_deref().or(cli.output.as_deref());
+    paths::resolve(book_dir, cli.input.as_deref(), output, config)
+}
+
+#[cfg(not(any(
+    feature = "server",
+    feature = "watcher",
+    feature = "search",
+    feature = "core"
+)))]
+fn main_impl_sync() -> Result<()> {
+    let cli = Cli::parse();
+    if let Some(Commands::Init { dir }) = &cli.command {
+        let d = dir.clone().unwrap_or_else(|| PathBuf::from("."));
+        return paths::init_book(&d);
+    }
+    let book_dir = match &cli.command {
+        Some(Commands::Build { dir }) => dir.clone(),
+        _ => None,
+    };
+    let config = load_config_resolved(book_dir.as_deref(), cli.config.as_deref())?;
+    let resolved = resolve_paths(&cli, book_dir.as_deref(), &config)?;
+    // Same contract as the async path: refuse to "succeed" outside a book.
+    resolved.validate_for_build(cli.input.is_some())?;
+    let args = Args {
+        input: resolved.src.to_string_lossy().into_owned(),
+        output: resolved.build.to_string_lossy().into_owned(),
+        config: cli.config.clone(),
+    };
+    build(&args, &config, false)?;
+    Ok(())
+}
+
+fn get_templates_dir(config: &BookConfig) -> Option<String> {
+    let p = &config.paths.templates;
+    if Path::new(p).exists() {
+        Some(p.clone())
     } else {
         None
     }
 }
 
+#[cfg(feature = "server")]
+async fn serve_book_with_host(
+    output_dir: String,
+    hostname: &str,
+    port: u16,
+    reload_tx: broadcast::Sender<()>,
+) -> Result<()> {
+    md_book::server::serve_book_on(output_dir, hostname, port, reload_tx).await
+}
+
 #[cfg(feature = "watcher")]
-async fn watch_files<F, Fut>(paths: Vec<String>, rebuild: F, reload_tx: ReloadSender) -> Result<()>
-where
-    F: Fn() -> Fut + Send + Sync + 'static,
-    Fut: std::future::Future<Output = Result<()>> + Send,
-{
-    let (tx, mut rx) = tokio::sync::mpsc::channel(32);
+async fn watch_and_rebuild(
+    watch_paths: Vec<String>,
+    args: Args,
+    config: BookConfig,
+    initial: md_book::BuildReport,
+    #[cfg(feature = "server")] reload_tx: broadcast::Sender<()>,
+) -> Result<()> {
+    use std::sync::mpsc::channel;
 
-    let mut watcher = RecommendedWatcher::new(
-        move |res| {
-            if let Ok(event) = res {
-                println!("Change detected: {:?}", event);
-                let _ = tx.blocking_send(());
-            }
-        },
-        notify::Config::default(),
-    )?;
+    let (tx, rx) = channel();
+    let mut watcher = RecommendedWatcher::new(tx, notify::Config::default())?;
 
-    // Watch all paths
-    for path in &paths {
-        println!("Watching {}", path);
-        watcher.watch(std::path::Path::new(path), RecursiveMode::Recursive)?;
+    for path in &watch_paths {
+        if Path::new(path).exists() {
+            watcher.watch(Path::new(path), RecursiveMode::Recursive)?;
+            println!("Watching {}", path);
+        }
     }
 
-    // Debounce timer
-    let mut debounce = tokio::time::interval(Duration::from_millis(500));
-    let mut pending = false;
+    // `build.create-missing` writes stubs into the source tree; without this
+    // the watcher would see md-book's own writes and rebuild for nothing.
+    let mut self_writes = md_book::SelfWriteFilter::new();
+    self_writes.record(&initial.created);
 
     loop {
-        tokio::select! {
-            Some(_) = rx.recv() => {
-                pending = true;
-            }
-            _ = debounce.tick() => {
-                if pending {
-                    pending = false;
-                    println!("Rebuilding...");
-                    if let Err(e) = rebuild().await {
-                        eprintln!("Rebuild error: {}", e);
-                    } else {
-                        #[cfg(feature = "server")]
-                        { let _ = reload_tx.send(()); }
+        match rx.recv() {
+            Ok(event) => {
+                // Debounce briefly, then take the whole batch so a stub write
+                // and a genuine edit arriving together are judged as one.
+                tokio::time::sleep(Duration::from_millis(200)).await;
+                let mut batch: Vec<PathBuf> = event.map(|e| e.paths).unwrap_or_default();
+                while let Ok(pending) = rx.try_recv() {
+                    if let Ok(e) = pending {
+                        batch.extend(e.paths);
                     }
                 }
+
+                if self_writes.should_ignore(&batch) {
+                    continue;
+                }
+
+                println!("Change detected, rebuilding…");
+                match build(&args, &config, true).await {
+                    Ok(report) => {
+                        self_writes.record(&report.created);
+                        #[cfg(feature = "server")]
+                        {
+                            let _ = reload_tx.send(());
+                        }
+                    }
+                    Err(e) => eprintln!("Rebuild failed: {e}"),
+                }
+            }
+            Err(e) => {
+                eprintln!("Watch error: {e}");
+                break;
             }
         }
     }
+    Ok(())
 }
-
-#[cfg(all(feature = "watcher", feature = "server"))]
-type ReloadSender = broadcast::Sender<()>;
-
-#[cfg(all(feature = "watcher", not(feature = "server")))]
-type ReloadSender = ();

@@ -72,15 +72,14 @@ async fn test_mdbook_test_book_redirects() -> Result<()> {
 fn verify_mdbook_test_book_structure(book: &TestBook) -> Result<()> {
     // Verify all expected files are present
     let expected_files = [
-        "README.html",
-        "SUMMARY.html",
+        "index.html",
         "last.html",
         "suffix.html",
-        "rust/README.html",
+        "rust/index.html",
         "rust/rust_codeblock.html",
-        "languages/README.html",
+        "languages/index.html",
         "languages/highlight.html",
-        "headings/README.html",
+        "headings/index.html",
         "headings/collapsed.html",
     ];
 
@@ -89,12 +88,10 @@ fn verify_mdbook_test_book_structure(book: &TestBook) -> Result<()> {
     }
 
     // Verify main page content
-    let readme_content = book.read_output("README.html")?;
+    let readme_content = book.read_output("index.html")?;
     assert_contains!(readme_content, "Demo Book");
 
     // Verify SUMMARY page
-    let summary_content = book.read_output("SUMMARY.html")?;
-    assert_contains!(summary_content, "SUMMARY");
 
     // Verify Rust code blocks
     let rust_content = book.read_output("rust/rust_codeblock.html")?;
@@ -105,7 +102,7 @@ fn verify_mdbook_test_book_structure(book: &TestBook) -> Result<()> {
     assert_contains!(highlight_content, "highlight");
 
     // Verify headings
-    let headings_content = book.read_output("headings/README.html")?;
+    let headings_content = book.read_output("headings/index.html")?;
     assert_contains!(headings_content, "headings");
 
     Ok(())

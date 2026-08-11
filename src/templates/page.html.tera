@@ -1,31 +1,47 @@
 <!DOCTYPE html>
-<html>
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page.title }} | {{ config.book.title }}</title>
+    <meta name="description" content="{{ page.description }}">
+    {% if page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url | safe }}">{% endif %}
     <!-- Include Shoelace assets -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/themes/light.css" />
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.12.0/cdn/shoelace-autoloader.js"></script>
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="/css/search.css">
-    <script src="/components/doc-toc.js" type="module"></script>
-    <script src="/js/mermaid.min.js" type="module"></script>
-    <script src="/js/mermaid-init.js" type="module"></script>
-    <script src="/js/pagefind-search.js" type="module"></script>
-    <script src="/components/search-modal.js" type="module"></script>
-    <script src="/js/search-init.js" type="module"></script>
-    <link rel="stylesheet" href="/css/syntax.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}vendor/shoelace/themes/light.css" />
+    <script type="module" src="{{ path_to_root | safe }}vendor/shoelace/shoelace-local.js"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    {% if search_enabled %}<link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">{% endif %}
+    <script src="{{ path_to_root | safe }}components/doc-toc.js" type="module"></script>
+    {% if has_mermaid %}
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
+    {% if search_enabled %}
+    <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
+    {% endif %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
     
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="container">
-        {% include "header" %}
+        {% include "header.html" %}
         <div class="sidebar">
-            {% include "sidebar" %}
+            {% include "sidebar.html" %}
         </div>
         <main class="content">
-            <article class="main-article">
+            <article class="main-article" id="main-content">
                 {{ page.content | safe }}
                 <div class="nav-footer">
                     {% if page.previous %}
@@ -48,11 +64,11 @@
     </div>
     
     <!-- Search Modal -->
-    <search-modal></search-modal>
+    {% if search_enabled %}<search-modal></search-modal>{% endif %}
     
-    {% include "footer" %}
+    {% include "footer.html" %}
     {% if watch_enabled %}
-    <script src="/js/live-reload.js"></script>
+    <script src="{{ path_to_root | safe }}js/live-reload.js"></script>
     {% endif %}
     <script>
         // Mobile Interactions
@@ -92,5 +108,9 @@
             }
         });
     </script>
+    <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
+    <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/fold.js"></script>
 </body>
 </html> 
