@@ -1070,7 +1070,9 @@ async fn test_ordinary_urls_stay_readable() -> Result<()> {
     Ok(())
 }
 
-#[cfg(feature = "tokio")]
+// Windows forbids `"` in filenames, so the case cannot arise there and the
+// fixture cannot even be created.
+#[cfg(all(feature = "tokio", unix))]
 #[tokio::test]
 async fn test_quoted_filename_cannot_break_out_of_href() -> Result<()> {
     // Output paths derive from filenames, and the templates mark them `| safe`,
