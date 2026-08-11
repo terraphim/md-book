@@ -362,20 +362,43 @@ pub fn book_from_summary(
     src_dir: &Path,
     create_missing: bool,
 ) -> Result<(Book, Vec<PathBuf>), SummaryErrors> {
+    // Default boundary: the book directory when `src` is a subdirectory of it,
+    // otherwise `src` itself.
+    let book_root = src_dir.parent().unwrap_or(src_dir).to_path_buf();
+    book_from_summary_in(summary, src_dir, &book_root, create_missing)
+}
+
+/// Where chapter paths may be resolved from, and what to do about gaps.
+#[derive(Clone, Copy)]
+struct Resolve<'a> {
+    src_dir: &'a Path,
+    /// Paths may sit anywhere under this directory, never outside it.
+    book_root: &'a Path,
+    create_missing: bool,
+}
+
+/// As [`book_from_summary`], with an explicit containment boundary.
+///
+/// Paths may sit anywhere under `book_root` -- a SUMMARY that references a file
+/// beside `book.toml` is legitimate -- but never outside it.
+pub fn book_from_summary_in(
+    summary: &Summary,
+    src_dir: &Path,
+    book_root: &Path,
+    create_missing: bool,
+) -> Result<(Book, Vec<PathBuf>), SummaryErrors> {
+    let ctx = Resolve {
+        src_dir,
+        book_root,
+        create_missing,
+    };
     let mut errors = Vec::new();
     let mut created = Vec::new();
     let mut seen: HashMap<PathBuf, usize> = HashMap::new();
     let mut items = Vec::new();
 
     for item in &summary.prefix {
-        if let Some(i) = convert_unnumbered(
-            item,
-            src_dir,
-            create_missing,
-            &mut seen,
-            &mut created,
-            &mut errors,
-        ) {
+        if let Some(i) = convert_unnumbered(item, ctx, &mut seen, &mut created, &mut errors) {
             items.push(i);
         }
     }
@@ -384,8 +407,7 @@ pub fn book_from_summary(
     for item in &summary.numbered {
         if let Some(i) = convert_numbered(
             item,
-            src_dir,
-            create_missing,
+            ctx,
             0,
             &mut counters,
             &mut seen,
@@ -397,14 +419,7 @@ pub fn book_from_summary(
     }
 
     for item in &summary.suffix {
-        if let Some(i) = convert_unnumbered(
-            item,
-            src_dir,
-            create_missing,
-            &mut seen,
-            &mut created,
-            &mut errors,
-        ) {
+        if let Some(i) = convert_unnumbered(item, ctx, &mut seen, &mut created, &mut errors) {
             items.push(i);
         }
     }
@@ -424,8 +439,7 @@ pub fn book_from_summary(
 
 fn convert_unnumbered(
     item: &SummaryItem,
-    src_dir: &Path,
-    create_missing: bool,
+    ctx: Resolve<'_>,
     seen: &mut HashMap<PathBuf, usize>,
     created: &mut Vec<PathBuf>,
     errors: &mut Vec<SummaryError>,
@@ -434,13 +448,10 @@ fn convert_unnumbered(
         SummaryItem::PartTitle(t) => Some(BookItem::PartTitle(t.clone())),
         SummaryItem::Separator => Some(BookItem::Separator),
         SummaryItem::Link(link) => {
-            let mut chapter =
-                link_to_chapter(link, src_dir, create_missing, None, seen, created, errors)?;
+            let mut chapter = link_to_chapter(link, ctx, None, seen, created, errors)?;
             let mut nested = Vec::new();
             for n in &link.nested {
-                if let Some(ni) =
-                    convert_unnumbered(n, src_dir, create_missing, seen, created, errors)
-                {
+                if let Some(ni) = convert_unnumbered(n, ctx, seen, created, errors) {
                     nested.push(ni);
                 }
             }
@@ -453,8 +464,7 @@ fn convert_unnumbered(
 #[allow(clippy::too_many_arguments)]
 fn convert_numbered(
     item: &SummaryItem,
-    src_dir: &Path,
-    create_missing: bool,
+    ctx: Resolve<'_>,
     depth: usize,
     counters: &mut Vec<u32>,
     seen: &mut HashMap<PathBuf, usize>,
@@ -485,8 +495,7 @@ fn convert_numbered(
                 Some(SectionNumber(counters[..=depth].to_vec()))
             };
 
-            let mut chapter =
-                link_to_chapter(link, src_dir, create_missing, number, seen, created, errors)?;
+            let mut chapter = link_to_chapter(link, ctx, number, seen, created, errors)?;
 
             if !is_draft && !is_external {
                 counters.truncate(depth + 1);
@@ -494,16 +503,9 @@ fn convert_numbered(
 
             let mut nested = Vec::new();
             for n in &link.nested {
-                if let Some(ni) = convert_numbered(
-                    n,
-                    src_dir,
-                    create_missing,
-                    depth + 1,
-                    counters,
-                    seen,
-                    created,
-                    errors,
-                ) {
+                if let Some(ni) =
+                    convert_numbered(n, ctx, depth + 1, counters, seen, created, errors)
+                {
                     nested.push(ni);
                 }
             }
@@ -515,8 +517,7 @@ fn convert_numbered(
 
 fn link_to_chapter(
     link: &SummaryLink,
-    src_dir: &Path,
-    create_missing: bool,
+    ctx: Resolve<'_>,
     number: Option<SectionNumber>,
     seen: &mut HashMap<PathBuf, usize>,
     created: &mut Vec<PathBuf>,
@@ -563,18 +564,9 @@ fn link_to_chapter(
         return None;
     }
 
-    let path = match normalize_rel_path(&raw_path) {
-        Some(p) => p,
-        None => {
-            errors.push(SummaryError::EscapesSourceDir {
-                line: link.line,
-                path: raw_path.clone(),
-            });
-            return None;
-        }
-    };
+    let path = normalize_rel_path(&raw_path).unwrap_or_else(|| raw_path.clone());
 
-    if path_escapes_src(src_dir, &path) {
+    if path.is_absolute() || path_escapes_book(ctx.book_root, ctx.src_dir, &path) {
         errors.push(SummaryError::EscapesSourceDir {
             line: link.line,
             path: path.clone(),
@@ -592,10 +584,10 @@ fn link_to_chapter(
     }
     seen.insert(path.clone(), link.line);
 
-    let full = src_dir.join(&path);
+    let full = ctx.src_dir.join(&path);
     if !full.exists() {
-        if create_missing {
-            if let Err(e) = ensure_missing_target_contained(src_dir, &path, link.line) {
+        if ctx.create_missing {
+            if let Err(e) = ensure_missing_target_contained(ctx.src_dir, &path, link.line) {
                 errors.push(e);
                 return None;
             }
@@ -605,7 +597,7 @@ fn link_to_chapter(
                     return None;
                 }
                 // Re-check parent after create_dir_all (symlink races)
-                if let Ok(canon_src) = src_dir.canonicalize() {
+                if let Ok(canon_src) = ctx.src_dir.canonicalize() {
                     if let Ok(canon_parent) = parent.canonicalize() {
                         if !canon_parent.starts_with(&canon_src) {
                             errors.push(SummaryError::EscapesSourceDir {
@@ -646,8 +638,8 @@ fn strip_md_for_heading(name: &str) -> String {
     name.replace("**", "").replace(['*', '`'], "")
 }
 
-fn path_escapes_src(src_dir: &Path, rel: &Path) -> bool {
-    let Ok(canonical_src) = src_dir.canonicalize() else {
+fn path_escapes_book(boundary: &Path, src_dir: &Path, rel: &Path) -> bool {
+    let Ok(canonical_src) = boundary.canonicalize() else {
         return true;
     };
     let joined = src_dir.join(rel);
@@ -693,9 +685,21 @@ pub fn source_to_output(source: &Path) -> PathBuf {
             .unwrap_or("page");
         format!("{stem}.html")
     };
-    match source.parent() {
-        Some(parent) if !parent.as_os_str().is_empty() => parent.join(out_name),
-        _ => PathBuf::from(out_name),
+    // Keep only Normal components: a source above `src` (`../NOTES.md`, allowed
+    // when it stays inside the book) must still land *inside* the build
+    // directory, not beside it.
+    let parent: PathBuf = source
+        .parent()
+        .map(|p| {
+            p.components()
+                .filter(|c| matches!(c, std::path::Component::Normal(_)))
+                .collect()
+        })
+        .unwrap_or_default();
+
+    match parent.as_os_str().is_empty() {
+        false => parent.join(out_name),
+        true => PathBuf::from(out_name),
     }
 }
 
@@ -957,5 +961,38 @@ mod tests {
             );
             assert!(!outside.path().join("evil.md").exists());
         }
+    }
+}
+
+#[cfg(test)]
+mod output_containment_tests {
+    use super::source_to_output;
+    use std::path::{Component, Path};
+
+    #[test]
+    fn test_output_path_never_escapes_the_build_dir() {
+        // Sources above `src` are allowed when they stay inside the book, but
+        // their pages must still be written inside the output directory.
+        for source in ["../NOTES.md", "../../far/away.md", "./a/b.md", "c.md"] {
+            let out = source_to_output(Path::new(source));
+            assert!(
+                !out.components().any(|c| matches!(c, Component::ParentDir)),
+                "{source} produced an escaping output path: {}",
+                out.display()
+            );
+            assert!(!out.is_absolute(), "{source} produced an absolute path");
+        }
+    }
+
+    #[test]
+    fn test_output_path_keeps_nesting_below_src() {
+        assert_eq!(
+            source_to_output(Path::new("guide/intro.md")),
+            Path::new("guide/intro.html")
+        );
+        assert_eq!(
+            source_to_output(Path::new("../NOTES.md")),
+            Path::new("NOTES.html")
+        );
     }
 }
