@@ -34,9 +34,9 @@
                 </ul>
             </details>
 
-            {% if config.book.github_url %}
+            {% if repo_url %}
             <div class="header-links">
-                <a href="{{ config.book.github_url }}" class="header-link" target="_blank" rel="noopener" aria-label="View source repository">
+                <a href="{{ repo_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="View source repository">
                     <sl-icon name="github"></sl-icon>
                 </a>
             </div>

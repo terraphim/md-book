@@ -140,6 +140,12 @@ pub struct HtmlOutput {
     pub no_section_label: bool,
     #[serde(default)]
     pub syntax_theme: Option<String>,
+    /// mdBook's spelling of `book.github_url`.
+    #[serde(default)]
+    pub git_repository_url: Option<String>,
+    /// mdBook's edit link, with a `{path}` placeholder for the source file.
+    #[serde(default)]
+    pub edit_url_template: Option<String>,
     /// Syntect theme used under the dark themes (coal, navy, ayu).
     #[serde(default)]
     pub syntax_theme_dark: Option<String>,
@@ -187,6 +193,15 @@ impl Default for PrintConfig {
 }
 
 impl HtmlOutput {
+    /// Repository URL, accepting mdBook's `git-repository-url` as well as
+    /// md-book's own `book.github_url`.
+    #[must_use]
+    pub fn repository_url<'a>(&'a self, book: &'a Book) -> Option<&'a str> {
+        book.github_url
+            .as_deref()
+            .or(self.git_repository_url.as_deref())
+    }
+
     /// Theme applied when the reader has expressed no preference.
     #[must_use]
     pub fn default_theme_name(&self) -> &str {

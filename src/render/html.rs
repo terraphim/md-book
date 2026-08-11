@@ -97,12 +97,21 @@ pub fn logo_url(logo: &str, root: &str) -> String {
 }
 
 /// Resolve the "edit this page" URL for a chapter, or `None` when unconfigured.
+///
+/// Accepts mdBook's `edit-url-template` (with a `{path}` placeholder) as well as
+/// md-book's `book.github_edit_url_base`, which is plain concatenation. Books
+/// migrating from mdBook keep their existing key.
 #[must_use]
-pub fn edit_url(base: Option<&str>, current_path: &str) -> Option<String> {
-    let base = base?;
+pub fn edit_url(config: &BookConfig, current_path: &str) -> Option<String> {
     let source = current_path
         .strip_suffix(".html")
         .map_or_else(|| current_path.to_string(), |stem| format!("{stem}.md"));
+
+    if let Some(template) = config.output.html.edit_url_template.as_deref() {
+        return Some(escape_url_attr(&template.replace("{path}", &source)));
+    }
+
+    let base = config.book.github_edit_url_base.as_deref()?;
     Some(escape_url_attr(&format!("{base}{source}")))
 }
 
@@ -220,9 +229,14 @@ pub fn render_page(
     context.insert("logo_url", &logo_url(&config.book.logo, &root));
     context.insert("additional_css", &additional.css);
     context.insert("additional_js", &additional.js);
+    context.insert("edit_url", &edit_url(config, current_path));
     context.insert(
-        "edit_url",
-        &edit_url(config.book.github_edit_url_base.as_deref(), current_path),
+        "repo_url",
+        &config
+            .output
+            .html
+            .repository_url(&config.book)
+            .map(escape_url_attr),
     );
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(
@@ -266,9 +280,14 @@ pub fn render_index(
     context.insert("logo_url", &logo_url(&config.book.logo, ""));
     context.insert("additional_css", &additional.css);
     context.insert("additional_js", &additional.js);
+    context.insert("edit_url", &edit_url(config, "index.html"));
     context.insert(
-        "edit_url",
-        &edit_url(config.book.github_edit_url_base.as_deref(), "index.html"),
+        "repo_url",
+        &config
+            .output
+            .html
+            .repository_url(&config.book)
+            .map(escape_url_attr),
     );
     context.insert("default_theme", &config.output.html.default_theme_name());
     context.insert(

@@ -1262,3 +1262,35 @@ async fn test_search_ui_omitted_without_an_index() -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_mdbook_repo_and_edit_url_keys_are_honoured() -> Result<()> {
+    // terraphim-ai's own book.toml uses mdBook's spellings; without these
+    // aliases both links vanish from the built site with no warning.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Deep](nested/deep.md)\n")?;
+    book.create_file("nested/deep.md", "# Deep\n\nx\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    // load_config picks up this repository's own book.toml when tests run from
+    // the workspace root; clear the native keys so the aliases are what is
+    // under test.
+    config.book.github_url = None;
+    config.book.github_edit_url_base = None;
+    config.output.html.git_repository_url = Some("https://github.com/o/r".into());
+    config.output.html.edit_url_template =
+        Some("https://github.com/o/r/edit/main/docs/{path}".into());
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("nested/deep.html")?;
+    assert_contains!(html, "href=\"https://github.com/o/r\"");
+    // {path} is the source file, not the rendered page.
+    assert_contains!(
+        html,
+        "href=\"https://github.com/o/r/edit/main/docs/nested/deep.md\""
+    );
+
+    Ok(())
+}
