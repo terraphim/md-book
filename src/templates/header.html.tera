@@ -10,12 +10,14 @@
             <span class="header-title">{{ config.book.title }}</span>
         </div>
         <div class="header-right">
+            {% if search_enabled %}
             <button class="mobile-search-toggle" aria-label="Search">
                 <sl-icon name="search"></sl-icon>
             </button>
             <sl-input placeholder="Search docs..." size="small" clearable class="header-search" id="header-search-input" aria-label="Search documentation">
                 <sl-icon name="search" slot="prefix"></sl-icon>
             </sl-input>
+            {% endif %}
 
             {# Theme picker. <details> gives keyboard support and an open/close
                state without script; theme-switch.js handles the selection. #}

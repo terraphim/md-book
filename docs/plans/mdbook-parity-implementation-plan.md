@@ -628,7 +628,7 @@ code-sample guard and both print-page directions.
 **Gate:** theme choice persists across pages; `print.html` contains every chapter in book order;
 a page with no diagram references no mermaid script.
 
-### Increment G -- page metadata and skip link (0.5-1 d)
+### Increment G -- page metadata and skip link (0.5-1 d) -- SHIPPED
 
 Recovers the work sitting in `stash@{0}` and finishes it. The stash was written against the
 pre-increment-A monolith, so it **cannot be popped**: `src/core.rs` no longer contains the
@@ -683,10 +683,14 @@ Tests:
 | `test_skip_link_is_first_focusable_and_targets_article` | Structural, on built output |
 | `test_search_modal_omitted_without_index` | Gating both ways |
 
-**Gate:** a built page carries a description and (with `site-url` set) a canonical URL; the skip
-link is the first focusable element and its target exists; with no Pagefind index, no search UI
-is emitted. After this lands, `stash@{0}` can be dropped -- record that explicitly rather than
-leaving it to rot.
+**Gate: met.** A built page carries a description and, with `site-url` set, a canonical URL; the
+skip link is the first focusable element and `#main-content` exists; with no Pagefind index no
+search UI is emitted, and it reappears once an index is present. `stash@{0}` was dropped after
+this landed -- its remaining content was the four items above, all now implemented against the
+rewritten templates.
+
+Deviation worth noting: `render_page` had grown to 16 positional arguments, so this increment
+collapsed them into a `PageRender` struct rather than adding two more.
 
 ### Increment F -- `pulldown-cmark` backend (designed only; separate cycle)
 

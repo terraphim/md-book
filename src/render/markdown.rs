@@ -156,6 +156,11 @@ pub fn convert_md_links_to_html(html: &str) -> String {
     result
 }
 
+/// Parse/compile options for the configured markdown flavour.
+pub(crate) fn options_for(config: &BookConfig) -> markdown::Options {
+    markdown_options(config)
+}
+
 fn markdown_options(config: &BookConfig) -> markdown::Options {
     let parse_options = match config.markdown.format {
         MarkdownFormat::Mdx => markdown::ParseOptions::mdx(),

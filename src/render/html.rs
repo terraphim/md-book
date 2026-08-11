@@ -13,6 +13,11 @@ use crate::core::PageInfo;
 #[derive(Serialize, Debug, Clone)]
 pub struct PageData {
     pub title: String,
+    /// `<meta name="description">` for this page.
+    pub description: String,
+    /// Absolute URL for `<link rel="canonical">`; omitted when no site URL is set.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub canonical_url: Option<String>,
     pub content: String,
     pub sections: Vec<Section>,
     pub previous: Option<PageInfo>,
@@ -147,26 +152,51 @@ mod path_to_root_tests {
     }
 }
 
+/// Everything one chapter page needs, so the writer takes an argument list a
+/// person can read.
+pub struct PageRender<'a> {
+    pub html_path: &'a str,
+    pub title: String,
+    pub description: String,
+    pub canonical_url: Option<String>,
+    pub content: String,
+    pub sections: &'a [Section],
+    pub previous: Option<PageInfo>,
+    pub next: Option<PageInfo>,
+    pub current_path: &'a str,
+    pub chapters: Option<&'a [crate::book::NavEntry]>,
+    pub has_mermaid: bool,
+    pub search_enabled: bool,
+}
+
 /// Write a single chapter HTML page.
-#[allow(clippy::too_many_arguments)]
 pub fn render_page(
     tera: &Tera,
-    html_path: &str,
-    title: String,
-    content: String,
-    sections: &[Section],
-    previous: Option<PageInfo>,
-    next: Option<PageInfo>,
     year: &str,
     config: &BookConfig,
-    current_path: &str,
-    watch_enabled: bool,
-    chapters: Option<&[crate::book::NavEntry]>,
-    has_mermaid: bool,
     additional: &crate::pipeline::AdditionalAssets,
+    watch_enabled: bool,
+    page: PageRender<'_>,
 ) -> Result<()> {
+    let PageRender {
+        html_path,
+        title,
+        description,
+        canonical_url,
+        content,
+        sections,
+        previous,
+        next,
+        current_path,
+        chapters,
+        has_mermaid,
+        search_enabled,
+    } = page;
+
     let page_data = PageData {
         title,
+        description,
+        canonical_url,
         content,
         sections: sections.to_vec(),
         previous,
@@ -179,6 +209,7 @@ pub fn render_page(
     context.insert("config", &config);
     context.insert("current_path", &current_path);
     context.insert("watch_enabled", &watch_enabled);
+    context.insert("search_enabled", &search_enabled);
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
     }
@@ -220,8 +251,14 @@ pub fn render_index(
     chapters: Option<&[crate::book::NavEntry]>,
     has_mermaid: bool,
     additional: &crate::pipeline::AdditionalAssets,
+    description: String,
+    canonical_url: Option<String>,
+    search_enabled: bool,
 ) -> Result<()> {
     let mut context = TeraContext::new();
+    context.insert("description", &description);
+    context.insert("canonical_url", &canonical_url);
+    context.insert("search_enabled", &search_enabled);
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);
@@ -506,6 +543,8 @@ mod tests {
     fn test_page_data_serialization() -> Result<()> {
         let page_data = PageData {
             title: "Test Page".to_string(),
+            description: "A test page".to_string(),
+            canonical_url: Some("https://example.com/test.html".to_string()),
             content: "<h1>Test</h1>".to_string(),
             sections: vec![Section {
                 title: "Section 1".to_string(),

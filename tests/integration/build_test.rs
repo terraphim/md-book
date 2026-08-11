@@ -1173,3 +1173,92 @@ async fn test_sidebar_fold_collapses_all_but_the_active_branch() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Increment G: page metadata, skip link, search gating.
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_page_carries_description_and_canonical() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file(
+        "one.md",
+        "# One\n\nThe **first** paragraph with `code`, café and Обзор.\n\nSecond.\n",
+    )?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.site_url = Some("https://example.com/docs/".into());
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    // Markup flattens, non-ASCII survives, the second paragraph is not used.
+    assert_contains!(
+        html,
+        "content=\"The first paragraph with code, café and Обзор.\""
+    );
+    assert_not_contains!(html, "Second.\"");
+    assert_contains!(
+        html,
+        "<link rel=\"canonical\" href=\"https://example.com/docs/one.html\">"
+    );
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_no_canonical_without_site_url() -> Result<()> {
+    // A relative canonical is worse than none: it resolves against whatever
+    // path served the page.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    assert_not_contains!(book.read_output("one.html")?, "rel=\"canonical\"");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_skip_link_is_first_focusable_and_targets_the_article() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    let skip = html.find("class=\"skip-link\"").expect("skip link missing");
+    let first_link = html.find("<a ").expect("no links at all");
+    assert!(skip < first_link + 40, "skip link should come first");
+    assert_contains!(html, "href=\"#main-content\"");
+    assert_contains!(html, "id=\"main-content\"");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_search_ui_omitted_without_an_index() -> Result<()> {
+    // Pagefind is optional; a search box with no index behind it silently does
+    // nothing, which is worse than no search box.
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    assert!(
+        !book.output_path().join("pagefind/pagefind.js").exists(),
+        "precondition: no index in this test environment"
+    );
+    assert_not_contains!(html, "<search-modal>");
+    assert_not_contains!(html, "js/search-init.js");
+    assert_not_contains!(html, "header-search");
+
+    Ok(())
+}

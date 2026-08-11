@@ -6,20 +6,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ page.title }} | {{ config.book.title }}</title>
+    <meta name="description" content="{{ page.description }}">
+    {% if page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url | safe }}">{% endif %}
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="{{ path_to_root | safe }}vendor/shoelace/themes/light.css" />
     <script type="module" src="{{ path_to_root | safe }}vendor/shoelace/shoelace-local.js"></script>
     <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
     <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
-    <link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">
+    {% if search_enabled %}<link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">{% endif %}
     <script src="{{ path_to_root | safe }}components/doc-toc.js" type="module"></script>
     {% if has_mermaid %}
     <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
     <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
+    {% if search_enabled %}
     <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
     <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
     <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
+    {% endif %}
     <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
     
     {% for css in additional_css %}
@@ -30,13 +34,14 @@
     {% endfor %}
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="container">
         {% include "header.html" %}
         <div class="sidebar">
             {% include "sidebar.html" %}
         </div>
         <main class="content">
-            <article class="main-article">
+            <article class="main-article" id="main-content">
                 {{ page.content | safe }}
                 <div class="nav-footer">
                     {% if page.previous %}
@@ -59,7 +64,7 @@
     </div>
     
     <!-- Search Modal -->
-    <search-modal></search-modal>
+    {% if search_enabled %}<search-modal></search-modal>{% endif %}
     
     {% include "footer.html" %}
     {% if watch_enabled %}

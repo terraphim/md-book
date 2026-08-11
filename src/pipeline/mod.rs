@@ -47,6 +47,11 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     }
 
     let additional = copy_additional_assets(config, src_dir, Path::new(&args.output))?;
+    // Canonical URLs need an absolute base; without one we emit none at all.
+    let site_prefix = site_url_prefix(config);
+    // Pagefind is optional, and shipping a search box with no index behind it
+    // is worse than shipping none.
+    let search_enabled = search_index_available(&args.output);
 
     let sections = if book.from_summary {
         book.to_legacy_sections()
@@ -119,19 +124,27 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
 
         render_page(
             &tera,
-            &html_path.to_string_lossy(),
-            title,
-            html_content,
-            &sections,
-            previous,
-            next,
             &current_year,
             config,
-            &crate::render::to_url_path(output_rel),
-            watch_enabled,
-            Some(&nav),
-            page_has_mermaid,
             &additional,
+            watch_enabled,
+            crate::render::PageRender {
+                html_path: &html_path.to_string_lossy(),
+                title,
+                description: crate::render::page_description(&markdown_content, config),
+                canonical_url: crate::render::canonical_url(
+                    &site_prefix,
+                    &crate::render::to_url_path(output_rel),
+                ),
+                content: html_content,
+                sections: &sections,
+                previous,
+                next,
+                current_path: &crate::render::to_url_path(output_rel),
+                chapters: Some(&nav),
+                has_mermaid: page_has_mermaid,
+                search_enabled,
+            },
         )?;
     }
 
@@ -143,41 +156,57 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             .unwrap_or(false)
     });
 
-    let (index_page_info, index_content, index_has_mermaid) = if let Some(ch) = index_chapter {
-        let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
-        let markdown_content = fs::read_to_string(&source_abs)?;
-        let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
-        #[cfg(feature = "syntax-highlighting")]
-        let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
-        #[cfg(not(feature = "syntax-highlighting"))]
-        let rendered = render_markdown(&preprocessed, config, None)?;
-        let html = crate::render::inject_heading_ids(&rendered.html);
-        // index.html sits at the build root, so links from it need no prefix.
-        (
-            Some(chapter_to_pageinfo(ch, "")),
-            Some(html),
-            rendered.has_mermaid,
-        )
-    } else {
-        // Fallback: look for index.md even if not in book (directory edge case)
-        let index_path = src_dir.join("index.md");
-        if index_path.exists() {
-            let markdown_content = fs::read_to_string(&index_path)?;
+    let (index_page_info, index_content, index_has_mermaid, index_description) =
+        if let Some(ch) = index_chapter {
+            let source_abs = src_dir.join(ch.source_path.as_ref().unwrap());
+            let markdown_content = fs::read_to_string(&source_abs)?;
             let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
             #[cfg(feature = "syntax-highlighting")]
             let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
             #[cfg(not(feature = "syntax-highlighting"))]
             let rendered = render_markdown(&preprocessed, config, None)?;
             let html = crate::render::inject_heading_ids(&rendered.html);
-            let info = PageInfo {
-                title: "Documentation".into(),
-                path: "/index.html".into(),
-            };
-            (Some(info), Some(html), rendered.has_mermaid)
+            // index.html sits at the build root, so links from it need no prefix.
+            (
+                Some(chapter_to_pageinfo(ch, "")),
+                Some(html),
+                rendered.has_mermaid,
+                crate::render::page_description(&markdown_content, config),
+            )
         } else {
-            (None, None, false)
-        }
-    };
+            // Fallback: look for index.md even if not in book (directory edge case)
+            let index_path = src_dir.join("index.md");
+            if index_path.exists() {
+                let markdown_content = fs::read_to_string(&index_path)?;
+                let preprocessed = preprocess(&markdown_content, &preprocess_ctx)?;
+                #[cfg(feature = "syntax-highlighting")]
+                let rendered = render_markdown(&preprocessed, config, Some(&ss))?;
+                #[cfg(not(feature = "syntax-highlighting"))]
+                let rendered = render_markdown(&preprocessed, config, None)?;
+                let html = crate::render::inject_heading_ids(&rendered.html);
+                let info = PageInfo {
+                    title: "Documentation".into(),
+                    path: "/index.html".into(),
+                };
+                (
+                    Some(info),
+                    Some(html),
+                    rendered.has_mermaid,
+                    crate::render::page_description(&markdown_content, config),
+                )
+            } else {
+                (
+                    None,
+                    None,
+                    false,
+                    config
+                        .book
+                        .description
+                        .clone()
+                        .unwrap_or_else(|| config.book.title.clone()),
+                )
+            }
+        };
 
     render_index(
         &tera,
@@ -190,6 +219,9 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         Some(&book.to_nav(Path::new("index.html"), no_section_label, fold)),
         index_has_mermaid,
         &additional,
+        index_description,
+        crate::render::canonical_url(&site_prefix, "index.html"),
+        search_enabled,
     )?;
 
     // 404 page
@@ -386,6 +418,15 @@ fn render_custom_404(
     let preprocessed = preprocess(&markdown, preprocess_ctx)?;
     let rendered = render_markdown(&preprocessed, config, syntax_set)?;
     Ok(crate::render::inject_heading_ids(&rendered.html))
+}
+
+/// Whether a Pagefind index exists in the output from a previous build.
+///
+/// Indexing runs after HTML generation, so on a first build with search enabled
+/// this is false and the UI appears from the second build onwards -- the same
+/// trade-off mdBook makes by shipping its index alongside.
+fn search_index_available(output_dir: &str) -> bool {
+    Path::new(output_dir).join("pagefind/pagefind.js").exists()
 }
 
 /// Copy `additional-css` / `additional-js` into the build and return their
