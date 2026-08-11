@@ -24,9 +24,13 @@ fn test_structure_matches_fixture() -> Result<()> {
             .get(name)
             .unwrap_or_else(|| panic!("missing chapter {name}"));
         if let Some(src) = expected["source"].as_str() {
+            // The fixture speaks in book paths, which always use `/`;
+            // Path::to_str would give backslashes on Windows.
             assert_eq!(
-                ch.source_path.as_ref().map(|p| p.to_str().unwrap()),
-                Some(src),
+                ch.source_path
+                    .as_ref()
+                    .map(|p| md_book::render::to_url_path(p)),
+                Some(src.to_string()),
                 "source for {name}"
             );
         } else {
@@ -34,8 +38,10 @@ fn test_structure_matches_fixture() -> Result<()> {
         }
         if let Some(out) = expected["output"].as_str() {
             assert_eq!(
-                ch.output_path.as_ref().map(|p| p.to_str().unwrap()),
-                Some(out),
+                ch.output_path
+                    .as_ref()
+                    .map(|p| md_book::render::to_url_path(p)),
+                Some(out.to_string()),
                 "output for {name}"
             );
         }
@@ -57,14 +63,7 @@ fn test_structure_matches_fixture() -> Result<()> {
     // Full page-producing chain starts with prefix, ends with suffix
     let chain: Vec<_> = book
         .iter_chapters()
-        .map(|c| {
-            c.output_path
-                .as_ref()
-                .unwrap()
-                .to_str()
-                .unwrap()
-                .to_string()
-        })
+        .map(|c| md_book::render::to_url_path(c.output_path.as_ref().unwrap()))
         .collect();
     assert_eq!(chain.first().map(String::as_str), Some("prefix.html"));
     assert_eq!(chain.last().map(String::as_str), Some("suffix.html"));
