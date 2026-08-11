@@ -942,12 +942,15 @@ mod tests {
         }
     }
 
+    // Windows needs a privilege for symlink creation, so this is a Unix test.
+    // Guarding the whole function keeps `outside` and `link` from being unused
+    // variables there, which `-D warnings` turns into a build failure.
+    #[cfg(unix)]
     #[test]
     fn test_create_missing_rejects_symlink_escape() {
         let dir = tempfile::TempDir::new().unwrap();
         let outside = tempfile::TempDir::new().unwrap();
         let link = dir.path().join("escape");
-        #[cfg(unix)]
         {
             std::os::unix::fs::symlink(outside.path(), &link).unwrap();
             let content = "- [Bad](escape/evil.md)\n";

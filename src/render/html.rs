@@ -423,7 +423,13 @@ pub fn scope_css(css: &str, themes: &[&str]) -> String {
 }
 
 #[cfg(not(feature = "syntax-highlighting"))]
-pub fn write_syntax_css(_output_dir: &str, _config: &BookConfig) -> Result<()> {
+pub fn write_syntax_css(output_dir: &str, _config: &BookConfig) -> Result<()> {
+    // The page template links css/syntax.css unconditionally, so a build
+    // without this feature must still emit the file or every page 404s on it.
+    fs::write(
+        format!("{output_dir}/css/syntax.css"),
+        "/* syntax highlighting disabled at build time */\n",
+    )?;
     Ok(())
 }
 

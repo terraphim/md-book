@@ -69,10 +69,12 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     #[cfg(feature = "syntax-highlighting")]
     let ss = {
         use syntect::parsing::SyntaxSet;
-        let ss = SyntaxSet::load_defaults_newlines();
-        write_syntax_css(&args.output, config)?;
-        ss
+        SyntaxSet::load_defaults_newlines()
     };
+
+    // Unconditional: the page template links css/syntax.css whether or not the
+    // feature is on, so the file has to exist either way.
+    write_syntax_css(&args.output, config)?;
 
     let preprocess_ctx = PreprocessCtx;
 
