@@ -46,6 +46,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         copy_non_markdown_assets(src_dir, Path::new(&args.output))?;
     }
 
+    let additional = copy_additional_assets(config, src_dir, Path::new(&args.output))?;
+
     let sections = if book.from_summary {
         book.to_legacy_sections()
     } else {
@@ -54,12 +56,16 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
 
     let current_year = Zoned::now().year().to_string();
     let no_section_label = config.output.html.no_section_label;
+    let fold = Some((
+        config.output.html.fold.enable,
+        config.output.html.fold.level,
+    ));
 
     #[cfg(feature = "syntax-highlighting")]
     let ss = {
         use syntect::parsing::SyntaxSet;
         let ss = SyntaxSet::load_defaults_newlines();
-        write_syntax_css(&args.output)?;
+        write_syntax_css(&args.output, config)?;
         ss
     };
 
@@ -109,7 +115,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         // SUMMARY link text wins as title
         let title = flatten_title(&chapter.name);
 
-        let nav = book.to_nav(output_rel, no_section_label);
+        let nav = book.to_nav(output_rel, no_section_label, fold);
 
         render_page(
             &tera,
@@ -125,6 +131,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             watch_enabled,
             Some(&nav),
             page_has_mermaid,
+            &additional,
         )?;
     }
 
@@ -180,8 +187,9 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         &sections,
         &current_year,
         config,
-        Some(&book.to_nav(Path::new("index.html"), no_section_label)),
+        Some(&book.to_nav(Path::new("index.html"), no_section_label, fold)),
         index_has_mermaid,
+        &additional,
     )?;
 
     // 404 page
@@ -224,6 +232,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("config", &config);
         ctx.insert("path_to_root", &root_prefix);
         ctx.insert("custom_404", &custom_404);
+        ctx.insert("additional_css", &additional.css);
+        ctx.insert("additional_js", &additional.js);
         ctx.insert("year", &current_year);
         ctx.insert("default_theme", &config.output.html.default_theme_name());
         ctx.insert(
@@ -337,6 +347,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("print_chapters", &print_chapters);
         ctx.insert("page_break", &config.output.html.print.page_break);
         ctx.insert("has_mermaid", &print_has_mermaid);
+        ctx.insert("additional_css", &additional.css);
+        ctx.insert("additional_js", &additional.js);
         ctx.insert("default_theme", &config.output.html.default_theme_name());
         ctx.insert(
             "preferred_dark_theme",
@@ -374,6 +386,71 @@ fn render_custom_404(
     let preprocessed = preprocess(&markdown, preprocess_ctx)?;
     let rendered = render_markdown(&preprocessed, config, syntax_set)?;
     Ok(crate::render::inject_heading_ids(&rendered.html))
+}
+
+/// Copy `additional-css` / `additional-js` into the build and return their
+/// build-root-relative paths, in the order the author listed them.
+///
+/// A missing file is reported rather than skipped in silence: the author asked
+/// for a stylesheet and would otherwise get an unstyled page with no clue why.
+fn copy_additional_assets(
+    config: &BookConfig,
+    src_dir: &Path,
+    out_dir: &Path,
+) -> Result<AdditionalAssets> {
+    fn copy_list(list: &[String], src_dir: &Path, out_dir: &Path, kind: &str) -> Vec<String> {
+        let mut urls = Vec::new();
+        for entry in list {
+            // Authors write paths relative to the book root; accept a path
+            // relative to src/ too, since that is where their files usually sit.
+            let candidates = [src_dir.join(entry), src_dir.join("..").join(entry)];
+            let Some(source) = candidates.iter().find(|p| p.is_file()) else {
+                eprintln!("warning: {kind} '{entry}' not found; skipping");
+                continue;
+            };
+
+            let file_name = match Path::new(entry).file_name() {
+                Some(name) => name,
+                None => continue,
+            };
+            let dest_rel = Path::new("additional").join(file_name);
+            let dest = out_dir.join(&dest_rel);
+            if let Some(parent) = dest.parent() {
+                if let Err(e) = fs::create_dir_all(parent) {
+                    eprintln!("warning: cannot create {}: {e}", parent.display());
+                    continue;
+                }
+            }
+            if let Err(e) = fs::copy(source, &dest) {
+                eprintln!("warning: cannot copy {kind} '{entry}': {e}");
+                continue;
+            }
+            urls.push(crate::render::to_url_path(&dest_rel));
+        }
+        urls
+    }
+
+    Ok(AdditionalAssets {
+        css: copy_list(
+            &config.output.html.additional_css,
+            src_dir,
+            out_dir,
+            "additional-css",
+        ),
+        js: copy_list(
+            &config.output.html.additional_js,
+            src_dir,
+            out_dir,
+            "additional-js",
+        ),
+    })
+}
+
+/// Author-supplied stylesheets and scripts, relative to the build root.
+#[derive(Debug, Default, Clone, serde::Serialize)]
+pub struct AdditionalAssets {
+    pub css: Vec<String>,
+    pub js: Vec<String>,
 }
 
 /// Absolute prefix for pages that may be served from an unknown path.

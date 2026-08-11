@@ -567,14 +567,20 @@ only applies the choice and marks it with `aria-current`), `localStorage` persis
 `default-theme` / `preferred-dark-theme` surfaced as `data-*` attributes on the root element.
 Browser-verified: selecting Coal sets `data-theme`, computed `background` becomes `#141617`,
 the choice survives navigation, and the picker closes on select. *Est:* 8 h.
-**E2. Configurable syntax theme** — `output.html.syntax-theme`, replacing the hard-coded
-`"Solarized (light)"` (`core.rs:242`); a light and a dark stylesheet emitted. *Deps:* E1.
-*Est:* 3 h.
+**E2. Configurable syntax theme** — *shipped.* `output.html.syntax-theme` plus a new
+`syntax-theme-dark`, replacing the hard-coded `"Solarized (light)"`. One stylesheet carries both:
+light rules unscoped, dark rules prefixed with `[data-theme="coal"|"navy"|"ayu"]` by `scope_css`,
+so the picker switches code colours too. An unknown theme name warns and lists the available
+ones rather than failing the build. *Actual:* 3 h.
 **E3. Print page** — `print.html.tera`, `print.css`, `[output.html.print]` enable/page-break.
 *Est:* 4 h.
-**E4. `additional-css` / `additional-js`** — copy and inject. *Est:* 2 h.
-**E5. Redirects + fold** — `[output.html.redirect]` stub pages; `[output.html.fold]` collapse
-depth. *Est:* 4 h.
+**E4. `additional-css` / `additional-js`** — *shipped.* Copied into `additional/` and injected
+last, so author styles override the defaults. A listed file that does not exist warns rather than
+being skipped in silence. *Actual:* 2 h.
+**E5. Redirects + fold** — *shipped.* Redirect stubs were already in place; folding now works:
+`to_nav` marks each chapter with `has_children` and whether its sub-list `starts_folded`, honouring
+`level` and always leaving the branch containing the current page open. The list is hidden by class,
+so `fold.js` can toggle it without a rebuild. *Actual:* 4 h.
 **E6. Keyboard shortcuts** — `←`/`→`/`s`/`/`/`?`. *Est:* 2 h.
 
 **E7. Load mermaid only on pages that contain a diagram** — *shipped.* Two extras found while

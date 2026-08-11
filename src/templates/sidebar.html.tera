@@ -10,11 +10,12 @@
             {# structural only: the closes above balanced the open lists #}
         {% elif entry.kind == "chapter" %}
             {% if entry.open_lists > 0 %}
-            <ul class="sidebar-items{% if entry.depth > 0 %} nested{% endif %}">
+            <ul class="sidebar-items{% if entry.depth > 0 %} nested{% endif %}{% if entry.starts_folded %} folded{% endif %}">
             {% else %}
             </li>
             {% endif %}
             <li class="sidebar-item{% if entry.is_active %} active{% endif %}">
+                {% if entry.has_children %}<button type="button" class="fold-toggle" aria-expanded="{% if entry.child_folded %}false{% else %}true{% endif %}" aria-label="Toggle section"></button>{% endif %}
                 {% if entry.is_draft %}
                     <span class="sidebar-draft" aria-disabled="true">{% if entry.number %}<span class="section-num">{{ entry.number }}</span> {% endif %}{{ entry.title_html | safe }}</span>
                 {% elif entry.href %}

@@ -86,3 +86,29 @@ body {
 .theme-menu .theme-list button[aria-current="true"]::after {
   content: " ✓";
 }
+
+/* Sidebar folding ([output.html.fold]). The list is hidden by class rather
+   than removed, so expanding it needs no rebuild. */
+.sidebar-items.folded {
+  display: none;
+}
+
+.fold-toggle {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0 0.35rem 0 0;
+  line-height: 1;
+}
+
+.fold-toggle::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 0.15s ease;
+}
+
+.fold-toggle[aria-expanded="true"]::before {
+  transform: rotate(90deg);
+}

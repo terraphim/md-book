@@ -140,6 +140,9 @@ pub struct HtmlOutput {
     pub no_section_label: bool,
     #[serde(default)]
     pub syntax_theme: Option<String>,
+    /// Syntect theme used under the dark themes (coal, navy, ayu).
+    #[serde(default)]
+    pub syntax_theme_dark: Option<String>,
     #[serde(default)]
     pub fold: FoldConfig,
     #[serde(default)]
@@ -322,22 +325,6 @@ const UNSUPPORTED: &[(&str, &str)] = &[
     (
         "output.html.playground",
         "the Rust Playground runtime is out of scope for md-book",
-    ),
-    (
-        "output.html.syntax-theme",
-        "not implemented yet; the syntect theme is currently fixed",
-    ),
-    (
-        "output.html.additional-css",
-        "not implemented yet; extra stylesheets are not copied or injected",
-    ),
-    (
-        "output.html.additional-js",
-        "not implemented yet; extra scripts are not copied or injected",
-    ),
-    (
-        "output.html.fold",
-        "not implemented yet; the sidebar does not fold",
     ),
     (
         "output.html.search.use-boolean-and",
@@ -794,15 +781,17 @@ mod unsupported_key_tests {
         let found = unsupported_keys_in(&doc(r#"
 [output.html]
 mathjax-support = true
-syntax-theme = "InspiredGitHub"
 
 [output.html.search]
 boost-title = 5
+
+[output.html.playground]
+editable = true
 "#));
 
         let paths: Vec<&str> = found.iter().map(|k| k.path.as_str()).collect();
         assert!(paths.contains(&"output.html.mathjax-support"), "{paths:?}");
-        assert!(paths.contains(&"output.html.syntax-theme"), "{paths:?}");
+        assert!(paths.contains(&"output.html.playground"), "{paths:?}");
         assert!(
             paths.contains(&"output.html.search.boost-title"),
             "{paths:?}"
@@ -850,6 +839,14 @@ create-missing = false
 site-url = "/docs/"
 input-404 = "404.md"
 preferred-dark-theme = "coal"
+syntax-theme = "InspiredGitHub"
+syntax-theme-dark = "base16-ocean.dark"
+additional-css = ["extra.css"]
+additional-js = ["extra.js"]
+
+[output.html.fold]
+enable = true
+level = 1
 
 [output.html.print]
 enable = true

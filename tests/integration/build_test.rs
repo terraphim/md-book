@@ -1088,3 +1088,88 @@ async fn test_quoted_filename_cannot_break_out_of_href() -> Result<()> {
 
     Ok(())
 }
+
+// ---------------------------------------------------------------------------
+// Increment E remainder: syntax themes, additional assets, sidebar fold.
+// ---------------------------------------------------------------------------
+
+#[cfg(all(feature = "tokio", feature = "syntax-highlighting"))]
+#[tokio::test]
+async fn test_syntax_theme_is_configurable_and_dark_scoped() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [Code](code.md)\n")?;
+    book.create_file("code.md", "# Code\n\n```rust\nfn main() {}\n```\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.syntax_theme = Some("InspiredGitHub".into());
+    config.output.html.syntax_theme_dark = Some("base16-mocha.dark".into());
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let css = book.read_output("css/syntax.css")?;
+    // Light rules apply unconditionally…
+    assert_contains!(css, "\n.comment {");
+    // …and dark rules only under the dark themes, or they would override the
+    // light theme for every reader.
+    assert_contains!(css, "[data-theme=\"coal\"] .comment");
+    assert_contains!(css, "[data-theme=\"navy\"] .comment");
+    assert_contains!(css, "[data-theme=\"ayu\"] .comment");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_additional_css_and_js_are_copied_and_injected() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nx\n")?;
+    book.create_file("custom.css", "body { color: red; }")?;
+    book.create_file("custom.js", "console.log('x');")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.additional_css = vec!["custom.css".into()];
+    config.output.html.additional_js = vec!["custom.js".into()];
+    let book = book.with_config(config);
+    book.build().await?;
+
+    assert!(book.output_exists("additional/custom.css"));
+    assert!(book.output_exists("additional/custom.js"));
+
+    let html = book.read_output("one.html")?;
+    assert_contains!(html, "additional/custom.css");
+    assert_contains!(html, "additional/custom.js");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_sidebar_fold_collapses_all_but_the_active_branch() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [Top](top.md)\n  - [A](sec/a.md)\n- [Other](other.md)\n  - [C](sec/c.md)\n",
+    )?;
+    book.create_file("top.md", "# Top\n\nx\n")?;
+    book.create_file("other.md", "# Other\n\nx\n")?;
+    book.create_file("sec/a.md", "# A\n\nx\n")?;
+    book.create_file("sec/c.md", "# C\n\nx\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.output.html.fold.enable = true;
+    config.output.html.fold.level = 0;
+    let book = book.with_config(config);
+    book.build().await?;
+
+    // A page outside both branches: everything nested is collapsed.
+    let other = book.read_output("other.html")?;
+    assert_eq!(other.matches("nested folded").count(), 2);
+    assert_contains!(other, "class=\"fold-toggle\"");
+
+    // A page inside a branch: that branch is expanded, the sibling stays folded.
+    let inside = book.read_output("sec/c.html")?;
+    assert_eq!(inside.matches("nested folded").count(), 1);
+
+    Ok(())
+}

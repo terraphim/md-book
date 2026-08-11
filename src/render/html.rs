@@ -163,6 +163,7 @@ pub fn render_page(
     watch_enabled: bool,
     chapters: Option<&[crate::book::NavEntry]>,
     has_mermaid: bool,
+    additional: &crate::pipeline::AdditionalAssets,
 ) -> Result<()> {
     let page_data = PageData {
         title,
@@ -186,6 +187,8 @@ pub fn render_page(
     // Gates the mermaid bundle: 2.9MB that most pages never need.
     context.insert("has_mermaid", &has_mermaid);
     context.insert("logo_url", &logo_url(&config.book.logo, &root));
+    context.insert("additional_css", &additional.css);
+    context.insert("additional_js", &additional.js);
     context.insert(
         "edit_url",
         &edit_url(config.book.github_edit_url_base.as_deref(), current_path),
@@ -216,6 +219,7 @@ pub fn render_index(
     config: &BookConfig,
     chapters: Option<&[crate::book::NavEntry]>,
     has_mermaid: bool,
+    additional: &crate::pipeline::AdditionalAssets,
 ) -> Result<()> {
     let mut context = TeraContext::new();
     context.insert("year", &year);
@@ -223,6 +227,8 @@ pub fn render_index(
     context.insert("sections", &sections);
     context.insert("has_mermaid", &has_mermaid);
     context.insert("logo_url", &logo_url(&config.book.logo, ""));
+    context.insert("additional_css", &additional.css);
+    context.insert("additional_js", &additional.js);
     context.insert(
         "edit_url",
         &edit_url(config.book.github_edit_url_base.as_deref(), "index.html"),
@@ -257,22 +263,111 @@ pub fn render_index(
 
 /// Emit syntect theme CSS into the output directory.
 #[cfg(feature = "syntax-highlighting")]
-pub fn write_syntax_css(output_dir: &str) -> Result<()> {
+pub fn write_syntax_css(output_dir: &str, config: &BookConfig) -> Result<()> {
     use syntect::highlighting::ThemeSet;
     use syntect::html::ClassStyle;
 
     let ts = ThemeSet::load_defaults();
-    // TODO: Make this configurable (increment E)
-    let theme = &ts.themes["Solarized (light)"];
-    let syntax_css = syntect::html::css_for_theme_with_class_style(theme, ClassStyle::Spaced)
-        .map_err(|e| anyhow::anyhow!("CSS generation error: {:?}", e))?;
 
-    fs::write(format!("{}/css/syntax.css", output_dir), syntax_css)?;
+    let pick = |configured: Option<&str>, fallback: &str| -> String {
+        match configured {
+            Some(name) if ts.themes.contains_key(name) => name.to_string(),
+            Some(name) => {
+                let mut available: Vec<&str> = ts.themes.keys().map(String::as_str).collect();
+                available.sort_unstable();
+                eprintln!(
+                    "warning: unknown syntax theme '{name}', using '{fallback}'. Available: {}",
+                    available.join(", ")
+                );
+                fallback.to_string()
+            }
+            None => fallback.to_string(),
+        }
+    };
+
+    let light = pick(
+        config.output.html.syntax_theme.as_deref(),
+        "Solarized (light)",
+    );
+    let dark = pick(
+        config.output.html.syntax_theme_dark.as_deref(),
+        "base16-ocean.dark",
+    );
+
+    let css_for = |name: &str| -> Result<String> {
+        syntect::html::css_for_theme_with_class_style(&ts.themes[name], ClassStyle::Spaced)
+            .map_err(|e| anyhow::anyhow!("CSS generation error: {e:?}"))
+    };
+
+    // The dark rules are scoped to the dark themes so a single stylesheet
+    // serves every theme the picker offers.
+    let dark_scopes = ["coal", "navy", "ayu"];
+    let mut css = css_for(&light)?;
+    css.push_str("\n\n/* Dark themes */\n");
+    css.push_str(&scope_css(&css_for(&dark)?, &dark_scopes));
+
+    fs::write(format!("{}/css/syntax.css", output_dir), css)?;
     Ok(())
 }
 
+/// Prefix every selector in `css` with each `[data-theme="…"]` scope.
+///
+/// syntect emits flat rules, so without this the dark theme would override the
+/// light one for every reader regardless of their choice.
+#[must_use]
+pub fn scope_css(css: &str, themes: &[&str]) -> String {
+    // Comments sit outside any rule, so they would otherwise be parsed as part
+    // of the next selector.
+    let mut stripped = String::with_capacity(css.len());
+    let mut rest = css;
+    while let Some(start) = rest.find("/*") {
+        stripped.push_str(&rest[..start]);
+        match rest[start..].find("*/") {
+            Some(end) => rest = &rest[start + end + 2..],
+            None => {
+                rest = "";
+                break;
+            }
+        }
+    }
+    stripped.push_str(rest);
+
+    let mut out = String::with_capacity(stripped.len() * 2);
+
+    for block in stripped.split_inclusive('}') {
+        let Some((selectors, body)) = block.split_once('{') else {
+            // Trailing whitespace after the last rule.
+            continue;
+        };
+
+        let scoped: Vec<String> = selectors
+            .split(',')
+            .map(str::trim)
+            .filter(|s| !s.is_empty())
+            .flat_map(|selector| {
+                themes.iter().map(move |theme| {
+                    if selector == ":root" || selector.eq_ignore_ascii_case("html") {
+                        format!("[data-theme=\"{theme}\"]")
+                    } else {
+                        format!("[data-theme=\"{theme}\"] {selector}")
+                    }
+                })
+            })
+            .collect();
+
+        if scoped.is_empty() {
+            continue;
+        }
+        out.push_str(&scoped.join(",\n"));
+        out.push_str(" {");
+        out.push_str(body);
+    }
+
+    out
+}
+
 #[cfg(not(feature = "syntax-highlighting"))]
-pub fn write_syntax_css(_output_dir: &str) -> Result<()> {
+pub fn write_syntax_css(_output_dir: &str, _config: &BookConfig) -> Result<()> {
     Ok(())
 }
 
@@ -488,5 +583,45 @@ mod url_path_tests {
     fn test_to_url_path_flat_and_empty() {
         assert_eq!(to_url_path(Path::new("index.html")), "index.html");
         assert_eq!(to_url_path(Path::new("")), "");
+    }
+}
+
+#[cfg(all(test, feature = "syntax-highlighting"))]
+mod scope_css_tests {
+    use super::scope_css;
+
+    #[test]
+    fn test_scope_css_prefixes_each_selector_for_each_theme() {
+        let css = ".comment { color: red; }\n.string { color: blue; }";
+        let scoped = scope_css(css, &["coal", "navy"]);
+
+        assert!(scoped.contains("[data-theme=\"coal\"] .comment"));
+        assert!(scoped.contains("[data-theme=\"navy\"] .comment"));
+        assert!(scoped.contains("[data-theme=\"coal\"] .string"));
+        // Unscoped rules would override the light theme for every reader.
+        assert!(!scoped.contains("\n.comment"));
+    }
+
+    #[test]
+    fn test_scope_css_rewrites_root_rather_than_nesting_it() {
+        let scoped = scope_css(":root { background: #000; }", &["coal"]);
+        assert!(scoped.contains("[data-theme=\"coal\"] {"));
+        assert!(!scoped.contains("[data-theme=\"coal\"] :root"));
+    }
+
+    #[test]
+    fn test_scope_css_drops_comments() {
+        // syntect prefixes its output with a comment; treating it as a selector
+        // produced `[data-theme="coal"] /* theme … */`.
+        let scoped = scope_css("/* theme \"X\" generated */\n.a { color: red; }", &["coal"]);
+        assert!(!scoped.contains("/*"));
+        assert!(scoped.contains("[data-theme=\"coal\"] .a"));
+    }
+
+    #[test]
+    fn test_scope_css_handles_comma_separated_selectors() {
+        let scoped = scope_css(".a, .b { color: red; }", &["ayu"]);
+        assert!(scoped.contains("[data-theme=\"ayu\"] .a"));
+        assert!(scoped.contains("[data-theme=\"ayu\"] .b"));
     }
 }

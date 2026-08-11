@@ -20,6 +20,12 @@
     <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
     <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
 </head>
 <body>
     <div class="container index-container">
@@ -59,6 +65,7 @@
     <search-modal></search-modal>
     <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
     <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/fold.js"></script>
     <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
 </body>
 </html> 

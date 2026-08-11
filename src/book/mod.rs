@@ -106,6 +106,14 @@ pub struct NavEntry {
     pub close_lists: usize,
     pub is_draft: bool,
     pub is_active: bool,
+    /// This chapter has sub-chapters, so it can carry a fold toggle.
+    pub has_children: bool,
+    /// The sub-list this chapter opens starts collapsed
+    /// (`[output.html.fold]`, and nothing on the active path is inside it).
+    pub child_folded: bool,
+    /// This entry opens a list that starts collapsed. Set on the first child,
+    /// because that is the entry the template emits the `<ul>` for.
+    pub starts_folded: bool,
 }
 
 impl Book {
@@ -131,7 +139,13 @@ impl Book {
     /// - siblings at the same depth set `close_lists` to 0 and `open_lists` to 0;
     ///   the template closes the previous `</li>` when `open_lists == 0` and the
     ///   previous entry was a chapter (see sidebar.html.tera).
-    pub fn to_nav(&self, active_path: &Path, no_section_label: bool) -> Vec<NavEntry> {
+    pub fn to_nav(
+        &self,
+        active_path: &Path,
+        no_section_label: bool,
+        fold: Option<(bool, u32)>,
+    ) -> Vec<NavEntry> {
+        let (fold_enabled, fold_level) = fold.unwrap_or((false, 0));
         let mut out = Vec::new();
         let mut list_depth: isize = -1;
 
@@ -156,6 +170,16 @@ impl Book {
             })
         }
 
+        fn contains_active(items: &[BookItem], active_path: &Path) -> bool {
+            items.iter().any(|item| match item {
+                BookItem::Chapter(ch) => {
+                    ch.output_path.as_deref() == Some(active_path)
+                        || contains_active(&ch.sub_items, active_path)
+                }
+                _ => false,
+            })
+        }
+
         fn emit_closes(list_depth: &mut isize, target_depth: isize) -> usize {
             let mut n = 0usize;
             while *list_depth > target_depth {
@@ -172,6 +196,8 @@ impl Book {
             active_path: &Path,
             no_section_label: bool,
             root: &str,
+            fold_enabled: bool,
+            fold_level: u32,
             list_depth: &mut isize,
             out: &mut Vec<NavEntry>,
         ) {
@@ -191,6 +217,9 @@ impl Book {
                             close_lists,
                             is_draft: false,
                             is_active: false,
+                            has_children: false,
+                            child_folded: false,
+                            starts_folded: false,
                         });
                     }
                     BookItem::PartTitle(title) => {
@@ -207,6 +236,9 @@ impl Book {
                             close_lists,
                             is_draft: false,
                             is_active: false,
+                            has_children: false,
+                            child_folded: false,
+                            starts_folded: false,
                         });
                     }
                     BookItem::Chapter(ch) => {
@@ -242,8 +274,19 @@ impl Book {
                             close_lists,
                             is_draft,
                             is_active,
+                            has_children: !ch.sub_items.is_empty(),
+                            child_folded: fold_enabled
+                                && !ch.sub_items.is_empty()
+                                && depth as u32 >= fold_level
+                                && !contains_active(&ch.sub_items, active_path),
+                            starts_folded: false,
                         });
 
+                        let folded_here = fold_enabled
+                            && !ch.sub_items.is_empty()
+                            && depth as u32 >= fold_level
+                            && !contains_active(&ch.sub_items, active_path);
+                        let first_child_index = out.len();
                         if !ch.sub_items.is_empty() {
                             walk(
                                 &ch.sub_items,
@@ -251,9 +294,16 @@ impl Book {
                                 active_path,
                                 no_section_label,
                                 root,
+                                fold_enabled,
+                                fold_level,
                                 list_depth,
                                 out,
                             );
+                            if folded_here {
+                                if let Some(child) = out.get_mut(first_child_index) {
+                                    child.starts_folded = true;
+                                }
+                            }
                         }
                     }
                 }
@@ -266,6 +316,8 @@ impl Book {
             active_path,
             no_section_label,
             &root,
+            fold_enabled,
+            fold_level,
             &mut list_depth,
             &mut out,
         );
@@ -284,6 +336,9 @@ impl Book {
                 close_lists: (list_depth + 1) as usize,
                 is_draft: false,
                 is_active: false,
+                has_children: false,
+                child_folded: false,
+                starts_folded: false,
             });
         }
 
@@ -518,7 +573,7 @@ mod tests {
 "#;
         let s = parse_summary(content).unwrap();
         let (book, _) = book_from_summary(&s, dir.path(), false).unwrap();
-        let nav = book.to_nav(Path::new("a.html"), false);
+        let nav = book.to_nav(Path::new("a.html"), false, None);
         let opens: usize = nav.iter().map(|e| e.open_lists).sum();
         let closes: usize = nav.iter().map(|e| e.close_lists).sum();
         assert_eq!(opens, closes, "open_lists must balance close_lists");
@@ -533,7 +588,7 @@ mod tests {
         let content = "- [A](a.md)\n  - [B](b.md)\n";
         let s = parse_summary(content).unwrap();
         let (book, _) = book_from_summary(&s, dir.path(), false).unwrap();
-        let nav = book.to_nav(Path::new("b.html"), false);
+        let nav = book.to_nav(Path::new("b.html"), false, None);
         let active: Vec<_> = nav.iter().filter(|e| e.is_active).collect();
         assert_eq!(active.len(), 1);
         assert_eq!(active[0].title_text, "B");

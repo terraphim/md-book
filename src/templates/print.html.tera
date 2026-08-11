@@ -18,6 +18,12 @@
     <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
     <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
     {% endif %}
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
 </head>
 <body>
   <h1>{{ config.book.title }}</h1>

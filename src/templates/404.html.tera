@@ -8,6 +8,12 @@
   <title>Not Found | {{ config.book.title }}</title>
   <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
   <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
 </head>
 <body>
   <main class="content">
