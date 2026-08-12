@@ -10,19 +10,19 @@
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Unit test coverage (lines) | 80% | **86.0%** | PASS |
-| Region coverage | -- | 84.7% | PASS |
-| Function coverage | -- | 80.7% | PASS |
+| Unit test coverage (lines) | 80% | **87.1%** | PASS |
+| Region coverage | -- | 85.9% | PASS |
+| Function coverage | -- | 83.2% | PASS |
 | Spec findings (Phase 2.5) covered | All 12 | **12/12** | PASS |
-| Module boundaries tested | All | 8/9 | PARTIAL -- see D-007 |
+| Module boundaries tested | All | **9/9** | PASS |
 | CI checks | All required | **19/19 green** | PASS |
 | Open critical/high defects | 0 | 0 | PASS |
 
-Test population: 90 unit, 46 integration, 12 e2e, 4 structure, 16 mdBook conformance = **168 tests**.
+Test population: 96 unit, 46 integration, 12 e2e, 4 structure, 16 mdBook conformance = **174 tests**.
 
 ## Specialist Skill Results
 
-### Static analysis (`ubs-scanner`) -- COULD NOT RUN
+### Static analysis (`ubs-scanner`) -- COULD NOT RUN, substituted
 
 ```
 ✗ failed to verify module rust: checksum mismatch for rust
@@ -34,9 +34,17 @@ UBS refuses to load its Rust module: the downloaded module's checksum does not m
 manifest, twice, after a refresh. **This was not worked around** -- disabling the integrity check
 to obtain a scan would defeat its purpose. Recorded as gap **D-007**.
 
-Substitute evidence: `cargo clippy --all-targets --all-features -- -D warnings` clean; `cargo
-audit` green in CI; three independent review rounds (one structural, two `pi-rust`
-openai-codex/gpt-5.5).
+Diagnosed 2026-08-12: `ubs doctor` verifies js, python, cpp and golang and fails **only** on
+rust. Three distinct digests exist -- the installer's pin (`5c0df5f4…`), what upstream serves
+(`08e99d1e…`), and the July cache (`26249823…`) -- and the served hash is stable across fetches,
+so this is not corruption in transit. `ubs` pulls modules from an unpinned `master` branch while
+pinning digests in a released installer, which breaks verification on any upstream edit. Upstream
+issue; see the validation report for the full table.
+
+Substitute analysis run directly with `ast-grep` and clippy: **0** `unsafe` blocks, **0**
+`panic!`/`todo!`/`unimplemented!`, **7** `unwrap()`/`expect()` in production code (each verified
+guarded by a surrounding invariant), clippy `-D warnings` clean across all targets and features.
+Plus `cargo audit` green in CI and three independent review rounds.
 
 ### Code review
 
@@ -140,7 +148,7 @@ Measurement removed one avoidable cost (a duplicate mdast parse per page, 12 ms)
 | `copy_static_assets` | yes | yes | PASS |
 | Pagefind indexing | yes | yes | PASS |
 | `SelfWriteFilter` -> watcher loop | yes | decision only | PARTIAL |
-| **warp server** | **no** | **no** | **FAIL -- D-006** |
+| warp server | yes | `warp::test` | PASS -- routes, fallback, websocket upgrade, bind resolution |
 
 ## Defect Register
 
