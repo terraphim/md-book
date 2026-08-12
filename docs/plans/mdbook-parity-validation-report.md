@@ -57,7 +57,8 @@ fixed. Measuring also removed one avoidable cost (a duplicate mdast parse per pa
 
 | ID | Description | Origin | Severity | Resolution |
 |----|-------------|--------|----------|------------|
-| V-001 | Index page had no navigation: one link (the logo) versus 30 on a chapter page. A README-backed index skips the card grid, and the template never included the sidebar | **Phase 2 (design omission)** | High | `3704b0d` |
+| V-001 | Index page had no navigation: one link (the logo) versus 30 on a chapter page. A README-backed index skips the card grid | **Phase 2 (design omission)** | High | `3704b0d`, corrected in `fix/index-layout-regression` |
+| V-005 | The V-001 fix injected the chapter `.sidebar` into `.index-container`, which is `display: block !important; max-width: 1400px`. With `grid-area` meaningless outside a grid, the sidebar became a `height: 100vh; overflow-y: auto` block inside the capped-width landing page — a fixed-width column with its own scrollbar. Reported by the user, not by any test | **Phase 3 (my fix ignored the target layout)** | High | Card grid now renders alongside index content; no sidebar on the landing page |
 | V-002 | Sidebar's deprecated branch read `page.sections`, absent from the index context — an empty book failed to render | Phase 2 (context asymmetry) | Medium | `3704b0d` |
 | V-003 | Logo link had no accessible name (`alt=""` on the image left the anchor unnamed) | Phase 3 | **Serious (WCAG 2.4.4, 4.1.2)** | `8bcc6b7` |
 | V-004 | On-this-page component emitted bare `div`s, leaving content outside any landmark | Phase 2 (component markup unspecified) | Moderate | `8bcc6b7` |

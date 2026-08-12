@@ -1323,7 +1323,11 @@ async fn test_index_page_is_navigable() -> Result<()> {
     let index = book.read_output("index.html")?;
     assert_contains!(index, "one.html");
     assert_contains!(index, "sub/two.html");
-    assert_contains!(index, "sidebar-nav");
+    // Navigation here is the card grid, not the chapter sidebar: the landing
+    // page is a full-width block layout by design, and dropping a grid-area
+    // sidebar into it produced a fixed-width column with its own scrollbar.
+    assert_contains!(index, "card-grid");
+    assert_not_contains!(index, "class=\"sidebar\"");
 
     Ok(())
 }
