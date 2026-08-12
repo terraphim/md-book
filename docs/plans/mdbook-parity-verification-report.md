@@ -10,19 +10,19 @@
 
 | Metric | Target | Actual | Status |
 |--------|--------|--------|--------|
-| Unit test coverage (lines) | 80% | **86.0%** | PASS |
-| Region coverage | -- | 84.7% | PASS |
-| Function coverage | -- | 80.7% | PASS |
+| Unit test coverage (lines) | 80% | **87.1%** | PASS |
+| Region coverage | -- | 85.9% | PASS |
+| Function coverage | -- | 83.2% | PASS |
 | Spec findings (Phase 2.5) covered | All 12 | **12/12** | PASS |
-| Module boundaries tested | All | 8/9 | PARTIAL -- see D-007 |
+| Module boundaries tested | All | **9/9** | PASS |
 | CI checks | All required | **19/19 green** | PASS |
 | Open critical/high defects | 0 | 0 | PASS |
 
-Test population: 90 unit, 46 integration, 12 e2e, 4 structure, 16 mdBook conformance = **168 tests**.
+Test population: 96 unit, 46 integration, 12 e2e, 4 structure, 16 mdBook conformance = **174 tests**.
 
 ## Specialist Skill Results
 
-### Static analysis (`ubs-scanner`) -- COULD NOT RUN
+### Static analysis (`ubs-scanner`) -- COULD NOT RUN, substituted
 
 ```
 ✗ failed to verify module rust: checksum mismatch for rust
@@ -34,9 +34,17 @@ UBS refuses to load its Rust module: the downloaded module's checksum does not m
 manifest, twice, after a refresh. **This was not worked around** -- disabling the integrity check
 to obtain a scan would defeat its purpose. Recorded as gap **D-007**.
 
-Substitute evidence: `cargo clippy --all-targets --all-features -- -D warnings` clean; `cargo
-audit` green in CI; three independent review rounds (one structural, two `pi-rust`
-openai-codex/gpt-5.5).
+Diagnosed 2026-08-12: `ubs doctor` verifies js, python, cpp and golang and fails **only** on
+rust. Three distinct digests exist -- the installer's pin (`5c0df5f4…`), what upstream serves
+(`08e99d1e…`), and the July cache (`26249823…`) -- and the served hash is stable across fetches,
+so this is not corruption in transit. `ubs` pulls modules from an unpinned `master` branch while
+pinning digests in a released installer, which breaks verification on any upstream edit. Upstream
+issue; see the validation report for the full table.
+
+Substitute analysis run directly with `ast-grep` and clippy: **0** `unsafe` blocks, **0**
+`panic!`/`todo!`/`unimplemented!`, **7** `unwrap()`/`expect()` in production code (each verified
+guarded by a surrounding invariant), clippy `-D warnings` clean across all targets and features.
+Plus `cargo audit` green in CI and three independent review rounds.
 
 ### Code review
 
@@ -94,7 +102,7 @@ Measurement removed one avoidable cost (a duplicate mdast parse per page, 12 ms)
 | `render/markdown.rs` | 76.9% | 77.8% | 55.6% | see D-008 |
 | `paths.rs` | 74.2% | 74.8% | 88.9% | |
 | `main.rs` | 28.6% | 24.9% | 33.3% | CLI wiring, exercised by e2e |
-| **`server.rs`** | **0%** | **0%** | **0%** | **D-006 -- no tests at all** |
+| `server.rs` | 86.7% | 80.5% | 82.6% | was 0%; see D-006, D-016 |
 | `pipeline/preprocess.rs` | 100% | 100% | 100% | identity seam |
 
 ## Traceability: Phase 2.5 spec findings -> tests
@@ -140,7 +148,7 @@ Measurement removed one avoidable cost (a duplicate mdast parse per page, 12 ms)
 | `copy_static_assets` | yes | yes | PASS |
 | Pagefind indexing | yes | yes | PASS |
 | `SelfWriteFilter` -> watcher loop | yes | decision only | PARTIAL |
-| **warp server** | **no** | **no** | **FAIL -- D-006** |
+| warp server | yes | `warp::test` | PASS -- routes, fallback, websocket upgrade, bind resolution |
 
 ## Defect Register
 
@@ -153,7 +161,9 @@ Defects found during implementation and verification, with the phase each traces
 | D-003 | `css/`, `js/`, `img/` emitted only when a templates dir existed | Phase 3 | High | `6eeccae` | Closed |
 | D-004 | Config defaults never applied (`title`, `logo`, `language` empty) | Phase 3 | High | `7564c23` | Closed |
 | D-005 | HTML injection via SUMMARY labels and link targets; Tera autoescape never active | Phase 2 (design) | **Critical** | `9776971`, `67e4c1d` | Closed |
-| D-006 | `server.rs` has no tests (0% coverage), including changed bind logic | Phase 4 | Medium | Manual verification only | **Open, deferred** |
+| D-006 | `server.rs` has no tests (0% coverage), including changed bind logic | Phase 4 | Medium | Tests added; coverage 0% -> 86.7% | Closed |
+| D-016 | Live reload never worked: the file fallback matched `/live-reload`, so the websocket upgrade was unreachable | Phase 2 (route order) | High | Found by writing D-006's tests | Closed |
+| D-017 | `serve -p` rejected; only `--port` existed, unlike mdBook | Phase 2 | Low | Short flag added | Closed |
 | D-007 | UBS scanner cannot run (module checksum mismatch) | Tooling | Medium | Substitute evidence recorded | **Open, external** |
 | D-008 | `render/markdown.rs` function coverage 55.6% | Phase 4 | Low | Feature-gated branches untested | **Open, accepted** |
 | D-009 | URLs built with `Path::display()` -- backslashes on Windows | Phase 3 | High | `696d30d` | Closed |

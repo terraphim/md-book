@@ -8,6 +8,12 @@
 > **A modern mdBook replacement written in Rust that generates beautiful HTML documentation from Markdown files**
 
 MD-Book is the next-generation documentation generator for Rust projects. Built with performance and developer experience in mind, it combines the simplicity of mdBook with modern web capabilities.
+
+> **Scope**: md-book builds mdBook books from `SUMMARY.md`, but does **not**
+> implement the preprocessor directives `{{#include}}`, `{{#playground}}`,
+> `{{#rustdoc_include}}` or `{{#title}}`. It is not a drop-in replacement for
+> books that use them. See CHANGELOG for the full list of known limitations.
+
 ## ✨ Features
 
 ### 🚀 **Modern Markdown Processing**

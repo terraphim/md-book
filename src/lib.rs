@@ -19,7 +19,7 @@ pub use watch::SelfWriteFilter;
 
 // Re-export server functionality when available
 #[cfg(feature = "server")]
-pub use server::{serve_book, serve_book_on};
+pub use server::{book_routes, resolve_bind_addr, serve_book, serve_book_on};
 
 // WASM-specific exports
 #[cfg(target_arch = "wasm32")]
