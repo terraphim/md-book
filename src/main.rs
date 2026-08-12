@@ -49,7 +49,7 @@ struct Cli {
     serve: bool,
 
     /// Port to serve on (default: 3000)
-    #[arg(long, default_value = "3000", global = true)]
+    #[arg(short = 'p', long, default_value = "3000", global = true)]
     #[cfg(feature = "server")]
     port: u16,
 

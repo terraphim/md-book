@@ -94,7 +94,7 @@ Measurement removed one avoidable cost (a duplicate mdast parse per page, 12 ms)
 | `render/markdown.rs` | 76.9% | 77.8% | 55.6% | see D-008 |
 | `paths.rs` | 74.2% | 74.8% | 88.9% | |
 | `main.rs` | 28.6% | 24.9% | 33.3% | CLI wiring, exercised by e2e |
-| **`server.rs`** | **0%** | **0%** | **0%** | **D-006 -- no tests at all** |
+| `server.rs` | 86.7% | 80.5% | 82.6% | was 0%; see D-006, D-016 |
 | `pipeline/preprocess.rs` | 100% | 100% | 100% | identity seam |
 
 ## Traceability: Phase 2.5 spec findings -> tests
@@ -153,7 +153,9 @@ Defects found during implementation and verification, with the phase each traces
 | D-003 | `css/`, `js/`, `img/` emitted only when a templates dir existed | Phase 3 | High | `6eeccae` | Closed |
 | D-004 | Config defaults never applied (`title`, `logo`, `language` empty) | Phase 3 | High | `7564c23` | Closed |
 | D-005 | HTML injection via SUMMARY labels and link targets; Tera autoescape never active | Phase 2 (design) | **Critical** | `9776971`, `67e4c1d` | Closed |
-| D-006 | `server.rs` has no tests (0% coverage), including changed bind logic | Phase 4 | Medium | Manual verification only | **Open, deferred** |
+| D-006 | `server.rs` has no tests (0% coverage), including changed bind logic | Phase 4 | Medium | Tests added; coverage 0% -> 86.7% | Closed |
+| D-016 | Live reload never worked: the file fallback matched `/live-reload`, so the websocket upgrade was unreachable | Phase 2 (route order) | High | Found by writing D-006's tests | Closed |
+| D-017 | `serve -p` rejected; only `--port` existed, unlike mdBook | Phase 2 | Low | Short flag added | Closed |
 | D-007 | UBS scanner cannot run (module checksum mismatch) | Tooling | Medium | Substitute evidence recorded | **Open, external** |
 | D-008 | `render/markdown.rs` function coverage 55.6% | Phase 4 | Low | Feature-gated branches untested | **Open, accepted** |
 | D-009 | URLs built with `Path::display()` -- backslashes on Windows | Phase 3 | High | `696d30d` | Closed |

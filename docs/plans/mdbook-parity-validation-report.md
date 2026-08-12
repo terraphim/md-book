@@ -69,12 +69,43 @@ between building the thing right and building the right thing, and it is why thi
 
 ## Conditions on Approval
 
-1. **`md-book serve` is untested** (D-006: `server.rs` at 0% coverage) and this work changed its
-   bind behaviour. Only `build` is validated. Either accept that `serve` is a development
-   convenience used at one's own risk, or add tests before relying on it.
-2. **UBS static analysis never ran** (D-007): its Rust module fails checksum verification. The
-   integrity check was not disabled to obtain a scan. Substitute evidence is clippy, `cargo
-   audit`, and three review rounds.
+1. ~~**`md-book serve` is untested**~~ **CLEARED 2026-08-12.** `server.rs` now at **86.7%**
+   coverage, via `book_routes` and `resolve_bind_addr` extracted for testability and exercised
+   with `warp::test`. Writing the tests immediately exposed a live defect: the catch-all
+   `fs::file` fallback matched *every* path, including `/live-reload`, so the WebSocket upgrade
+   was unreachable and **live reload had silently never worked** — the browser received
+   `index.html` where it expected a socket. Route order corrected; a test now performs the
+   handshake and asserts a rebuild pushes `reload`. Also found by using the tool: `serve -p` was
+   rejected because only `--port` existed, unlike mdBook.
+
+2. **UBS static analysis still cannot run** (D-007) — diagnosed, not fixable here. `ubs doctor`
+   verifies the js, python, cpp and golang modules and fails **only** on rust, with a stable
+   hash across independent fetches, so this is not corruption in transit:
+
+   | | sha256 |
+   |---|---|
+   | pinned in the installed `ubs` (July) | `5c0df5f4…` |
+   | currently served upstream | `08e99d1e…` |
+   | cached copy on disk (v3.0.1) | `26249823…` |
+
+   Three distinct digests. `ubs` fetches modules from
+   `raw.githubusercontent.com/Dicklesworthstone/ultimate_bug_scanner/master` — an unpinned
+   branch — while pinning digests in a released installer, so any upstream edit breaks
+   verification by construction. Upstream issue; the integrity check was **not** disabled.
+
+   Substitute analysis run directly instead, with `ast-grep` and clippy:
+
+   | Check | Result |
+   |-------|--------|
+   | `unsafe` blocks | **0** (the two matches are warning-message strings) |
+   | `panic!` / `todo!` / `unimplemented!` | **0** |
+   | `unwrap()` / `expect()` in production code | **7**, each verified guarded by a surrounding invariant |
+   | clippy `-D warnings` (all targets, all features) | clean |
+   | clippy pedantic + nursery | 121 advisory, none actioned |
+
+   The seven: two in `summary.rs` guarded by the branch conditions above them; four in
+   `pipeline/mod.rs` resting on `iter_chapters` only yielding chapters with sources (two say so
+   in their `expect` message); one in `slug.rs` on a string literal.
 3. **`quick-xml` advisories are documented, not fixed** (RUSTSEC-2026-0194/0195), reachable only
    through `syntect -> plist` parsing files md-book ships. Revisit when `plist` updates.
 
