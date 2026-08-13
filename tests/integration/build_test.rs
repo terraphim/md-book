@@ -1302,6 +1302,10 @@ async fn test_webawesome_theme_is_isolated_and_explicitly_online_only() -> Resul
     let themes = book.read_output("css/themes.css")?;
     assert_contains!(themes, "--wa-color-neutral-300: #596067");
     assert_contains!(themes, "--wa-color-primary-700: #91bee1");
+    assert_contains!(
+        book.read_output("components/search-modal.js")?,
+        "label=\"Close search\""
+    );
 
     Ok(())
 }

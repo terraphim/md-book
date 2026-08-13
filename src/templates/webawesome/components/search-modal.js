@@ -50,7 +50,7 @@ class SearchModal extends HTMLElement {
                                 <wa-icon name="magnifying-glass" slot="start"></wa-icon>
                             </wa-input>
                         </div>
-                        <wa-button class="search-close-btn" variant="text" size="small" aria-label="Close search">
+                        <wa-button class="search-close-btn" variant="text" size="small" label="Close search" aria-label="Close search">
                             <wa-icon name="xmark"></wa-icon>
                         </wa-button>
                     </div>
