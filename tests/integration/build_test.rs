@@ -871,18 +871,12 @@ async fn test_every_page_kind_loads_theme_stylesheet() -> Result<()> {
 
     for page in ["index.html", "404.html", "print.html"] {
         let html = book.read_output(page)?;
-        assert_contains!(
-            html,
-            &format!("css/themes.css?v={}", env!("CARGO_PKG_VERSION"))
-        );
+        assert_contains!(html, "css/themes.css?v=");
         assert_contains!(html, "data-default-theme=");
     }
 
     let chapter = book.read_output("chapter.html")?;
-    assert_contains!(
-        chapter,
-        &format!("css/themes.css?v={}", env!("CARGO_PKG_VERSION"))
-    );
+    assert_contains!(chapter, "css/themes.css?v=");
 
     // The index must also carry the behaviour scripts chapter pages get.
     let index = book.read_output("index.html")?;

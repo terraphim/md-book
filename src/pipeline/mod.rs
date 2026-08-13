@@ -14,7 +14,8 @@ use crate::config::BookConfig;
 use crate::core::{Args, PageInfo};
 use crate::pipeline::preprocess::{preprocess, PreprocessCtx};
 use crate::render::html::{
-    copy_static_assets, init_tera, render_index, render_page, write_syntax_css, Section,
+    copy_static_assets, init_tera, render_index, render_page, theme_asset_version,
+    write_syntax_css, Section,
 };
 use crate::render::markdown::render_markdown;
 
@@ -31,6 +32,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     let tera = init_tera(config)?;
     fs::create_dir_all(&args.output)?;
     copy_static_assets(&args.output, &config.paths.templates, config)?;
+    let asset_version = theme_asset_version(&args.output)?;
 
     let src_dir = Path::new(&args.input);
     let create_missing = config.build.create_missing;
@@ -130,6 +132,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
             config,
             &additional,
             watch_enabled,
+            &asset_version,
             crate::render::PageRender {
                 html_path: &html_path.to_string_lossy(),
                 title,
@@ -224,6 +227,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         index_description,
         crate::render::canonical_url(&site_prefix, "index.html"),
         search_enabled,
+        &asset_version,
     )?;
 
     // 404 page
@@ -268,7 +272,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("custom_404", &custom_404);
         ctx.insert("additional_css", &additional.css);
         ctx.insert("additional_js", &additional.js);
-        ctx.insert("asset_version", &env!("CARGO_PKG_VERSION"));
+        ctx.insert("asset_version", &asset_version);
         ctx.insert("year", &current_year);
         ctx.insert("default_theme", &config.output.html.default_theme_name());
         ctx.insert(
@@ -384,7 +388,7 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
         ctx.insert("has_mermaid", &print_has_mermaid);
         ctx.insert("additional_css", &additional.css);
         ctx.insert("additional_js", &additional.js);
-        ctx.insert("asset_version", &env!("CARGO_PKG_VERSION"));
+        ctx.insert("asset_version", &asset_version);
         ctx.insert("default_theme", &config.output.html.default_theme_name());
         ctx.insert(
             "preferred_dark_theme",

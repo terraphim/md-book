@@ -185,6 +185,7 @@ pub fn render_page(
     config: &BookConfig,
     additional: &crate::pipeline::AdditionalAssets,
     watch_enabled: bool,
+    asset_version: &str,
     page: PageRender<'_>,
 ) -> Result<()> {
     let PageRender {
@@ -219,7 +220,7 @@ pub fn render_page(
     context.insert("current_path", &current_path);
     context.insert("watch_enabled", &watch_enabled);
     context.insert("search_enabled", &search_enabled);
-    context.insert("asset_version", &env!("CARGO_PKG_VERSION"));
+    context.insert("asset_version", &asset_version);
     context.insert("nav_sections", &page_data.sections);
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
@@ -270,12 +271,13 @@ pub fn render_index(
     description: String,
     canonical_url: Option<String>,
     search_enabled: bool,
+    asset_version: &str,
 ) -> Result<()> {
     let mut context = TeraContext::new();
     context.insert("description", &description);
     context.insert("canonical_url", &canonical_url);
     context.insert("search_enabled", &search_enabled);
-    context.insert("asset_version", &env!("CARGO_PKG_VERSION"));
+    context.insert("asset_version", &asset_version);
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);
@@ -525,6 +527,17 @@ pub fn copy_static_assets(
     Ok(())
 }
 
+/// Return a stable cache key for the emitted theme stylesheet.
+pub(crate) fn theme_asset_version(output_dir: &str) -> Result<String> {
+    let path = Path::new(output_dir).join("css/themes.css");
+    let bytes = fs::read(&path)
+        .with_context(|| format!("Failed to read theme asset {}", path.display()))?;
+    let hash = bytes.iter().fold(0xcbf29ce484222325_u64, |hash, byte| {
+        (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
+    });
+    Ok(format!("{hash:016x}"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -632,6 +645,21 @@ mod tests {
         let result = copy_static_assets(output_dir.to_str().unwrap(), templates_dir, &config);
 
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_theme_asset_version_tracks_stylesheet_content() -> Result<()> {
+        let output = TempDir::new()?;
+        let css = output.path().join("css");
+        fs::create_dir_all(&css)?;
+        fs::write(css.join("themes.css"), "body { color: black; }")?;
+        let first = theme_asset_version(output.path().to_str().unwrap())?;
+        assert_eq!(first, theme_asset_version(output.path().to_str().unwrap())?);
+
+        fs::write(css.join("themes.css"), "body { color: white; }")?;
+        let second = theme_asset_version(output.path().to_str().unwrap())?;
+        assert_ne!(first, second);
+        Ok(())
     }
 }
 
