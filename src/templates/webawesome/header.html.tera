@@ -22,8 +22,8 @@
             {# Theme picker. <details> gives keyboard support and an open/close
                state without script; theme-switch.js handles the selection. #}
             <details class="theme-menu">
-                <summary class="header-link" aria-label="Change theme" title="Change theme">
-                    <wa-icon name="palette"></wa-icon>
+                <summary class="header-link header-action" aria-label="Change theme" title="Change theme">
+                    <span class="theme-swatch" aria-hidden="true"></span>
                 </summary>
                 <ul class="theme-list" role="list">
                     {% for theme in ["light", "rust", "coal", "navy", "ayu"] %}
@@ -36,14 +36,14 @@
 
             {% if repo_url %}
             <div class="header-links">
-                <a href="{{ repo_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="View source repository">
+                <a href="{{ repo_url | safe }}" class="header-link header-action" target="_blank" rel="noopener" aria-label="View source repository">
                     <wa-icon name="brands/github"></wa-icon>
                 </a>
             </div>
             {% endif %}
             {% if edit_url %}
             <div class="header-links">
-                <a href="{{ edit_url | safe }}" class="header-link" target="_blank" rel="noopener" aria-label="Edit this page">
+                <a href="{{ edit_url | safe }}" class="header-link header-action" target="_blank" rel="noopener" aria-label="Edit this page">
                     <wa-icon name="pen-to-square"></wa-icon>
                 </a>
             </div>

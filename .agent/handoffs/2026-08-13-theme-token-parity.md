@@ -1,7 +1,7 @@
 # Handover: Theme token parity, cache-safe deployment, and Pagefind validation
 
 **Date**: 2026-08-13  
-**UTC Time**: 21:51:25 UTC  
+**UTC Time**: 21:58:42 UTC
 **Change Slug**: `theme-token-parity`  
 **Branch**: `main`  
 **Session File**: No dedicated session file was created for this continuation; use the lifecycle evidence indexed below.  
@@ -19,8 +19,12 @@
   - Changed documented CSS/JS policy from immutable stable filenames to revalidation.
   - Confirmed Pagefind instant search produces results in both template families.
   - Added Web Awesome's component-native `label="Close search"` alongside `aria-label` to remove its icon-button accessibility warning.
+  - Replaced the visually heavy palette glyph with a neutral 16 px light/dark swatch in both template families.
+  - Normalised theme, repository, and edit actions to a shared 32 px square target, 4 px spacing, centred icon geometry, and explicit hover/focus/open states.
+  - Removed unconditional accent colouring from header utilities while preserving accessible accent feedback during interaction.
+  - Added the previously missing accessible `<details>` theme-menu presentation to the Web Awesome theme bundle.
 - Current implementation state:
-  - The md-book implementation was clean and matched `origin/main` at `1b0055f` before this handover artefact was committed.
+  - The palette-alignment implementation and this updated handover are ready to commit on `main`; all verification gates pass.
   - Production was built from md-book `c5f6580` and Terraphim `3df1fbbf0`; the later Web Awesome-only label commit `1b0055f` is pushed and will enter the next documentation build.
   - Terraphim deployment changes were made in an isolated clean clone and pushed directly to GitHub `main`; the user's unrelated dirty Terraphim checkout was not modified.
 - Working vs blocked:
@@ -45,6 +49,7 @@
   - md-book `c5f6580` — derive the theme key from stylesheet content.
   - md-book `1b0055f` — label the Web Awesome search close action.
   - terraphim-ai `3df1fbbf0` — emit deployment headers and revalidate generated assets.
+  - Current pending md-book commit — align the theme/header utility controls in both component families.
 
 ## Current State
 
@@ -57,6 +62,7 @@
   - Minimum observed contrast across structural surfaces was 7.07:1, above WCAG AA and AAA normal-text thresholds.
   - Live Pagefind query `Terraphim` returned 10 instant results with no loading or empty state left visible.
   - Local Chrome audit confirmed Web Awesome only, all five colour schemes, multi-column sidebar/TOC, Pagefind results, and both `label` and `aria-label` on the close action.
+  - Chrome re-validation of the palette fix covered Light, Rust, Coal, Navy, and Ayu in both Shoelace and Web Awesome. Every header action measured exactly 32×32 px, each swatch measured 16×16 px, and the vertical-centre spread was 0 px in every scheme.
 - Partially working:
   - Cloudflare's zone-level rule still responds with `cache-control: public, max-age=14400, must-revalidate`, overriding the intended zero-age `_headers` policy. Theme correctness is protected by the stylesheet-content URL key.
 - Risky or broken:
@@ -71,7 +77,7 @@
    git status --short --branch
    git log -5 --oneline
    ```
-   Expected: clean `main` matching `origin/main`, with `1b0055f` in recent history immediately before the handover commit.
+   Expected: clean `main` matching `origin/main`, with the palette-alignment fix and this handover in recent history.
 2. Re-run the quality gate:
    ```bash
    cargo fmt -- --check
@@ -92,7 +98,7 @@
 
 ## Next Steps
 
-1. If a production rebuild is needed for the Web Awesome label commit, dispatch `deploy-docs.yml` with `environment=production`; it is not required for current Shoelace production behavior.
+1. Confirm the dispatched production build includes the palette-alignment commit, then remeasure the three Shoelace header actions on `docs.terraphim.ai`.
 2. Change the Cloudflare zone/browser-cache rule from four hours to revalidation or extend content-addressing to all generated mutable CSS/JS assets.
 3. Upgrade GitHub actions that still produce Node.js 20 deprecation annotations when compatible releases are available.
 
@@ -107,5 +113,6 @@
 - The original visual inconsistency was not missing theme tokens in the deployed artifact. Chrome held the old stable `css/themes.css` URL while the origin already had corrected tokens.
 - Do not revert the content-derived theme key to package versioning: unreleased stylesheet changes can occur without a Cargo version bump.
 - The two component families are Shoelace and Web Awesome; all five colour schemes belong to both families.
+- The theme control intentionally uses a CSS light/dark swatch rather than a component-library palette icon, avoiding divergent glyph metrics between Shoelace and Font Awesome-backed Web Awesome.
 - Production is deliberately Shoelace/offline-first. Web Awesome is selected explicitly through `paths.templates = "src/templates/webawesome"` and currently uses its pinned CDN fallback.
 - No `memory/handoffs/PENDING.yaml` exists in this repository, so no external transfer buffer was updated.

@@ -850,6 +850,9 @@ async fn test_theme_picker_and_attributes_present() -> Result<()> {
     for theme in ["light", "rust", "coal", "navy", "ayu"] {
         assert_contains!(html, &format!("data-theme-set=\"{theme}\""));
     }
+    assert_contains!(html, "class=\"header-link header-action\"");
+    assert_contains!(html, "class=\"theme-swatch\"");
+    assert!(!html.contains("name=\"palette\""));
     assert_contains!(html, "js/theme-switch.js");
 
     Ok(())
