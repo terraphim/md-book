@@ -32,7 +32,6 @@ class SearchModal extends HTMLElement {
             this.search.destroy();
         }
         this.input?.removeEventListener('input', this.handleInput);
-        this.nativeInput?.removeEventListener('input', this.handleInput);
     }
 
     render() {
@@ -98,7 +97,7 @@ class SearchModal extends HTMLElement {
         try {
             this.search = new PagefindSearch({
                 debounceDelay: 150,
-                minQueryLength: 1,
+                minQueryLength: 2,
                 maxResults: 10
             });
 
@@ -123,7 +122,6 @@ class SearchModal extends HTMLElement {
 
         // Search input events
         this.input?.addEventListener('input', this.handleInput);
-        this.bindNativeInput();
 
         this.input?.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -138,15 +136,6 @@ class SearchModal extends HTMLElement {
 
     removeEventListeners() {
         document.removeEventListener('keydown', this.handleKeydown);
-    }
-
-    async bindNativeInput() {
-        await window.customElements.whenDefined(this.input.localName);
-        if (this.input.updateComplete) await this.input.updateComplete;
-        this.nativeInput = this.input.shadowRoot?.querySelector('input');
-        if (!this.nativeInput) return;
-        this.input.removeEventListener('input', this.handleInput);
-        this.nativeInput.addEventListener('input', this.handleInput);
     }
 
     handleInput(e) {
@@ -187,7 +176,7 @@ class SearchModal extends HTMLElement {
         // Update URL
         this.search.updateUrl(query);
 
-        if (!query || query.length < 1) {
+        if (!query || query.length < this.search.options.minQueryLength) {
             this.showEmpty();
             return;
         }

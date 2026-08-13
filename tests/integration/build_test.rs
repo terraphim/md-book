@@ -1319,6 +1319,14 @@ async fn test_theme_tokens_reach_shadow_components_and_search_paths_are_relative
     assert_not_contains!(search, "bundlePath: '/pagefind/'");
     let modal = book.read_output("components/search-modal.js")?;
     assert_contains!(modal, "e.composedPath()[0]");
+    assert_contains!(
+        modal,
+        "this.input?.addEventListener('input', this.handleInput)"
+    );
+    assert_not_contains!(modal, "bindNativeInput");
+    assert_not_contains!(modal, "nativeInput");
+    assert_contains!(modal, "minQueryLength: 2");
+    assert_contains!(modal, "query.length < this.search.options.minQueryLength");
     assert_contains!(modal, "aria-modal=\"true\"");
     assert_contains!(modal, "aria-selected', 'true'");
     assert_contains!(modal, "aria-label=\"Search results\"");
