@@ -219,6 +219,7 @@ pub fn render_page(
     context.insert("current_path", &current_path);
     context.insert("watch_enabled", &watch_enabled);
     context.insert("search_enabled", &search_enabled);
+    context.insert("asset_version", &env!("CARGO_PKG_VERSION"));
     context.insert("nav_sections", &page_data.sections);
     if let Some(nav) = chapters {
         context.insert("chapters", &nav);
@@ -274,6 +275,7 @@ pub fn render_index(
     context.insert("description", &description);
     context.insert("canonical_url", &canonical_url);
     context.insert("search_enabled", &search_enabled);
+    context.insert("asset_version", &env!("CARGO_PKG_VERSION"));
     context.insert("year", &year);
     context.insert("config", &config);
     context.insert("sections", &sections);

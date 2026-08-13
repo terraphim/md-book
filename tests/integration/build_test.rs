@@ -651,7 +651,8 @@ async fn test_default_assets_emitted_without_templates_dir() -> Result<()> {
         if url.is_empty() || url.starts_with("http") || url.starts_with('#') {
             continue;
         }
-        let target = book.output_path().join(url.trim_start_matches("./"));
+        let asset_path = url.split(['?', '#']).next().unwrap_or_default();
+        let target = book.output_path().join(asset_path.trim_start_matches("./"));
         assert!(
             target.exists(),
             "page references {url}, which was not emitted"
@@ -860,15 +861,28 @@ async fn test_every_page_kind_loads_theme_stylesheet() -> Result<()> {
     // A page that applies data-theme without themes.css shows the wrong colours,
     // which is what happened to index.html and print.html.
     let book = TestBook::new()?;
-    book.create_file("SUMMARY.md", "# Summary\n\n- [Home](README.md)\n")?;
+    book.create_file(
+        "SUMMARY.md",
+        "# Summary\n\n- [Home](README.md)\n- [Chapter](chapter.md)\n",
+    )?;
     book.create_file("README.md", "# Home\n\nBody.\n")?;
+    book.create_file("chapter.md", "# Chapter\n\nBody.\n")?;
     book.build().await?;
 
     for page in ["index.html", "404.html", "print.html"] {
         let html = book.read_output(page)?;
-        assert_contains!(html, "css/themes.css");
+        assert_contains!(
+            html,
+            &format!("css/themes.css?v={}", env!("CARGO_PKG_VERSION"))
+        );
         assert_contains!(html, "data-default-theme=");
     }
+
+    let chapter = book.read_output("chapter.html")?;
+    assert_contains!(
+        chapter,
+        &format!("css/themes.css?v={}", env!("CARGO_PKG_VERSION"))
+    );
 
     // The index must also carry the behaviour scripts chapter pages get.
     let index = book.read_output("index.html")?;
