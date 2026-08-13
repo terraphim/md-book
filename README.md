@@ -74,6 +74,20 @@ The tool generates static HTML files that can be deployed to any static hosting 
 - **Templates**: Modify files in `src/templates/` (standard Tera templates)
 - **Configuration**: Add `book.toml` for advanced settings
 
+### Theme families
+
+The default templates use the vendored Shoelace family and work offline. To
+select the optional Web Awesome family, point `paths.templates` at
+`src/templates/webawesome`; see `book.webawesome.toml` for a complete example.
+Web Awesome is pinned to `3.0.0-beta.6` but currently uses its CDN fallback, so
+that family is explicitly online-only.
+
+Both families support `light`, `rust`, `coal`, `navy`, and `ayu`. Custom themes
+should define the semantic surface tokens (`--bg`, `--fg`, `--sidebar-bg`, and
+`--accent`) plus the component-family color scale used by their controls. This
+is a breaking change for custom templates that relied on the previous partial
+theme overrides.
+
 ## Styling
 
 * Nicer default styling for content - multiple columns for horizontal layout,
@@ -125,6 +139,11 @@ Syntax highlighting, page navigation, and content browsing.
 
 ## Search
 Full-text search powered by Pagefind with instant results.
+
+Pagefind is generated before the final render, so a successful first build
+contains working search UI and its index. If indexing fails, md-book reports
+the failure in build output, removes any stale Pagefind bundle, and publishes
+the book without a non-functional search control.
 
 ![Search Demo](gif/search-demo.webp)
 

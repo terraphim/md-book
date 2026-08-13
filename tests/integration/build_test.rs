@@ -1245,7 +1245,7 @@ async fn test_skip_link_is_first_focusable_and_targets_the_article() -> Result<(
 
 #[cfg(feature = "tokio")]
 #[tokio::test]
-async fn test_search_ui_omitted_without_an_index() -> Result<()> {
+async fn test_search_ui_matches_pagefind_index_after_first_build() -> Result<()> {
     // Pagefind is optional; a search box with no index behind it silently does
     // nothing, which is worse than no search box.
     let book = TestBook::new()?;
@@ -1253,13 +1253,9 @@ async fn test_search_ui_omitted_without_an_index() -> Result<()> {
     book.create_file("one.md", "# One\n\nBody.\n")?;
     book.build().await?;
 
-    // Indexing runs after rendering, so the second build is the one that sees
-    // the index state the first produced. Asserting the invariant rather than
-    // "there is no index here" keeps this honest on CI, which installs the
-    // pagefind CLI, and locally, which usually does not.
+    // A successful first build rerenders after Pagefind writes its index. The
+    // generated book must therefore not require a second build for search.
     let index_exists = book.output_path().join("pagefind/pagefind.js").exists();
-    book.build().await?;
-
     let html = book.read_output("one.html")?;
     if index_exists {
         assert_contains!(html, "<search-modal>");
@@ -1270,6 +1266,78 @@ async fn test_search_ui_omitted_without_an_index() -> Result<()> {
         assert_not_contains!(html, "header-search");
     }
 
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_webawesome_theme_is_isolated_and_explicitly_online_only() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+
+    let mut config = md_book::config::load_config(None)?;
+    config.paths.templates = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("src/templates/webawesome")
+        .to_string_lossy()
+        .into_owned();
+    let book = book.with_config(config);
+    book.build().await?;
+
+    let html = book.read_output("one.html")?;
+    assert_contains!(html, "webawesome@3.0.0-beta.6");
+    assert_contains!(html, "<wa-input");
+    assert_contains!(html, "Web Awesome CDN fallback: online-only");
+    assert_not_contains!(html, "vendor/shoelace");
+    assert!(!book.output_exists("vendor/shoelace/shoelace-local.js"));
+    assert_contains!(book.read_output("css/styles.css")?, "column-width: 40ch");
+    let themes = book.read_output("css/themes.css")?;
+    assert_contains!(themes, "--wa-color-neutral-300: #596067");
+    assert_contains!(themes, "--wa-color-primary-700: #91bee1");
+
+    Ok(())
+}
+
+#[cfg(feature = "tokio")]
+#[tokio::test]
+async fn test_theme_tokens_reach_shadow_components_and_search_paths_are_relative() -> Result<()> {
+    let book = TestBook::new()?;
+    book.create_file("SUMMARY.md", "# Summary\n\n- [One](one.md)\n")?;
+    book.create_file("one.md", "# One\n\nBody.\n")?;
+    book.build().await?;
+
+    let themes = book.read_output("css/themes.css")?;
+    assert_contains!(themes, "--sl-color-neutral-0: #141617");
+    assert_contains!(themes, "--sl-color-neutral-300: #596067");
+    assert_contains!(themes, "--sl-color-primary-700: #91bee1");
+    let toc = book.read_output("components/doc-toc.js")?;
+    assert_not_contains!(toc, "vendor/shoelace/themes/light.css");
+    let search = book.read_output("js/pagefind-search.js")?;
+    assert_contains!(search, "new URL('../pagefind/', import.meta.url)");
+    assert_contains!(search, "debounceDelay: 150");
+    assert_contains!(search, "debouncedSearch(");
+    assert_not_contains!(search, "bundlePath: '/pagefind/'");
+    let modal = book.read_output("components/search-modal.js")?;
+    assert_contains!(modal, "e.composedPath()[0]");
+    assert_contains!(modal, "aria-modal=\"true\"");
+    assert_contains!(modal, "aria-selected', 'true'");
+    assert_contains!(modal, "aria-label=\"Search results\"");
+    let init = book.read_output("js/search-init.js")?;
+    assert_not_contains!(init, "// Global keyboard shortcut handling");
+
+    Ok(())
+}
+
+#[test]
+fn test_failed_index_cleanup_discards_stale_pagefind_assets() -> Result<()> {
+    let temp = tempfile::tempdir()?;
+    let pagefind = temp.path().join("pagefind");
+    std::fs::create_dir_all(&pagefind)?;
+    std::fs::write(pagefind.join("pagefind.js"), "stale")?;
+
+    md_book::pipeline::discard_search_index(temp.path().to_str().unwrap())?;
+
+    assert!(!pagefind.exists());
     Ok(())
 }
 

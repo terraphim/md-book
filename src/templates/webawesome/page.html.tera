@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ page.title }} | {{ config.book.title }}</title>
+    <meta name="description" content="{{ page.description }}">
+    {% if page.canonical_url %}<link rel="canonical" href="{{ page.canonical_url | safe }}">{% endif %}
+    <!-- Web Awesome is pinned but currently loaded from its online-only fallback. -->
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/default.css" />
+    <!-- Web Awesome CDN fallback: online-only -->
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    {% if search_enabled %}<link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">{% endif %}
+    <script src="{{ path_to_root | safe }}components/doc-toc.js" type="module"></script>
+    {% if has_mermaid %}
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
+    {% if search_enabled %}
+    <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
+    {% endif %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
+
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="container">
+        {% include "header.html" %}
+        <div class="sidebar">
+            {% include "sidebar.html" %}
+        </div>
+        <main class="content">
+            <article class="main-article" id="main-content">
+                {{ page.content | safe }}
+                <div class="nav-footer">
+                    {% if page.previous %}
+                    <wa-button href="{{ page.previous.path | safe }}" variant="default" class="nav-previous">
+                        <wa-icon slot="start" name="arrow-left"></wa-icon>
+                        {{ page.previous.title }}
+                    </wa-button>
+                    {% endif %}
+                    {% if page.next %}
+                    <wa-button href="{{ page.next.path | safe }}" variant="default" class="nav-next">
+                        {{ page.next.title }}
+                        <wa-icon slot="end" name="arrow-right"></wa-icon>
+                    </wa-button>
+                    {% endif %}
+                </div>
+            </article>
+        </main>
+        <doc-toc>
+        </doc-toc>
+    </div>
+
+    <!-- Search Modal -->
+    {% if search_enabled %}<search-modal></search-modal>{% endif %}
+
+    {% include "footer.html" %}
+    {% if watch_enabled %}
+    <script src="{{ path_to_root | safe }}js/live-reload.js"></script>
+    {% endif %}
+    <script>
+        // Mobile Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mobile menu toggle
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            const sidebar = document.querySelector('.sidebar');
+
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('active');
+                    document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+                });
+
+                // Close sidebar when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (sidebar.classList.contains('active') &&
+                        !sidebar.contains(e.target) &&
+                        !menuToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                        document.body.style.overflow = '';
+                    }
+                });
+            }
+
+            // Mobile search toggle
+            const searchToggle = document.querySelector('.mobile-search-toggle');
+            const searchModal = document.querySelector('search-modal');
+
+            if (searchToggle && searchModal) {
+                searchToggle.addEventListener('click', () => {
+                    if (searchModal.open) {
+                        searchModal.open();
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
+    <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/fold.js"></script>
+</body>
+</html>

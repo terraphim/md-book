@@ -1,6 +1,3 @@
-// CSS custom properties inherit through the shadow host, so the active
-// document theme remains authoritative here.
-
 class SimpleBlock extends HTMLElement {
   constructor() {
     super();
@@ -16,15 +13,15 @@ class SimpleBlock extends HTMLElement {
       <style>
         :host {
           display: block;
-          margin: var(--sl-spacing-medium) auto;
+          margin: var(--wa-spacing-medium) auto;
           max-width: 800px;
         }
 
         .block-container {
-          background: var(--sl-panel-background-color);
-          border-radius: var(--sl-border-radius-medium);
-          box-shadow: var(--sl-shadow-x-small);
-          padding: var(--sl-spacing-large);
+          background: var(--wa-panel-background-color);
+          border-radius: var(--wa-border-radius-medium);
+          box-shadow: var(--wa-shadow-x-small);
+          padding: var(--wa-spacing-large);
           text-align: center;
         }
 
@@ -32,16 +29,16 @@ class SimpleBlock extends HTMLElement {
           display: flex;
           align-items: center;
           justify-content: center;
-          font-size: var(--sl-font-size-small);
-          gap: var(--sl-spacing-medium);
-          margin-bottom: var(--sl-spacing-medium);
+          font-size: var(--wa-font-size-small);
+          gap: var(--wa-spacing-medium);
+          margin-bottom: var(--wa-spacing-medium);
         }
-        
+
         h3 {
           margin: 0;
-          font-weight: var(--sl-font-weight-semibold);
-          font-size: var(--sl-font-size-small);
-          color: var(--sl-color-neutral-500);
+          font-weight: var(--wa-font-weight-semibold);
+          font-size: var(--wa-font-size-small);
+          color: var(--wa-color-neutral-500);
         }
 
         ::slotted(*) {
@@ -50,28 +47,28 @@ class SimpleBlock extends HTMLElement {
         }
 
         .content {
-          color: var(--sl-color-neutral-500);
-          font-family: var(--sl-font-sans);
-          line-height: var(--sl-line-height-normal);
+          color: var(--wa-color-neutral-500);
+          font-family: var(--wa-font-sans);
+          line-height: var(--wa-line-height-normal);
           text-align: center;
         }
 
         ::slotted(h2) {
-          margin: 0 0 var(--sl-spacing-small) 0;
-          font-size: var(--sl-font-size-medium);
-          font-weight: var(--sl-font-weight-semibold);
-          color: var(--sl-color-neutral-500);
+          margin: 0 0 var(--wa-spacing-small) 0;
+          font-size: var(--wa-font-size-medium);
+          font-weight: var(--wa-font-weight-semibold);
+          color: var(--wa-color-neutral-500);
         }
 
         ::slotted(h3) {
-          margin: 0 0 var(--sl-spacing-small) 0;
-          font-size: var(--sl-font-size-small);
-          font-weight: var(--sl-font-weight-semibold);
-          color: var(--sl-color-neutral-500);
+          margin: 0 0 var(--wa-spacing-small) 0;
+          font-size: var(--wa-font-size-small);
+          font-weight: var(--wa-font-weight-semibold);
+          color: var(--wa-color-neutral-500);
         }
 
-        ::slotted(sl-button) {
-          margin-top: var(--sl-spacing-medium);
+        ::slotted(wa-button) {
+          margin-top: var(--wa-spacing-medium);
         }
 
         ::slotted(:last-child) {
@@ -96,10 +93,10 @@ class SimpleBlock extends HTMLElement {
           }
         }
       </style>
-      
+
         <div class="block-container">
           <div class="header">
-          <sl-icon name="info-circle" style="color: var(--sl-color-neutral-500); font-size: var(--sl-font-size-large);"></sl-icon>
+          <wa-icon name="info-circle" style="color: var(--wa-color-neutral-500); font-size: var(--wa-font-size-large);"></wa-icon>
           <slot name="title"></slot>
         </div>
         <div class="content">

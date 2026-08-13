@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="{{ config.book.language }}"
+      data-default-theme="{{ default_theme }}"
+      data-preferred-dark-theme="{{ preferred_dark_theme }}">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} | {{ config.book.title }}</title>
+    <meta name="description" content="{{ description }}">
+    {% if canonical_url %}<link rel="canonical" href="{{ canonical_url | safe }}">{% endif %}
+    <!-- Include Shoelace assets -->
+    <link rel="stylesheet" href="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/styles/themes/default.css" />
+    <!-- Web Awesome CDN fallback: online-only -->
+    <script type="module" src="https://early.webawesome.com/webawesome@3.0.0-beta.6/dist/webawesome.loader.js"></script>
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css">
+    {% if search_enabled %}<link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">{% endif %}
+    <script type="module" src="{{ path_to_root | safe }}components/simple-block.js"></script>
+    {% if search_enabled %}
+    <script src="{{ path_to_root | safe }}js/pagefind-search.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}components/search-modal.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/search-init.js" type="module"></script>
+    {% endif %}
+    {% if has_mermaid %}
+    <script src="{{ path_to_root | safe }}js/mermaid.min.js" type="module"></script>
+    <script src="{{ path_to_root | safe }}js/mermaid-init.js" type="module"></script>
+    {% endif %}
+    {% for css in additional_css %}
+    <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">
+    {% endfor %}
+    {% for js in additional_js %}
+    <script src="{{ path_to_root | safe }}{{ js | safe }}"></script>
+    {% endfor %}
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="container index-container">
+        {% include "header.html" %}
+        <main class="content index-content" id="main-content">
+            {% if has_index %}
+                <article class="main-article">
+                    {{ content | safe }}
+                </article>
+            {% endif %}
+            {% if not has_index %}
+                <div class="index-header">
+                    <h1>Documentation</h1>
+                </div>
+            {% endif %}
+            {# The card grid is this page's navigation, and the reason the
+               layout is a full-width block rather than the chapter grid. It
+               used to render only when there was no index page of its own,
+               which left a README-backed book with no route into its
+               chapters at all. #}
+            <div class="card-grid">
+                    {% for section in sections %}
+                        <div class="section-group">
+                            <h2>{{ section.title }}</h2>
+                            <div class="card-group">
+                                {% for page in section.pages %}
+                                    <wa-card class="doc-card">
+                                        <h3 slot="header">{{ page.title }}</h3>
+                                        <wa-button href="{{ path_to_root | safe }}{{ page.path | safe }}" variant="default">
+                                            Read More
+                                            <wa-icon slot="end" name="arrow-right"></wa-icon>
+                                        </wa-button>
+                                    </wa-card>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <!-- Search Modal -->
+    {% if search_enabled %}<search-modal></search-modal>{% endif %}
+    <script src="{{ path_to_root | safe }}js/theme-switch.js"></script>
+    <script src="{{ path_to_root | safe }}js/keyboard.js"></script>
+    <script src="{{ path_to_root | safe }}js/fold.js"></script>
+    <script src="{{ path_to_root | safe }}js/code-copy.js"></script>
+</body>
+</html>

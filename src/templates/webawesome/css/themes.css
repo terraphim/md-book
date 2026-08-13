@@ -1,0 +1,164 @@
+:root,
+[data-theme="light"] {
+  --bg: #ffffff;
+  --fg: #0f172a;
+  --sidebar-bg: #f8fafc;
+  --accent: #0284c7;
+  --wa-color-neutral-0: #ffffff;
+  --wa-color-neutral-50: #f8fafc;
+  --wa-color-neutral-100: #f1f5f9;
+  --wa-color-neutral-200: #e2e8f0;
+  --wa-color-neutral-300: #cbd5e1;
+  --wa-color-neutral-400: #94a3b8;
+  --wa-color-neutral-500: #64748b;
+  --wa-color-neutral-600: #475569;
+  --wa-color-neutral-700: #334155;
+  --wa-color-neutral-800: #1e293b;
+  --wa-color-neutral-900: #0f172a;
+  --wa-color-primary-50: #f0f9ff;
+  --wa-color-primary-100: #e0f2fe;
+  --wa-color-primary-200: #bae6fd;
+  --wa-color-primary-300: #7dd3fc;
+  --wa-color-primary-400: #38bdf8;
+  --wa-color-primary-500: #0ea5e9;
+  --wa-color-primary-600: #0284c7;
+  --wa-color-primary-700: #0369a1;
+  --wa-color-primary-800: #075985;
+  --wa-color-primary-900: #0c4a6e;
+}
+
+[data-theme="rust"] {
+  --bg: #e1e1db;
+  --fg: #262625;
+  --sidebar-bg: #d1c7a5;
+  --accent: #a72145;
+  --wa-color-neutral-0: #e1e1db;
+  --wa-color-neutral-50: #d8d4c5;
+  --wa-color-neutral-100: #d1c7a5;
+  --wa-color-neutral-200: #b8ad8c;
+  --wa-color-neutral-300: #968b70;
+  --wa-color-neutral-400: #756d58;
+  --wa-color-neutral-500: #5d5748;
+  --wa-color-neutral-600: #474339;
+  --wa-color-neutral-700: #37342e;
+  --wa-color-neutral-800: #2e2c29;
+  --wa-color-neutral-900: #262625;
+  --wa-color-primary-50: #fbf3f5;
+  --wa-color-primary-100: #f3dce2;
+  --wa-color-primary-200: #e9b9c6;
+  --wa-color-primary-300: #dc8ba2;
+  --wa-color-primary-400: #ce5e7f;
+  --wa-color-primary-500: #bd365b;
+  --wa-color-primary-600: #a72145;
+  --wa-color-primary-700: #8b1a39;
+  --wa-color-primary-800: #71152e;
+  --wa-color-primary-900: #531020;
+}
+
+[data-theme="coal"] {
+  --bg: #141617;
+  --fg: #d5dce2;
+  --sidebar-bg: #292c2f;
+  --accent: #70a8d8;
+  --wa-color-neutral-0: #141617;
+  --wa-color-neutral-50: #1d2022;
+  --wa-color-neutral-100: #292c2f;
+  --wa-color-neutral-200: #3a3e42;
+  --wa-color-neutral-300: #596067;
+  --wa-color-neutral-400: #7f8992;
+  --wa-color-neutral-500: #98a3ad;
+  --wa-color-neutral-600: #b3bdc6;
+  --wa-color-neutral-700: #c8d0d7;
+  --wa-color-neutral-800: #d5dce2;
+  --wa-color-neutral-900: #edf1f4;
+  --wa-color-primary-50: #101f2c;
+  --wa-color-primary-100: #18344d;
+  --wa-color-primary-200: #244f70;
+  --wa-color-primary-300: #336b92;
+  --wa-color-primary-400: #4380ad;
+  --wa-color-primary-500: #5592c6;
+  --wa-color-primary-600: #70a8d8;
+  --wa-color-primary-700: #91bee1;
+  --wa-color-primary-800: #b7d4eb;
+  --wa-color-primary-900: #dcebf6;
+}
+
+[data-theme="navy"] {
+  --bg: #161923;
+  --fg: #d3d5e3;
+  --sidebar-bg: #212942;
+  --accent: #6db4d8;
+  --wa-color-neutral-0: #161923;
+  --wa-color-neutral-50: #1c2131;
+  --wa-color-neutral-100: #212942;
+  --wa-color-neutral-200: #313b58;
+  --wa-color-neutral-300: #56617b;
+  --wa-color-neutral-400: #7f849e;
+  --wa-color-neutral-500: #9da0b7;
+  --wa-color-neutral-600: #bcbdd0;
+  --wa-color-neutral-700: #d3d5e3;
+  --wa-color-neutral-800: #e6e7ef;
+  --wa-color-neutral-900: #f5f5f8;
+  --wa-color-primary-50: #101e29;
+  --wa-color-primary-100: #173446;
+  --wa-color-primary-200: #20506a;
+  --wa-color-primary-300: #2b6f91;
+  --wa-color-primary-400: #3587aa;
+  --wa-color-primary-500: #4197bd;
+  --wa-color-primary-600: #6db4d8;
+  --wa-color-primary-700: #91cae1;
+  --wa-color-primary-800: #b9deed;
+  --wa-color-primary-900: #ddf0f7;
+}
+
+[data-theme="ayu"] {
+  --bg: #0f1419;
+  --fg: #e6e1cf;
+  --sidebar-bg: #14191f;
+  --accent: #ffb454;
+  --wa-color-neutral-0: #0f1419;
+  --wa-color-neutral-50: #14191f;
+  --wa-color-neutral-100: #1b222a;
+  --wa-color-neutral-200: #2d3640;
+  --wa-color-neutral-300: #4b5661;
+  --wa-color-neutral-400: #6c7680;
+  --wa-color-neutral-500: #929aa3;
+  --wa-color-neutral-600: #b3b8be;
+  --wa-color-neutral-700: #c5c9cd;
+  --wa-color-neutral-800: #e0ded5;
+  --wa-color-neutral-900: #f3f0e8;
+  --wa-color-primary-50: #2b2216;
+  --wa-color-primary-100: #49351b;
+  --wa-color-primary-200: #765024;
+  --wa-color-primary-300: #a76e30;
+  --wa-color-primary-400: #cd8739;
+  --wa-color-primary-500: #e69f45;
+  --wa-color-primary-600: #ffb454;
+  --wa-color-primary-700: #ffc678;
+  --wa-color-primary-800: #ffd6a1;
+  --wa-color-primary-900: #ffead0;
+}
+
+body,
+.site-header,
+.sidebar,
+doc-toc,
+.search-modal,
+.site-footer {
+  background: var(--bg);
+  color: var(--fg);
+  border-color: var(--sidebar-bg);
+}
+
+.sidebar,
+doc-toc,
+.site-footer,
+.search-footer {
+  background: var(--sidebar-bg);
+}
+
+.content a,
+.header-link,
+.footer-link {
+  color: var(--accent);
+}

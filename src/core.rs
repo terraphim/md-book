@@ -69,7 +69,16 @@ async fn build_impl(args: &Args, config: &BookConfig, watch_enabled: bool) -> Re
 
     #[cfg(all(feature = "search", feature = "tokio"))]
     {
-        pipeline::index(&args.output).await?;
+        if pipeline::index(&args.output).await? {
+            // The first render is the Pagefind input; the second sees the
+            // newly written index and emits the usable search controls.
+            pipeline::run_sync(args, config, watch_enabled)?;
+        } else {
+            pipeline::discard_search_index(&args.output)?;
+            // A partial or stale index must not leave a non-functional search
+            // affordance in the published output.
+            pipeline::run_sync(args, config, watch_enabled)?;
+        }
     }
 
     Ok(report)

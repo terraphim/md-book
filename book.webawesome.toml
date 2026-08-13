@@ -1,0 +1,18 @@
+[book]
+title = "mdBook test book (Web Awesome Theme)"
+description = "A demo book for the optional Web Awesome theme family"
+authors = ["Alex Mikhalev"]
+language = "en"
+logo = "/img/terraphim_gray.png"
+github_url = "https://github.com/terraphim/md-book"
+
+[paths]
+templates = "src/templates/webawesome"
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+
+# Web Awesome 3.0.0-beta.6 currently uses the approved pinned CDN fallback.
+# Generated books using this family are online-only until the minimal local
+# dependency closure is vendored. The default Shoelace family remains offline.

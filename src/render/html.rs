@@ -509,7 +509,11 @@ pub fn copy_static_assets(
     write_embedded(&DEFAULT_JS, out, "js")?;
     write_embedded(&DEFAULT_IMG, out, "img")?;
     write_embedded(&DEFAULT_COMPONENTS, out, "components")?;
-    write_embedded(&VENDOR_DIR, out, "vendor")?;
+    // Web Awesome is a mutually exclusive template family. Its approved CDN
+    // fallback must not also ship or initialise the Shoelace runtime.
+    if !Path::new(templates_dir).ends_with("webawesome") {
+        write_embedded(&VENDOR_DIR, out, "vendor")?;
+    }
 
     // ...then a user templates directory overrides them file by file.
     for tree in ["css", "js", "img", "components"] {

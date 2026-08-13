@@ -1,10 +1,5 @@
-// Assets are resolved from this module's own URL, so the component works at a
-// domain root, under a sub-path, and over file:// alike. Shadow DOM cannot
-// inherit the page's stylesheets, and this file is copied verbatim so it has no
-// access to Tera's path_to_root.
-const BOOK_ROOT = new URL('../', import.meta.url);
-const SHOELACE_THEME = new URL('vendor/shoelace/themes/light.css', BOOK_ROOT).href;
-const BOOK_STYLES = new URL('css/styles.css', BOOK_ROOT).href;
+// CSS custom properties inherit through the shadow host, so the active
+// document theme remains authoritative here.
 
 class DocSidebar extends HTMLElement {
   constructor() {
@@ -18,7 +13,6 @@ class DocSidebar extends HTMLElement {
 
   render() {
     this.shadowRoot.innerHTML = `
-      <link rel="stylesheet" href="${SHOELACE_THEME}" />
       <style>
         :host {
           display: block;
@@ -147,4 +141,4 @@ class DocSidebar extends HTMLElement {
   }
 }
 
-customElements.define('doc-sidebar', DocSidebar); 
+customElements.define('doc-sidebar', DocSidebar);

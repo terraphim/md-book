@@ -1,0 +1,15 @@
+<footer class="site-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <p class="copyright">© {{ year }} {{ config.book.title }}. Built with md-book.</p>
+        </div>
+        {% if repo_url %}
+        <div class="footer-section">
+            <a href="{{ repo_url | safe }}" class="footer-link" target="_blank" rel="noopener">
+                <wa-icon name="brands/github"></wa-icon>
+                GitHub
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</footer>

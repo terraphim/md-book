@@ -12,7 +12,7 @@ class SearchModal extends HTMLElement {
         this.search = null;
         this.currentResults = [];
         this.selectedIndex = -1;
-        
+
         // Bind methods
         this.handleKeydown = this.handleKeydown.bind(this);
         this.handleClickOutside = this.handleClickOutside.bind(this);
@@ -41,21 +41,21 @@ class SearchModal extends HTMLElement {
                 <div class="search-modal" role="dialog" aria-modal="true" aria-label="Search documentation">
                     <div class="search-modal-header">
                         <div class="search-input-container">
-                            <sl-input 
-                                class="search-input" 
-                                placeholder="Search documentation..." 
-                                size="large" 
+                            <wa-input
+                                class="search-input"
+                                placeholder="Search documentation..."
+                                size="large"
                                 clearable
                                 aria-controls="search-results"
                                 autofocus>
-                                <sl-icon name="search" slot="prefix"></sl-icon>
-                            </sl-input>
+                                <wa-icon name="magnifying-glass" slot="start"></wa-icon>
+                            </wa-input>
                         </div>
-                        <sl-button class="search-close-btn" variant="text" size="small" aria-label="Close search">
-                            <sl-icon name="x-lg"></sl-icon>
-                        </sl-button>
+                        <wa-button class="search-close-btn" variant="text" size="small" aria-label="Close search">
+                            <wa-icon name="xmark"></wa-icon>
+                        </wa-button>
                     </div>
-                    
+
                     <div class="search-results-container">
                         <div class="search-results" id="search-results" role="listbox" aria-label="Search results"></div>
                         <div class="search-footer">
@@ -66,14 +66,14 @@ class SearchModal extends HTMLElement {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="search-loading" style="display: none;">
-                        <sl-spinner></sl-spinner>
+                        <wa-spinner></wa-spinner>
                         <span>Searching...</span>
                     </div>
-                    
+
                     <div class="search-empty" style="display: none;">
-                        <sl-icon name="search" class="search-empty-icon"></sl-icon>
+                        <wa-icon name="magnifying-glass" class="search-empty-icon"></wa-icon>
                         <p>No results found</p>
                         <p class="search-empty-subtitle">Try adjusting your search terms</p>
                     </div>
@@ -116,11 +116,11 @@ class SearchModal extends HTMLElement {
     setupEventListeners() {
         // Keyboard shortcuts
         document.addEventListener('keydown', this.handleKeydown);
-        
+
         // Modal events
         this.closeBtn?.addEventListener('click', () => this.close());
         this.overlay?.addEventListener('click', this.handleClickOutside);
-        
+
         // Search input events
         this.input?.addEventListener('input', this.handleInput);
         this.bindNativeInput();
@@ -211,7 +211,7 @@ class SearchModal extends HTMLElement {
         }
 
         this.currentResults = searchData.results || [];
-        
+
         if (this.currentResults.length === 0) {
             this.showEmpty();
             return;
@@ -222,7 +222,7 @@ class SearchModal extends HTMLElement {
 
     renderResults(searchData) {
         const { query, results, totalResults } = searchData;
-        
+
         this.resultsContainer.innerHTML = '';
         this.selectedIndex = -1;
 
@@ -257,7 +257,7 @@ class SearchModal extends HTMLElement {
         content.append(title, excerpt, url);
         const action = document.createElement('div');
         action.className = 'search-result-action';
-        const icon = document.createElement('sl-icon');
+        const icon = document.createElement('wa-icon');
         icon.name = 'arrow-right';
         action.appendChild(icon);
         element.append(content, action);
@@ -277,7 +277,7 @@ class SearchModal extends HTMLElement {
         if (this.currentResults.length === 0) return;
 
         const newIndex = this.selectedIndex + direction;
-        
+
         if (newIndex >= 0 && newIndex < this.currentResults.length) {
             this.setSelectedIndex(newIndex);
         } else if (direction > 0 && this.selectedIndex === this.currentResults.length - 1) {
@@ -339,7 +339,7 @@ class SearchModal extends HTMLElement {
         this.previouslyFocused = document.activeElement;
         this.isOpen = true;
         this.overlay.style.display = 'flex';
-        
+
         // Focus input after modal opens
         requestAnimationFrame(() => {
             this.input?.focus();
@@ -352,10 +352,10 @@ class SearchModal extends HTMLElement {
     close() {
         this.isOpen = false;
         this.overlay.style.display = 'none';
-        
+
         // Restore body scroll
         document.body.style.overflow = '';
-        
+
         // Clear selection
         this.selectedIndex = -1;
         this.currentResults = [];

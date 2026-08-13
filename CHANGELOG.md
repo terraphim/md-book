@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Restored Web Awesome as an explicit, mutually exclusive template family via
+  `paths.templates = "src/templates/webawesome"`. It is pinned to
+  `3.0.0-beta.6` and currently uses a clearly labelled online-only CDN
+  fallback; the default Shoelace family remains vendored and offline.
+
+### Fixed
+- Pagefind full-text search is available on the first successful build, uses
+  instant 150 ms debounced results, ignores stale responses, and resolves its
+  bundle relative to the generated site on root and nested pages.
+- A failed Pagefind index now emits a clear build error, removes stale or
+  partial index assets, and rerenders the book without broken search controls.
+- `light`, `rust`, `coal`, `navy`, and `ayu` now apply coherent semantic colors
+  to the page, header, sidebar, TOC, search, and both component families.
+- Wide-screen prose keeps its multi-column layout, while mobile layouts no
+  longer overflow horizontally and long book titles truncate in the header.
+
+### Changed
+- **Breaking (custom themes)**: custom templates must provide the semantic
+  surface tokens `--bg`, `--fg`, `--sidebar-bg`, and `--accent`, together with
+  the selected component family's color scale. Partial legacy overrides are no
+  longer treated as a complete theme.
+
 ## [0.2.0] - 2026-08-11
 
 mdBook contract parity for the `build` path: any valid mdBook book (bar those

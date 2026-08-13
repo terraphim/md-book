@@ -6,17 +6,17 @@
 class PagefindSearch {
     constructor(options = {}) {
         this.options = {
-            bundlePath: '/pagefind/',
-            baseUrl: '/',
-            debounceDelay: 300,
+            bundlePath: new URL('../pagefind/', import.meta.url).href,
+            baseUrl: new URL('../', import.meta.url).href,
+            debounceDelay: 150,
             minQueryLength: 2,
             maxResults: 20,
             ...options
         };
         
         this.pagefind = null;
-        this.debounceTimer = null;
         this.isInitialized = false;
+        this.searchGeneration = 0;
         this.searchHistory = this.loadSearchHistory();
     }
 
@@ -27,9 +27,9 @@ class PagefindSearch {
         if (this.isInitialized) return;
         
         try {
-            this.pagefind = await import(`${this.options.bundlePath}pagefind.js`);
+            this.pagefind = await import(new URL('pagefind.js', this.options.bundlePath).href);
             await this.pagefind.options({
-                bundlePath: this.options.bundlePath,
+                basePath: this.options.bundlePath,
                 baseUrl: this.options.baseUrl
             });
             await this.pagefind.init();
@@ -45,27 +45,32 @@ class PagefindSearch {
      * Perform search with debouncing
      */
     async search(query, callback) {
-        if (!query || query.length < this.options.minQueryLength) {
-            callback([]);
+        const normalizedQuery = query.trim();
+        const generation = ++this.searchGeneration;
+
+        if (normalizedQuery.length < this.options.minQueryLength) {
+            callback({ query: normalizedQuery, results: [], totalResults: 0 });
             return;
         }
 
-        // Clear previous debounce timer
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
+        try {
+            if (!this.isInitialized) await this.init();
+            const searchResult = await this.pagefind.debouncedSearch(
+                normalizedQuery,
+                {},
+                this.options.debounceDelay
+            );
+            if (searchResult === null || generation !== this.searchGeneration) return;
 
-        // Debounce search
-        this.debounceTimer = setTimeout(async () => {
-            try {
-                const results = await this.performSearch(query);
-                this.addToSearchHistory(query);
-                callback(results);
-            } catch (error) {
-                console.error('Search failed:', error);
-                callback([], error);
-            }
-        }, this.options.debounceDelay);
+            const results = await this.loadResults(normalizedQuery, searchResult);
+            if (generation !== this.searchGeneration) return;
+            this.addToSearchHistory(normalizedQuery);
+            callback(results);
+        } catch (error) {
+            if (generation !== this.searchGeneration) return;
+            console.error('Search failed:', error);
+            callback({ query: normalizedQuery, results: [], totalResults: 0 }, error);
+        }
     }
 
     /**
@@ -76,10 +81,11 @@ class PagefindSearch {
             await this.init();
         }
 
-        // Preload for better performance
-        await this.pagefind.preload(query);
-        
         const searchResult = await this.pagefind.search(query);
+        return this.loadResults(query, searchResult);
+    }
+
+    async loadResults(query, searchResult) {
         const results = await Promise.all(
             searchResult.results
                 .slice(0, this.options.maxResults)
@@ -111,11 +117,7 @@ class PagefindSearch {
         const urlParams = new URLSearchParams(window.location.search);
         const searchQuery = urlParams.get('q');
         
-        if (searchQuery) {
-            return decodeURIComponent(searchQuery);
-        }
-        
-        return null;
+        return searchQuery || null;
     }
 
     /**
@@ -124,7 +126,7 @@ class PagefindSearch {
     updateUrl(query) {
         const url = new URL(window.location);
         if (query && query.trim()) {
-            url.searchParams.set('q', encodeURIComponent(query.trim()));
+            url.searchParams.set('q', query.trim());
         } else {
             url.searchParams.delete('q');
         }
@@ -218,17 +220,11 @@ class PagefindSearch {
      * Destroy the search instance
      */
     destroy() {
-        if (this.debounceTimer) {
-            clearTimeout(this.debounceTimer);
-        }
+        this.searchGeneration += 1;
+        if (this.pagefind?.destroy) this.pagefind.destroy();
         this.pagefind = null;
         this.isInitialized = false;
     }
 }
 
-// Export for use in modules or make available globally
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = PagefindSearch;
-} else {
-    window.PagefindSearch = PagefindSearch;
-}
+export { PagefindSearch };

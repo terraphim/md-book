@@ -49,8 +49,8 @@ pub fn run_sync(args: &Args, config: &BookConfig, watch_enabled: bool) -> Result
     let additional = copy_additional_assets(config, src_dir, Path::new(&args.output))?;
     // Canonical URLs need an absolute base; without one we emit none at all.
     let site_prefix = site_url_prefix(config);
-    // Pagefind is optional, and shipping a search box with no index behind it
-    // is worse than shipping none.
+    // Pagefind is indexed after this render. `core::build_impl` renders a
+    // second time after a successful index so a clean first build gets UI too.
     let search_enabled = search_index_available(&args.output);
 
     let sections = if book.from_summary {
@@ -431,6 +431,15 @@ fn search_index_available(output_dir: &str) -> bool {
     Path::new(output_dir).join("pagefind/pagefind.js").exists()
 }
 
+/// Remove a stale or partially written Pagefind index after indexing failure.
+pub fn discard_search_index(output_dir: &str) -> Result<()> {
+    let path = Path::new(output_dir).join("pagefind");
+    if path.exists() {
+        fs::remove_dir_all(path).context("Failed to discard stale Pagefind index")?;
+    }
+    Ok(())
+}
+
 /// Copy `additional-css` / `additional-js` into the build and return their
 /// build-root-relative paths, in the order the author listed them.
 ///
@@ -632,18 +641,17 @@ fn copy_non_markdown_assets(src_dir: &Path, out_dir: &Path) -> Result<()> {
 
 /// Run Pagefind indexing over the output directory (async path only).
 #[cfg(all(feature = "search", feature = "tokio"))]
-pub async fn index(output: &str) -> Result<()> {
+pub async fn index(output: &str) -> Result<bool> {
     use crate::pagefind_service::PagefindBuilder;
 
     match PagefindBuilder::new(PathBuf::from(output)).await {
-        Ok(pagefind) => {
-            if let Err(e) = pagefind.build().await {
-                eprintln!("Search indexing failed: {e}");
-            }
-        }
+        Ok(pagefind) => match pagefind.build().await {
+            Ok(()) => return Ok(true),
+            Err(e) => eprintln!("Search indexing failed: {e}"),
+        },
         Err(e) => {
             eprintln!("Failed to create search builder: {e}");
         }
     }
-    Ok(())
+    Ok(false)
 }

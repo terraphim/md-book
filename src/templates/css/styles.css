@@ -69,6 +69,12 @@ body {
     background: var(--theme-bg);
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 .container {
     display: grid;
     grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--toc-width);
@@ -888,4 +894,33 @@ pre .code {
 
 .content a:active {
     color: var(--sl-color-primary-900);
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .site-header,
+    .header-content,
+    .content {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .header-left {
+        min-width: 0;
+    }
+
+    .header-right {
+        flex: 0 0 auto;
+    }
+
+    .header-title {
+        min-width: 0;
+        max-width: 42vw;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 }

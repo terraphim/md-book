@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle header search input value
     headerSearchInput.addEventListener('input', (e) => {
-        const query = e.target.value;
+        const source = e.composedPath()[0];
+        const query = source.value || headerSearchInput.value || '';
         if (query.trim()) {
             searchModal.triggerSearch(query);
         }
@@ -64,37 +65,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (searchQuery) {
         // Show the search query in header input (for display only)
-        headerSearchInput.value = decodeURIComponent(searchQuery);
+        headerSearchInput.value = searchQuery;
         
         // Open search modal with the query
         setTimeout(() => {
             searchModal.triggerSearch(searchQuery);
         }, 100);
-    }
-});
-
-// Global keyboard shortcut handling
-document.addEventListener('keydown', (e) => {
-    // Don't interfere if user is typing in an input
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) {
-        return;
-    }
-
-    // Open search with '/' key
-    if (e.key === '/') {
-        e.preventDefault();
-        const searchModal = document.querySelector('search-modal');
-        if (searchModal) {
-            searchModal.open();
-        }
-    }
-    
-    // Open search with Cmd/Ctrl + K
-    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        const searchModal = document.querySelector('search-modal');
-        if (searchModal) {
-            searchModal.open();
-        }
     }
 });

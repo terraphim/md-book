@@ -2,9 +2,11 @@
   const KEY = 'md-book-theme';
   const root = document.documentElement;
   const stored = localStorage.getItem(KEY);
+  const themes = new Set(['light', 'rust', 'coal', 'navy', 'ayu']);
   const preferredDark = root.dataset.preferredDarkTheme || 'navy';
   const defaultTheme = root.dataset.defaultTheme || 'light';
   function apply(theme) {
+    if (!themes.has(theme)) theme = themes.has(defaultTheme) ? defaultTheme : 'light';
     root.setAttribute('data-theme', theme);
     localStorage.setItem(KEY, theme);
     // Reflect the choice for assistive tech, and close the picker.
@@ -16,7 +18,7 @@
       }
     });
   }
-  if (stored) {
+  if (themes.has(stored)) {
     apply(stored);
   } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     apply(preferredDark);
