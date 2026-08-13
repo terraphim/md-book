@@ -6,7 +6,7 @@
 **Branch**: `main`  
 **Session File**: No dedicated session file was created for this continuation; use the lifecycle evidence indexed below.  
 **Production**: <https://docs.terraphim.ai>  
-**Successful Deployment**: <https://github.com/terraphim/terraphim-ai/actions/runs/31735280450>
+**Successful Deployment**: <https://github.com/terraphim/terraphim-ai/actions/runs/31748165547>
 
 ## Progress Summary
 
@@ -24,7 +24,8 @@
   - Removed unconditional accent colouring from header utilities while preserving accessible accent feedback during interaction.
   - Added the previously missing accessible `<details>` theme-menu presentation to the Web Awesome theme bundle.
 - Current implementation state:
-  - The palette-alignment implementation and this updated handover are ready to commit on `main`; all verification gates pass.
+  - The palette-alignment implementation is committed and pushed on `main` at `7d39432`; all verification gates pass.
+  - Production was rebuilt, deployed, and purged successfully in workflow run `31748165547`.
   - Production was built from md-book `c5f6580` and Terraphim `3df1fbbf0`; the later Web Awesome-only label commit `1b0055f` is pushed and will enter the next documentation build.
   - Terraphim deployment changes were made in an isolated clean clone and pushed directly to GitHub `main`; the user's unrelated dirty Terraphim checkout was not modified.
 - Working vs blocked:
@@ -49,7 +50,7 @@
   - md-book `c5f6580` — derive the theme key from stylesheet content.
   - md-book `1b0055f` — label the Web Awesome search close action.
   - terraphim-ai `3df1fbbf0` — emit deployment headers and revalidate generated assets.
-  - Current pending md-book commit — align the theme/header utility controls in both component families.
+  - md-book `7d39432` — align the theme/header utility controls in both component families.
 
 ## Current State
 
@@ -63,6 +64,7 @@
   - Live Pagefind query `Terraphim` returned 10 instant results with no loading or empty state left visible.
   - Local Chrome audit confirmed Web Awesome only, all five colour schemes, multi-column sidebar/TOC, Pagefind results, and both `label` and `aria-label` on the close action.
   - Chrome re-validation of the palette fix covered Light, Rust, Coal, Navy, and Ayu in both Shoelace and Web Awesome. Every header action measured exactly 32×32 px, each swatch measured 16×16 px, and the vertical-centre spread was 0 px in every scheme.
+  - The same Chrome measurements passed on the deployed production report page after Cloudflare cache purge; the old palette SVG count was zero and the Pagefind search control remained present.
 - Partially working:
   - Cloudflare's zone-level rule still responds with `cache-control: public, max-age=14400, must-revalidate`, overriding the intended zero-age `_headers` policy. Theme correctness is protected by the stylesheet-content URL key.
 - Risky or broken:
@@ -98,7 +100,7 @@
 
 ## Next Steps
 
-1. Confirm the dispatched production build includes the palette-alignment commit, then remeasure the three Shoelace header actions on `docs.terraphim.ai`.
+1. No immediate corrective action remains; use the browser smoke test above if a future header/theme change is deployed.
 2. Change the Cloudflare zone/browser-cache rule from four hours to revalidation or extend content-addressing to all generated mutable CSS/JS assets.
 3. Upgrade GitHub actions that still produce Node.js 20 deprecation annotations when compatible releases are available.
 
