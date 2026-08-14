@@ -71,6 +71,27 @@
     --wa-transition-medium: 250ms;
 }
 
+/* Mobile controls stay out of the desktop header and become available at the
+   same breakpoint as the off-canvas navigation and compact search. */
+.mobile-menu-toggle,
+.mobile-search-toggle {
+    display: none;
+    padding: var(--wa-spacing-small);
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--wa-color-neutral-600);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color var(--wa-transition-fast), background-color var(--wa-transition-fast);
+}
+
+.mobile-menu-toggle:hover,
+.mobile-search-toggle:hover {
+    color: var(--wa-color-primary-600);
+    background: var(--wa-color-neutral-100);
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
     :root {
@@ -125,6 +146,22 @@ body {
 *::before,
 *::after {
     box-sizing: border-box;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 1001;
+    padding: var(--wa-spacing-small) var(--wa-spacing-medium);
+    border: 2px solid var(--wa-color-primary-600);
+    border-radius: 0 0 var(--wa-border-radius-small) 0;
+    background: var(--wa-color-neutral-0);
+    color: var(--wa-color-neutral-900);
+}
+
+.skip-link:focus {
+    left: 0;
 }
 
 .container {
@@ -317,7 +354,26 @@ doc-toc {
     }
 
     .sidebar {
-        display: none;
+        display: block;
+        position: fixed;
+        left: -300px;
+        top: var(--header-height);
+        bottom: 0;
+        z-index: 1000;
+        width: 300px;
+        height: calc(100vh - var(--header-height));
+        border-right: 0;
+        box-shadow: var(--wa-shadow-large);
+        transition: transform var(--wa-transition-medium);
+    }
+
+    .sidebar.active {
+        transform: translateX(300px);
+    }
+
+    .mobile-menu-toggle,
+    .mobile-search-toggle {
+        display: block;
     }
 
     .content {
@@ -427,10 +483,6 @@ doc-toc {
 @media (max-width: 768px) {
     .header-content {
         padding: 0 var(--wa-spacing-medium);
-    }
-
-    .header-link span {
-        display: none;
     }
 
     .header-search {

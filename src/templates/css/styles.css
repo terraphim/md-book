@@ -805,10 +805,6 @@ sl-input {
     .header-content {
         padding: 0 1rem;
     }
-
-    .header-link span {
-        display: none;
-    }
 }
 
 .header-search {

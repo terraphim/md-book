@@ -853,6 +853,8 @@ async fn test_theme_picker_and_attributes_present() -> Result<()> {
     assert_contains!(html, "class=\"header-link header-action\"");
     assert_contains!(html, "class=\"theme-swatch\"");
     assert!(!html.contains("name=\"palette\""));
+    let styles = book.read_output("css/styles.css")?;
+    assert_not_contains!(styles, ".header-link span {");
     assert_contains!(html, "js/theme-switch.js");
 
     Ok(())
@@ -1301,7 +1303,18 @@ async fn test_webawesome_theme_is_isolated_and_explicitly_online_only() -> Resul
     assert_contains!(html, "Web Awesome CDN fallback: online-only");
     assert_not_contains!(html, "vendor/shoelace");
     assert!(!book.output_exists("vendor/shoelace/shoelace-local.js"));
-    assert_contains!(book.read_output("css/styles.css")?, "column-width: 40ch");
+    assert_contains!(html, "class=\"header-link header-action\"");
+    assert_contains!(html, "class=\"theme-swatch\"");
+    assert!(!html.contains("name=\"palette\""));
+    let styles = book.read_output("css/styles.css")?;
+    assert_contains!(styles, "column-width: 40ch");
+    assert_not_contains!(styles, ".header-link span {");
+    assert_contains!(styles, ".mobile-menu-toggle,\n.mobile-search-toggle");
+    assert_contains!(styles, ".sidebar.active");
+    assert_contains!(styles, "left: -300px");
+    assert_contains!(styles, ".skip-link");
+    assert_contains!(styles, ".skip-link:focus");
+    assert_contains!(styles, "left: -9999px");
     let themes = book.read_output("css/themes.css")?;
     assert_contains!(themes, "--wa-color-neutral-300: #596067");
     assert_contains!(themes, "--wa-color-primary-700: #91bee1");
