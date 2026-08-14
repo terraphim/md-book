@@ -527,14 +527,17 @@ pub fn copy_static_assets(
     Ok(())
 }
 
-/// Return a stable cache key for the emitted theme stylesheet.
+/// Return a stable cache key for the emitted first-party stylesheets.
 pub(crate) fn theme_asset_version(output_dir: &str) -> Result<String> {
-    let path = Path::new(output_dir).join("css/themes.css");
-    let bytes = fs::read(&path)
-        .with_context(|| format!("Failed to read theme asset {}", path.display()))?;
-    let hash = bytes.iter().fold(0xcbf29ce484222325_u64, |hash, byte| {
-        (hash ^ u64::from(*byte)).wrapping_mul(0x100000001b3)
-    });
+    let mut hash = 0xcbf29ce484222325_u64;
+    for asset in ["styles.css", "themes.css"] {
+        let path = Path::new(output_dir).join("css").join(asset);
+        let bytes = fs::read(&path)
+            .with_context(|| format!("Failed to read stylesheet asset {}", path.display()))?;
+        for byte in asset.bytes().chain(std::iter::once(0)).chain(bytes) {
+            hash = (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3);
+        }
+    }
     Ok(format!("{hash:016x}"))
 }
 
@@ -652,13 +655,18 @@ mod tests {
         let output = TempDir::new()?;
         let css = output.path().join("css");
         fs::create_dir_all(&css)?;
+        fs::write(css.join("styles.css"), "body { margin: 0; }")?;
         fs::write(css.join("themes.css"), "body { color: black; }")?;
         let first = theme_asset_version(output.path().to_str().unwrap())?;
         assert_eq!(first, theme_asset_version(output.path().to_str().unwrap())?);
 
-        fs::write(css.join("themes.css"), "body { color: white; }")?;
+        fs::write(css.join("styles.css"), "body { margin: 1rem; }")?;
         let second = theme_asset_version(output.path().to_str().unwrap())?;
         assert_ne!(first, second);
+
+        fs::write(css.join("themes.css"), "body { color: white; }")?;
+        let third = theme_asset_version(output.path().to_str().unwrap())?;
+        assert_ne!(second, third);
         Ok(())
     }
 }

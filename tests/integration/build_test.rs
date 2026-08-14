@@ -876,11 +876,13 @@ async fn test_every_page_kind_loads_theme_stylesheet() -> Result<()> {
 
     for page in ["index.html", "404.html", "print.html"] {
         let html = book.read_output(page)?;
+        assert_contains!(html, "css/styles.css?v=");
         assert_contains!(html, "css/themes.css?v=");
         assert_contains!(html, "data-default-theme=");
     }
 
     let chapter = book.read_output("chapter.html")?;
+    assert_contains!(chapter, "css/styles.css?v=");
     assert_contains!(chapter, "css/themes.css?v=");
 
     // The index must also carry the behaviour scripts chapter pages get.
@@ -977,7 +979,7 @@ async fn test_404_uses_site_url_when_configured() -> Result<()> {
     book.build().await?;
 
     let html = book.read_output("404.html")?;
-    assert_contains!(html, "href=\"/docs/css/styles.css\"");
+    assert_contains!(html, "href=\"/docs/css/styles.css?v=");
     assert_contains!(html, "href=\"/docs/index.html\"");
     // input-404 supplies the body.
     assert_contains!(html, "Custom body");
@@ -996,7 +998,7 @@ async fn test_404_falls_back_to_relative_without_site_url() -> Result<()> {
     book.build().await?;
 
     let html = book.read_output("404.html")?;
-    assert_contains!(html, "href=\"css/styles.css\"");
+    assert_contains!(html, "href=\"css/styles.css?v=");
     assert_not_contains!(html, "href=\"/css/styles.css\"");
 
     Ok(())
@@ -1077,7 +1079,7 @@ async fn test_ordinary_urls_stay_readable() -> Result<()> {
     book.build().await?;
 
     let html = book.read_output("nested/deep.html")?;
-    assert_contains!(html, "href=\"../css/styles.css\"");
+    assert_contains!(html, "href=\"../css/styles.css?v=");
     assert_not_contains!(html, "&#x2F;");
 
     Ok(())
@@ -1300,6 +1302,7 @@ async fn test_webawesome_theme_is_isolated_and_explicitly_online_only() -> Resul
     let html = book.read_output("one.html")?;
     assert_contains!(html, "webawesome@3.0.0-beta.6");
     assert_contains!(html, "<wa-input");
+    assert_contains!(html, "css/styles.css?v=");
     assert_contains!(html, "Web Awesome CDN fallback: online-only");
     assert_not_contains!(html, "vendor/shoelace");
     assert!(!book.output_exists("vendor/shoelace/shoelace-local.js"));

@@ -6,7 +6,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Not Found | {{ config.book.title }}</title>
-  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css?v={{ asset_version }}">
     {% for css in additional_css %}
     <link rel="stylesheet" href="{{ path_to_root | safe }}{{ css | safe }}">

@@ -11,7 +11,7 @@
     <!-- Include Shoelace assets -->
     <link rel="stylesheet" href="{{ path_to_root | safe }}vendor/shoelace/themes/light.css" />
     <script type="module" src="{{ path_to_root | safe }}vendor/shoelace/shoelace-local.js"></script>
-    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+    <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css?v={{ asset_version }}">
     <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css?v={{ asset_version }}">
     {% if search_enabled %}<link rel="stylesheet" href="{{ path_to_root | safe }}css/search.css">{% endif %}
     <script src="{{ path_to_root | safe }}components/doc-toc.js" type="module"></script>

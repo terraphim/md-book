@@ -5,7 +5,7 @@
 <head>
   <meta charset="utf-8">
   <title>{{ config.book.title }} — Print</title>
-  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css">
+  <link rel="stylesheet" href="{{ path_to_root | safe }}css/styles.css?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ path_to_root | safe }}css/themes.css?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ path_to_root | safe }}css/syntax.css">
   <style>
